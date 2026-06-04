@@ -18,6 +18,16 @@ class QdvsRuleRepository
         return $this->rules ??= $this->load();
     }
 
+    /**
+     * Regeln eines DAS-Datasets (z. B. 'qs_data' = vollstationäre Bewohner-Erhebung).
+     *
+     * @return array<int, RawRule>
+     */
+    public function forDataset(string $dataset): array
+    {
+        return array_values(array_filter($this->all(), fn (RawRule $r) => $r->dataset === $dataset));
+    }
+
     /** @return array<int, RawRule> */
     private function load(): array
     {

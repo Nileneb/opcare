@@ -50,10 +50,19 @@ it('meldet Erhebungsdatum vor Einzugsdatum als Fehler (DAS 50019)', function () 
     expect(collect($issues)->where('schwere', 'fehler')->pluck('feld')->all())->toContain('ERHEBUNGSDATUM');
 });
 
+it('erzeugt pro Verstoß genau ein Issue (keine Dataset-Doppelung)', function () {
+    // Regression K1: qs_data + qs_data_mds teilen Feld-/Regel-IDs → früher doppelte Issues
+    $issues = app(QdvsValidator::class)->validate([vollesPaket(['geburtsmonat' => null])]);
+
+    $geburtsmonat = collect($issues)->where('feld', 'GEBURTSMONAT');
+    expect($geburtsmonat)->toHaveCount(1);
+});
+
 it('liefert einen Coverage-Report nach der Validierung', function () {
     $validator = app(QdvsValidator::class);
     $validator->validate([vollesPaket()]);
 
-    expect($validator->report()->total)->toBe(440)
-        ->and($validator->report()->applicable)->toBeGreaterThanOrEqual(38);
+    // Validator prüft nur das Dataset qs_data (bewohnerbezogene vollstationäre Erhebung)
+    expect($validator->report()->total)->toBe(410)
+        ->and($validator->report()->applicable)->toBeGreaterThanOrEqual(24);
 });

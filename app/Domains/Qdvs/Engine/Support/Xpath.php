@@ -73,6 +73,16 @@ final class Xpath
 
     public static function castableAsDate(mixed $v): bool
     {
-        return self::date($v) !== null;
+        if (self::isEmpty($v)) {
+            return false;
+        }
+        // strikt: kein Carbon-Overflow (2026-02-30 → März) als „gültig" durchwinken
+        try {
+            $d = CarbonImmutable::createFromFormat('!Y-m-d', (string) $v);
+        } catch (Throwable) {
+            return false;
+        }
+
+        return $d !== false && $d->format('Y-m-d') === (string) $v;
     }
 }

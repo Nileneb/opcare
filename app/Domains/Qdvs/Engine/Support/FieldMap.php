@@ -49,7 +49,8 @@ class FieldMap
             'GEBURTSJAHR' => new FieldBinding(fn (QdvsResidentPackage $p) => $p->geburtsjahr, 'int'),
             'GEBURTSMONAT' => new FieldBinding(fn (QdvsResidentPackage $p) => $p->geburtsmonat, 'int'),
             // WHY(DAS_REGELN): DAS-Feld 7 ist „Pflegegrad vorhanden? 0/1" — opcare speichert den Grad 1–5.
-            // Die fachliche 1–5-Prüfung bleibt als native Zusatzregel im QdvsValidator.
+            // Vorhanden→'1' ist immer DAS-gültig, daher können die Schlüsselwert-/Typregeln (20003/30007)
+            // strukturell nicht auslösen; die fachliche 1–5-Prüfung liegt nativ im QdvsValidator.
             'PFLEGEGRAD' => new FieldBinding(
                 fn (QdvsResidentPackage $p) => $p->pflegegrad,
                 'scalar',

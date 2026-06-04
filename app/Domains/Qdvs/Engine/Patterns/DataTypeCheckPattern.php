@@ -37,7 +37,7 @@ class DataTypeCheckPattern extends AbstractPattern
             }
 
             $badType = match ($type) {
-                'xs:int', 'xs:integer' => ! Xpath::castableAsInt($v),
+                'xs:int', 'xs:integer', 'xs:gYear' => ! Xpath::castableAsInt($v),
                 'xs:decimal' => ! Xpath::castableAsDecimal($v),
                 'xs:date' => ! Xpath::castableAsDate($v),
                 default => false,

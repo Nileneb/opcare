@@ -17,6 +17,11 @@ use Carbon\CarbonImmutable;
  */
 class QdvsValidator
 {
+    // WHY(DAS_REGELN): OPCare exportiert die bewohnerbezogene vollstationäre Erhebung → Dataset qs_data.
+    // qs_data_mds/facility/commentation sind andere Abgabearten und würden sonst feldgleiche Regeln
+    // doppelt feuern lassen.
+    private const DATASET = 'qs_data';
+
     /** @var array<int, CompiledRule>|null */
     private ?array $compiled = null;
 
@@ -66,7 +71,7 @@ class QdvsValidator
     private function rules(): array
     {
         if ($this->compiled === null) {
-            ['compiled' => $this->compiled, 'report' => $this->report] = $this->compiler->compileAll($this->repository->all());
+            ['compiled' => $this->compiled, 'report' => $this->report] = $this->compiler->compileAll($this->repository->forDataset(self::DATASET));
         }
 
         return $this->compiled;
