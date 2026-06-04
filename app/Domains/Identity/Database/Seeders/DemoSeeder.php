@@ -26,6 +26,7 @@ use App\Domains\Medication\Models\TradeForm;
 use App\Domains\Quality\Enums\EventSeverity;
 use App\Domains\Quality\Enums\QualityIndicator;
 use App\Domains\Quality\Models\CareEvent;
+use App\Domains\Scheduling\Database\Seeders\ShiftSeeder;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
@@ -40,6 +41,7 @@ class DemoSeeder extends Seeder
         $tenant = Tenant::create(['name' => 'Bergische Diakonie — Wohnbereich Aprath', 'slug' => 'aprath']);
         app(CurrentTenant::class)->set($tenant);
         $this->call(MedicationReferenceSeeder::class);
+        $this->call(ShiftSeeder::class);
 
         $admin = User::create([
             'name' => 'Bettina Mertens',
@@ -196,6 +198,7 @@ class DemoSeeder extends Seeder
         $birkenhof = Tenant::create(['name' => 'Haus Birkenhof', 'slug' => 'birkenhof']);
         app(CurrentTenant::class)->set($birkenhof);
         $this->call(MedicationReferenceSeeder::class);
+        $this->call(ShiftSeeder::class);
 
         $birkenhofAdmin = User::create([
             'name' => 'Karl Birken',
