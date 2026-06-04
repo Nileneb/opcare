@@ -8,6 +8,7 @@ use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Facility;
+use App\Livewire\Medication\Stammdaten;
 use App\Livewire\Medication\Stellplan;
 use App\Livewire\Overview;
 use App\Livewire\Pflegeplanung;
@@ -43,6 +44,7 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::get('/admin/einrichtungen', Tenants::class)->name('admin.tenants');
     Route::get('/admin/benutzer', Users::class)->name('admin.users');
     Route::get('/bewohner/{resident}/medikation', Stellplan::class)->name('medikation.stellplan');
+    Route::get('/medikation/stamm', Stammdaten::class)->name('medikation.stammdaten');
     Route::get('/controlling', Controlling::class)->name('controlling');
     Route::get('/qualitaet/report', QualityReport::class)->name('quality.report');
 
