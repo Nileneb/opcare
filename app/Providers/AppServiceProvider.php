@@ -19,6 +19,8 @@ use App\Domains\Medication\Models\MedicationAdministration;
 use App\Domains\Medication\Models\Prescription;
 use App\Domains\Medication\Policies\MedicationAdministrationPolicy;
 use App\Domains\Medication\Policies\PrescriptionPolicy;
+use App\Domains\Quality\Models\CareEvent;
+use App\Domains\Quality\Policies\CareEventPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -39,6 +41,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(CareReport::class, CareReportPolicy::class);
         Gate::policy(Prescription::class, PrescriptionPolicy::class);
         Gate::policy(MedicationAdministration::class, MedicationAdministrationPolicy::class);
+        Gate::policy(CareEvent::class, CareEventPolicy::class);
         Gate::before(fn ($user) => $user?->isSuperAdmin() ? true : null);
     }
 }
