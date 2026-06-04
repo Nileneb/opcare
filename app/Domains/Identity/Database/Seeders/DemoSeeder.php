@@ -22,6 +22,9 @@ use App\Domains\Medication\Data\StockData;
 use App\Domains\Medication\Enums\ScheduleFrequency;
 use App\Domains\Medication\Models\MedProduct;
 use App\Domains\Medication\Models\TradeForm;
+use App\Domains\Quality\Enums\EventSeverity;
+use App\Domains\Quality\Enums\QualityIndicator;
+use App\Domains\Quality\Models\CareEvent;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
@@ -143,6 +146,49 @@ class DemoSeeder extends Seeder
             Carbon::today()->toDateString(),
             Carbon::today()->addDays(3)->toDateString(),
         );
+
+        // WHY: kein „Feature ohne Outcome" — Controlling/Report muss nach migrate:fresh sofort Zahlen zeigen.
+        app(CurrentTenant::class)->set($tenant);
+        $quarterStart = now()->startOfQuarter()->toDateString();
+
+        $maria = Resident::query()->where('name', 'Maria Schneider')->firstOrFail();
+        CareEvent::create([
+            'resident_id' => $maria->id,
+            'indicator' => QualityIndicator::Sturz,
+            'datum' => now()->startOfQuarter()->addDays(5)->toDateString(),
+            'severity' => EventSeverity::MitFolgen,
+            'details' => ['ort' => 'Bad', 'verletzung' => 'Platzwunde Kopf'],
+            'reported_by' => $admin->id,
+        ]);
+        CareEvent::create([
+            'resident_id' => $maria->id,
+            'indicator' => QualityIndicator::Dekubitus,
+            'datum' => $quarterStart,
+            'behoben_am' => now()->startOfQuarter()->addDays(14)->toDateString(),
+            'severity' => EventSeverity::Leicht,
+            'details' => ['lokalisation' => 'Steißbein', 'grad' => 1],
+            'reported_by' => $admin->id,
+        ]);
+
+        $wilhelm = Resident::query()->where('name', 'Wilhelm Müller')->firstOrFail();
+        CareEvent::create([
+            'resident_id' => $wilhelm->id,
+            'indicator' => QualityIndicator::Sturz,
+            'datum' => now()->startOfQuarter()->addDays(12)->toDateString(),
+            'severity' => EventSeverity::OhneFolgen,
+            'details' => ['ort' => 'Flur', 'verletzung' => 'keine'],
+            'reported_by' => $admin->id,
+        ]);
+
+        $kurt = Resident::query()->where('name', 'Kurt Petersen')->firstOrFail();
+        CareEvent::create([
+            'resident_id' => $kurt->id,
+            'indicator' => QualityIndicator::Dekubitus,
+            'datum' => now()->startOfQuarter()->addDays(3)->toDateString(),
+            'severity' => EventSeverity::Schwer,
+            'details' => ['lokalisation' => 'Ferse rechts', 'grad' => 3],
+            'reported_by' => $admin->id,
+        ]);
 
         // Zweites Heim — Haus Birkenhof (2 Bewohner, kein SIS für Minimal-Demo)
         $birkenhof = Tenant::create(['name' => 'Haus Birkenhof', 'slug' => 'birkenhof']);
