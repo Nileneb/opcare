@@ -17,6 +17,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'tenant' => SetCurrentTenant::class,
         ]);
+
+        // WHY: Livewire-Update-Requests (POST /livewire/update) laufen nur durch die
+        // web-Gruppe, nicht durch die Route-Middleware der Seiten. Ohne diesen Eintrag
+        // ist CurrentTenant bei Livewire-Aktionen ungesetzt → tenant_id NULL beim Anlegen
+        // tenant-skopierter Modelle. Läuft am Ende der Gruppe (nach StartSession/Auth).
+        $middleware->web(append: [
+            SetCurrentTenant::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
