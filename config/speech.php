@@ -1,6 +1,9 @@
 <?php
 
 return [
+    // WHY: im Dev/Test ohne Whisper/Ollama lauffähig — bindet Fake-Adapter (Demo-Pipeline).
+    'fake' => (bool) env('SPEECH_FAKE', false),
+
     'whisper' => [
         'url' => env('WHISPER_URL', 'http://127.0.0.1:9000'),
         'model' => env('WHISPER_MODEL', 'large-v3'),

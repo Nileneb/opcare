@@ -1,0 +1,207 @@
+<?php
+
+namespace App\Livewire;
+
+use App\Domains\CarePlanning\Actions\CreateCareMeasure;
+use App\Domains\CarePlanning\Actions\CreateCareReport;
+use App\Domains\CarePlanning\Actions\CreateEvaluation;
+use App\Domains\CarePlanning\Actions\CreateSisAssessment;
+use App\Domains\CarePlanning\Data\CareMeasureData;
+use App\Domains\CarePlanning\Data\CareReportData;
+use App\Domains\CarePlanning\Data\EvaluationData;
+use App\Domains\CarePlanning\Data\SisAssessmentData;
+use App\Domains\CarePlanning\Enums\RiskType;
+use App\Domains\CarePlanning\Enums\SisTopicField;
+use App\Domains\CarePlanning\Models\CareMeasure;
+use App\Domains\CarePlanning\Support\SisAreaCatalog;
+use App\Domains\Masterdata\Models\HealthInsurance;
+use App\Domains\Masterdata\Models\IcdCode;
+use App\Domains\Masterdata\Models\Physician;
+use App\Domains\Masterdata\Models\Resident;
+use Livewire\Attributes\Layout;
+use Livewire\Component;
+
+#[Layout('layouts.app')]
+class ResidentShow extends Component
+{
+    public Resident $resident;
+
+    // Diagnose
+    public ?int $diag_icd = null;
+    public string $diag_art = 'sekundär';
+
+    // Versicherung
+    public ?int $ins_id = null;
+    public string $ins_nr = '';
+    public bool $ins_primary = true;
+
+    // Betreuer
+    public string $cust_name = '';
+    public string $cust_umfang = '';
+    public string $cust_kontakt = '';
+
+    // Arzt
+    public ?int $phys_id = null;
+
+    // SIS
+    public string $sis_eingangsfrage = '';
+    public array $sis_felder = [];
+    public array $sis_risiken = [];
+
+    // Maßnahme
+    public string $m_themenfeld = 'mobilitaet';
+    public string $m_beschreibung = '';
+    public string $m_ziel = '';
+
+    // Bericht
+    public string $r_datum = '';
+    public string $r_schicht = 'frueh';
+    public string $r_text = '';
+
+    // Evaluation
+    public ?int $e_measure = null;
+    public string $e_zielerreichung = 'teilweise';
+    public string $e_anlass = '';
+
+    public function mount(Resident $resident): void
+    {
+        $this->resident = $resident;
+        $this->r_datum = now()->format('Y-m-d\TH:i');
+        foreach (SisTopicField::cases() as $f) {
+            $this->sis_felder[$f->value] = '';
+        }
+    }
+
+    public function addDiagnosis(): void
+    {
+        $this->validate(['diag_icd' => ['required', 'exists:icd_codes,id'], 'diag_art' => ['required', 'in:primär,sekundär']]);
+        $this->resident->diagnoses()->create(['icd_code_id' => $this->diag_icd, 'art' => $this->diag_art]);
+        $this->reset('diag_icd', 'diag_art');
+        $this->diag_art = 'sekundär';
+        session()->flash('status', 'Diagnose hinzugefügt.');
+    }
+
+    public function addInsurance(): void
+    {
+        $this->validate(['ins_id' => ['required', 'exists:health_insurances,id'], 'ins_nr' => ['nullable', 'string', 'max:60']]);
+        $this->resident->insurances()->create([
+            'health_insurance_id' => $this->ins_id,
+            'versichertennr' => $this->ins_nr ?: null,
+            'ist_primaer' => $this->ins_primary,
+        ]);
+        $this->reset('ins_id', 'ins_nr');
+        $this->ins_primary = true;
+        session()->flash('status', 'Versicherung hinzugefügt.');
+    }
+
+    public function addCustodian(): void
+    {
+        $this->validate(['cust_name' => ['required', 'string', 'max:255']]);
+        $this->resident->custodians()->create([
+            'name' => $this->cust_name,
+            'umfang' => $this->cust_umfang ?: null,
+            'kontakt' => $this->cust_kontakt ?: null,
+        ]);
+        $this->reset('cust_name', 'cust_umfang', 'cust_kontakt');
+        session()->flash('status', 'Betreuer:in hinzugefügt.');
+    }
+
+    public function attachPhysician(): void
+    {
+        $this->validate(['phys_id' => ['required', 'exists:physicians,id']]);
+        $this->resident->physicians()->syncWithoutDetaching([$this->phys_id]);
+        $this->reset('phys_id');
+        session()->flash('status', 'Arzt/Ärztin zugeordnet.');
+    }
+
+    public function createSis(CreateSisAssessment $createSis): void
+    {
+        $felder = [];
+        foreach ($this->sis_felder as $key => $text) {
+            if (trim((string) $text) !== '') {
+                $felder[] = ['themenfeld' => $key, 'freitext' => $text, 'strukturdaten' => null];
+            }
+        }
+
+        $sis = $createSis->handle(new SisAssessmentData(
+            resident_id: $this->resident->id,
+            created_by: auth()->id(),
+            erstellt_am: now()->format('Y-m-d'),
+            eingangsfrage: $this->sis_eingangsfrage ?: null,
+            themenfelder: $felder,
+        ));
+
+        foreach ($this->sis_risiken as $risiko) {
+            $sis->riskItems()->create(['risiko' => $risiko, 'eingeschaetzt' => true]);
+        }
+
+        $this->reset('sis_eingangsfrage', 'sis_risiken');
+        foreach (SisTopicField::cases() as $f) {
+            $this->sis_felder[$f->value] = '';
+        }
+        session()->flash('status', 'SIS-Erhebung angelegt.');
+    }
+
+    public function addMeasure(CreateCareMeasure $createMeasure): void
+    {
+        $this->validate(['m_themenfeld' => ['required'], 'm_beschreibung' => ['required', 'string']]);
+        $createMeasure->handle(new CareMeasureData(
+            resident_id: $this->resident->id,
+            themenfeld: $this->m_themenfeld,
+            beschreibung: $this->m_beschreibung,
+            ziel: $this->m_ziel ?: null,
+            verantwortlich: auth()->user()->name,
+        ));
+        $this->reset('m_beschreibung', 'm_ziel');
+        session()->flash('status', 'Maßnahme geplant.');
+    }
+
+    public function addReport(CreateCareReport $createReport): void
+    {
+        $this->validate(['r_datum' => ['required', 'date'], 'r_schicht' => ['required', 'in:frueh,spaet,nacht'], 'r_text' => ['required', 'string']]);
+        $createReport->handle(new CareReportData(
+            resident_id: $this->resident->id,
+            created_by: auth()->id(),
+            datum: str_replace('T', ' ', $this->r_datum).':00',
+            schicht: $this->r_schicht,
+            text: $this->r_text,
+        ));
+        $this->reset('r_text');
+        session()->flash('status', 'Bericht gespeichert.');
+    }
+
+    public function addEvaluation(CreateEvaluation $createEvaluation): void
+    {
+        $this->validate(['e_measure' => ['required', 'exists:care_measures,id'], 'e_zielerreichung' => ['required', 'in:erreicht,teilweise,nicht']]);
+        $createEvaluation->handle(new EvaluationData(
+            evaluable_type: CareMeasure::class,
+            evaluable_id: $this->e_measure,
+            created_by: auth()->id(),
+            datum: now()->format('Y-m-d'),
+            zielerreichung: $this->e_zielerreichung,
+            anlass: $this->e_anlass ?: null,
+        ));
+        $this->reset('e_anlass');
+        session()->flash('status', 'Evaluation erfasst.');
+    }
+
+    public function render()
+    {
+        $this->resident->load([
+            'room.station', 'diagnoses.icdCode', 'insurances.healthInsurance',
+            'custodians', 'physicians',
+            'sisAssessments' => fn ($q) => $q->current()->latest('id')->with(['topicFields', 'riskItems']),
+            'careMeasures' => fn ($q) => $q->current()->latest('id'),
+        ]);
+
+        return view('livewire.resident-show', [
+            'areas' => SisAreaCatalog::all(),
+            'topicFields' => SisTopicField::cases(),
+            'riskTypes' => RiskType::cases(),
+            'icdCodes' => IcdCode::orderBy('code')->get(),
+            'insurances' => HealthInsurance::orderBy('name')->get(),
+            'physicians' => Physician::orderBy('name')->get(),
+            'measures' => $this->resident->careMeasures,
+        ]);
+    }
+}
