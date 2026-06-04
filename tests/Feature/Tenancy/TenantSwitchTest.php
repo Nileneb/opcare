@@ -21,3 +21,10 @@ it('schaltet den aktiven Mandanten in die Session', function () {
         ->call('switchTo', $this->b->id);
     expect(session('active_tenant_id'))->toBe($this->b->id);
 });
+
+it('kann nach einem Wechsel erneut wechseln', function () {
+    Livewire::actingAs($this->admin)->test(TenantSwitcher::class)
+        ->call('switchTo', $this->b->id)
+        ->call('switchTo', $this->a->id);
+    expect(session('active_tenant_id'))->toBe($this->a->id);
+});

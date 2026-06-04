@@ -14,6 +14,20 @@ beforeEach(function () {
     $this->admin->assignRole('admin');
 });
 
+it('verhindert, dass ein admin super-admin vergibt', function () {
+    $opfer = \App\Domains\Identity\Models\User::factory()->create(['tenant_id' => $this->t->id]);
+    $opfer->assignRole('pflegehilfskraft');
+
+    try {
+        Livewire::actingAs($this->admin)->test(Users::class)
+            ->call('setRole', $opfer->id, 'super-admin');
+    } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+        expect($e->getStatusCode())->toBe(403);
+    }
+
+    expect($opfer->fresh()->isSuperAdmin())->toBeFalse();
+});
+
 it('legt Mitarbeitende mit Rolle an', function () {
     Livewire::actingAs($this->admin)->test(Users::class)
         ->set('name', 'Hans Helfer')->set('email', 'hans@opcare.local')

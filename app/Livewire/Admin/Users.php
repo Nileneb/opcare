@@ -34,15 +34,22 @@ class Users extends Component
 
     public function setRole(int $userId, string $role, AssignRole $assign): void
     {
-        $this->authorize('update', User::find($userId));
-        $assign->handle(User::findOrFail($userId), $role);
+        $target = User::findOrFail($userId);
+        $this->authorize('update', $target);
+
+        $erlaubte = \Spatie\Permission\Models\Role::pluck('name')->all();
+        abort_unless(in_array($role, $erlaubte, true), 422);
+        // WHY(privilege-escalation): admin darf keine super-admin-Rolle vergeben
+        abort_if($role === 'super-admin' && ! auth()->user()->isSuperAdmin(), 403);
+
+        $assign->handle($target, $role);
         session()->flash('status', 'Rolle aktualisiert.');
     }
 
     public function render()
     {
         return view('livewire.admin.users', [
-            'users' => User::where('tenant_id', auth()->user()->tenant_id)->with('roles')->orderBy('name')->get(),
+            'users' => User::where('tenant_id', app(\App\Domains\Identity\Support\CurrentTenant::class)->id())->with('roles')->orderBy('name')->get(),
             'roles' => Role::orderBy('name')->pluck('name'),
         ]);
     }
