@@ -19,6 +19,7 @@ class AdministerOnDemand
         return DB::transaction(function () use ($schedule, $userId, $dosis, $notiz) {
             $rx = $schedule->prescription;
 
+            // WHY: Tageslimit-Prüfung ist TOCTOU-anfällig; v1 setzt einen einzelnen, nicht-nebenläufigen Bediener am Bett voraus.
             if ($schedule->max_anzahl_taeglich !== null) {
                 $heute = MedicationAdministration::where('prescription_schedule_id', $schedule->id)
                     ->where('status', AdministrationStatus::Gegeben->value)

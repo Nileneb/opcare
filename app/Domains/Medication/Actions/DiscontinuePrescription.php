@@ -19,7 +19,7 @@ class DiscontinuePrescription
 
             MedicationAdministration::whereIn('prescription_schedule_id', $rx->schedules()->pluck('id'))
                 ->where('status', AdministrationStatus::Geplant->value)
-                ->where('soll_zeitpunkt', '>=', $stichtag->startOfDay())
+                ->where('soll_zeitpunkt', '>=', $stichtag->copy()->startOfDay())
                 ->update(['status' => AdministrationStatus::Ausgelassen, 'notiz' => 'Verordnung abgesetzt']);
 
             return $rx;

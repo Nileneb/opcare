@@ -19,11 +19,13 @@ use App\Domains\Masterdata\Models\IcdCode;
 use App\Domains\Masterdata\Models\Physician;
 use App\Domains\Masterdata\Models\Resident;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
 class ResidentShow extends Component
 {
+    #[Locked]
     public Resident $resident;
 
     // Diagnose

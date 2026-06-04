@@ -9,11 +9,13 @@ use App\Domains\Medication\Data\AdministerData;
 use App\Domains\Medication\Enums\AdministrationStatus;
 use App\Domains\Medication\Models\MedicationAdministration;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
 class Stellplan extends Component
 {
+    #[Locked]
     public Resident $resident;
 
     public string $tag;

@@ -13,6 +13,7 @@ use App\Domains\Medication\Enums\AdministrationStatus;
 use App\Domains\Medication\Enums\AdministrationTimeslot;
 use App\Domains\Medication\Models\MedicationAdministration;
 use App\Domains\Medication\Models\MedProduct;
+use App\Domains\Medication\Models\MedStock;
 
 beforeEach(function () {
     $t = Tenant::create(['name' => 'A', 'slug' => 'a']);
@@ -39,6 +40,31 @@ it('quittiert eine Gabe und bucht den Bestand ab', function () {
         ->and($a->quittiert_von)->toBe($this->nurse->id)
         ->and($a->ist_zeitpunkt)->not->toBeNull()
         ->and($a->stockTransactions)->toHaveCount(1);
+});
+
+it('bucht bei Unterbestand nur die tatsächlich verfügbare Menge und lässt keinen negativen Bestand zu', function () {
+    $resident = Resident::factory()->create();
+    $product = MedProduct::factory()->create();
+    app(AddStock::class)->handle(new StockData($resident->id, $product->id, 0.5, 'Stück'));
+
+    $a = MedicationAdministration::create([
+        'resident_id' => $resident->id, 'soll_zeitpunkt' => now()->setTime(8, 0),
+        'tageszeit' => AdministrationTimeslot::Morgens, 'dosis' => 1, 'status' => AdministrationStatus::Geplant,
+    ]);
+
+    app(AdministerMedication::class)->handle($a, new AdministerData(
+        quittiert_von: $this->nurse->id, med_product_id: $product->id, dosis: 1,
+    ));
+
+    $a->refresh();
+    expect($a->status)->toBe(AdministrationStatus::Gegeben);
+
+    $tx = $a->stockTransactions->first();
+    expect($tx)->not->toBeNull()
+        ->and((float) $tx->menge)->toBe(-0.5);
+
+    $stock = MedStock::first();
+    expect((float) $stock->menge_aktuell)->toBe(0.0);
 });
 
 it('vermerkt eine Ablehnung ohne Bestandsabbuchung', function () {

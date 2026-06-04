@@ -49,17 +49,21 @@ class AdministerMedication
             return;
         }
 
+        $verfuegbar = (float) $stock->menge_aktuell;
+        $entnommen = min($dosis, $verfuegbar);
+
+        // WHY: nur die real entnommene Menge buchen — Transaktions-Ledger bleibt konsistent (Summe == initial − aktuell). Mehrbedarf über mehrere Chargen ist v1 bewusst nicht aufgeteilt.
         $stock->transactions()->create([
             'administration_id' => $a->id,
             'typ' => StockTransactionType::Entnahme,
-            'menge' => -1 * $dosis,
+            'menge' => -1 * $entnommen,
             'gebucht_am' => now(),
             'gebucht_von' => $userId,
         ]);
 
-        $neu = (float) $stock->menge_aktuell - $dosis;
+        $neu = $verfuegbar - $entnommen;
         $stock->update([
-            'menge_aktuell' => max(0, $neu),
+            'menge_aktuell' => $neu,
             'geoeffnet_am' => $stock->geoeffnet_am ?? now()->toDateString(),
             'status' => $neu <= 0 ? StockStatus::Leer : StockStatus::Angebrochen,
         ]);

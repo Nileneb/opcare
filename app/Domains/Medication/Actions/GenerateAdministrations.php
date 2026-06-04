@@ -15,6 +15,7 @@ class GenerateAdministrations
 {
     // WHY(idempotenz): ein nächtlicher Job kann den Stellplan rollierend für die nächsten N Tage
     // materialisieren, ohne Duplikate. Eindeutiger Lookup: (prescription_schedule_id, soll_zeitpunkt, tageszeit).
+    // WHY: Idempotenz über PHP-Exists-Check; setzt einen serialisierten täglichen Scheduler voraus (kein paralleler Doppellauf).
     public function handle(PrescriptionSchedule $schedule, string $von, string $bis): int
     {
         if ($schedule->frequenz === ScheduleFrequency::BeiBedarf) {
