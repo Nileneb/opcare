@@ -18,6 +18,7 @@ use App\Livewire\Quality\QualityReport;
 use App\Livewire\Residents;
 use App\Livewire\ResidentShow;
 use App\Livewire\Scheduling\Dienstplan;
+use App\Livewire\Scheduling\Kalender;
 use App\Livewire\Speech;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -50,6 +51,7 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::post('/speech/optimize', [SpeechController::class, 'optimize'])->name('speech.optimize');
     Route::get('/qdvs', QdvsExport::class)->name('qdvs.export');
     Route::get('/dienstplan', Dienstplan::class)->name('dienstplan');
+    Route::get('/kalender', Kalender::class)->name('kalender');
     Route::get('/qdvs/{export}/download', function (App\Domains\Qdvs\Models\QdvsExport $export) {
         // WHY(DSGVO Art. 9): pseudonymisierte Gesundheitsdaten — Download nur für Leitung (admin/pflegefachkraft/super-admin).
         abort_unless(
