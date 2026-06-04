@@ -4,8 +4,9 @@ use App\Domains\Identity\Models\Tenant;
 use App\Domains\Identity\Support\CurrentTenant;
 use App\Domains\Scheduling\Enums\CalendarEventType;
 use App\Domains\Scheduling\Enums\ShiftKind;
-use App\Domains\Scheduling\Models\Shift;
 use App\Domains\Scheduling\Models\CalendarEvent;
+use App\Domains\Scheduling\Models\Shift;
+use Illuminate\Support\Carbon;
 
 beforeEach(function () {
     $this->tenant = Tenant::create(['name' => 'A', 'slug' => 'a']);
@@ -29,7 +30,7 @@ it('castet CalendarEvent-Datumsfelder', function () {
         'beginnt_am' => '2026-06-20 10:00:00', 'created_by' => 1,
     ]);
 
-    expect($e->beginnt_am)->toBeInstanceOf(\Illuminate\Support\Carbon::class)
+    expect($e->beginnt_am)->toBeInstanceOf(Carbon::class)
         ->and($e->type)->toBe(CalendarEventType::Arzttermin)
         ->and($e->istAbgesagt())->toBeFalse();
 });
