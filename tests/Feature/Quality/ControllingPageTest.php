@@ -12,6 +12,7 @@ use Livewire\Livewire;
 beforeEach(function () {
     $this->seed(RolesSeeder::class);
     $t = Tenant::create(['name' => 'A', 'slug' => 'a']);
+    $this->tenant = $t;
     app(CurrentTenant::class)->set($t);
     $this->lead = User::factory()->create(['tenant_id' => $t->id]);
     $this->lead->assignRole('pflegefachkraft');
@@ -22,8 +23,21 @@ it('rendert das Controlling-Dashboard mit KPIs', function () {
     Livewire::actingAs($this->lead)->test(Controlling::class)->assertOk()->assertSee('Belegung');
 });
 
+it('verwehrt pflegehilfskraft/leserecht den Zugriff auf Controlling', function () {
+    $u = User::factory()->create(['tenant_id' => $this->tenant->id]);
+    $u->assignRole('pflegehilfskraft');
+    $this->actingAs($u)->get('/controlling')->assertForbidden();
+    $this->actingAs($u)->get('/qualitaet/report')->assertForbidden();
+});
+
 it('rendert den Qualitäts-Report für einen Stichtag', function () {
     Livewire::actingAs($this->lead)->test(QualityReport::class)
         ->set('stichtag', '2026-02-15')->set('von', '2026-01-01')->set('bis', '2026-03-31')
         ->call('berechnen')->assertOk()->assertSee('Sturz');
+});
+
+it('validiert die Datumsfelder im Report', function () {
+    Livewire::actingAs($this->lead)->test(QualityReport::class)
+        ->set('stichtag', '')->set('von', '')->set('bis', '')
+        ->call('berechnen')->assertHasErrors(['stichtag', 'von', 'bis']);
 });

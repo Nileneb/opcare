@@ -10,6 +10,15 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class Controlling extends Component
 {
+    public function mount(): void
+    {
+        // WHY: Controlling/QMS ist Leitungs-Sicht — nicht für pflegehilfskraft/leserecht. mount() blockt auch den Livewire-Update-Pfad (ohne erfolgreichen mount kein Snapshot).
+        abort_unless(
+            auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'pflegefachkraft']),
+            403,
+        );
+    }
+
     public function render(IndicatorService $svc)
     {
         $cohort = Cohort::atStichtag(today()->toDateString());

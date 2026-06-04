@@ -50,7 +50,7 @@ class IndicatorService
             bewohnerAktiv: $aktive->count(),
             pflegegradVerteilung: $verteilung,
             betten: (int) Room::sum('betten'),
-            belegt: $aktive->whereNotNull('room_id')->count(),
+            belegt: Resident::where('status', 'aktiv')->whereNotNull('room_id')->count(),
         );
     }
 }

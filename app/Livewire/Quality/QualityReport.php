@@ -22,6 +22,12 @@ class QualityReport extends Component
 
     public function mount(): void
     {
+        // WHY: Controlling/QMS ist Leitungs-Sicht — nicht für pflegehilfskraft/leserecht. mount() blockt auch den Livewire-Update-Pfad (ohne erfolgreichen mount kein Snapshot).
+        abort_unless(
+            auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'pflegefachkraft']),
+            403,
+        );
+
         $this->stichtag = today()->toDateString();
         $this->von = today()->startOfQuarter()->toDateString();
         $this->bis = today()->endOfQuarter()->toDateString();
@@ -29,6 +35,11 @@ class QualityReport extends Component
 
     public function berechnen(IndicatorService $svc): void
     {
+        $this->validate([
+            'stichtag' => ['required', 'date'],
+            'von' => ['required', 'date'],
+            'bis' => ['required', 'date', 'after_or_equal:von'],
+        ]);
         $cohort = Cohort::atStichtag($this->stichtag);
         $this->kohorte = $cohort->count();
         $this->ergebnisse = collect($svc->allIncidences($this->von, $this->bis, $cohort))
