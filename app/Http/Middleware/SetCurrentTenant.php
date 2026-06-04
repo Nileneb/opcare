@@ -17,9 +17,12 @@ class SetCurrentTenant
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
-
-        if ($user && $user->tenant) {
-            app(CurrentTenant::class)->set($user->tenant);
+        if ($user) {
+            $tenant = app(\App\Domains\Identity\Support\TenantResolver::class)
+                ->resolveFor($user, $request->session()->get('active_tenant_id'));
+            if ($tenant) {
+                app(CurrentTenant::class)->set($tenant);
+            }
         }
 
         return $next($request);
