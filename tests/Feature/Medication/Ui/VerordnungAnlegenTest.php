@@ -54,3 +54,20 @@ it('validiert: ohne Produkt UND ohne BHP-Text keine Verordnung', function () {
         ->call('speichern')
         ->assertHasErrors('medProductId');
 });
+
+it('lehnt ein Produkt eines FREMDEN Mandanten ab (IDOR via exists-Regel)', function () {
+    $tenantB = Tenant::create(['name' => 'B', 'slug' => 'b']);
+    app(CurrentTenant::class)->set($tenantB);
+    $fremdForm = TradeForm::create(['name' => 'Tablette B', 'einheit' => 'Stk', 'teilbar' => true]);
+    $fremdProduct = MedProduct::create(['name' => 'Fremd 5', 'trade_form_id' => $fremdForm->id]);
+    app(CurrentTenant::class)->set($this->tenant);
+
+    Livewire::test(VerordnungAnlegen::class, ['resident' => $this->resident])
+        ->set('medProductId', $fremdProduct->id)
+        ->set('frequenz', 'taeglich')
+        ->set('dosis.morgens', 1)
+        ->call('speichern')
+        ->assertHasErrors('medProductId');
+
+    expect(Prescription::where('resident_id', $this->resident->id)->count())->toBe(0);
+});

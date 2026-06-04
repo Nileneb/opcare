@@ -8,9 +8,9 @@ use App\Domains\Medication\Actions\AddSchedule;
 use App\Domains\Medication\Actions\CreatePrescription;
 use App\Domains\Medication\Data\PrescriptionData;
 use App\Domains\Medication\Data\ScheduleData;
-use App\Domains\Medication\Models\MedicationAdministration;
-use App\Domains\Medication\Models\Prescription;
+use App\Domains\Medication\Models\PrescriptionSchedule;
 use App\Livewire\Medication\Verordnungen;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Carbon;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
@@ -44,4 +44,31 @@ it('setzt eine Verordnung ab', function () {
         ->assertHasNoErrors();
 
     expect($this->rx->fresh()->abgesetzt_am)->not->toBeNull();
+});
+
+it('kann keine Verordnung eines FREMDEN Bewohners absetzen (IDOR)', function () {
+    $fremd = Resident::factory()->create(['tenant_id' => $this->tenant->id]);
+    $fremdRx = (new CreatePrescription)->handle(new PrescriptionData(
+        resident_id: $fremd->id, created_by: $this->user->id, bhp_text: 'Fremd',
+    ));
+
+    expect(fn () => Livewire::test(Verordnungen::class, ['resident' => $this->resident])
+        ->call('absetzen', $fremdRx->id))
+        ->toThrow(ModelNotFoundException::class);
+
+    expect($fremdRx->fresh()->abgesetzt_am)->toBeNull();
+});
+
+it('kann keinen Bedarf-Schedule eines FREMDEN Bewohners dosieren (IDOR)', function () {
+    $fremd = Resident::factory()->create(['tenant_id' => $this->tenant->id]);
+    $fremdRx = (new CreatePrescription)->handle(new PrescriptionData(
+        resident_id: $fremd->id, created_by: $this->user->id, bhp_text: 'Fremd', bei_bedarf: true,
+    ));
+    $fremdSchedule = (new AddSchedule)->handle($fremdRx, new ScheduleData(frequenz: 'bei_bedarf', dosis: []));
+
+    expect(fn () => Livewire::test(Verordnungen::class, ['resident' => $this->resident])
+        ->call('bedarfGeben', $fremdSchedule->id, 1.0))
+        ->toThrow(ModelNotFoundException::class);
+
+    expect(PrescriptionSchedule::find($fremdSchedule->id)->administrations()->count())->toBe(0);
 });
