@@ -8,6 +8,7 @@
     <link rel="icon" href="{{ asset('sis/assets/heart.svg') }}" />
     <link rel="stylesheet" href="{{ asset('sis/css/colors_and_type.css') }}" />
     <link rel="stylesheet" href="{{ asset('sis/css/admin.css') }}" />
+    <script src="{{ asset('sis/js/voice.js') }}"></script>
     @livewireStyles
 </head>
 <body>
@@ -15,7 +16,6 @@
         $nav = [
             ['route' => 'overview', 'label' => 'Übersicht'],
             ['route' => 'bewohner', 'label' => 'Bewohner'],
-            ['route' => 'spracherfassung', 'label' => 'Spracherfassung'],
             ['route' => 'einrichtung', 'label' => 'Stammdaten'],
             ['route' => 'pflegeplanung', 'label' => 'SIS-Board'],
         ];

@@ -94,3 +94,30 @@ table.data tr.clickable:hover td { background: var(--color-bg); }
 .flash { background: var(--green-050); border: 1px solid var(--green-100); color: var(--green-800); border-radius: var(--radius-md); padding: 10px 14px; margin-bottom: 16px; font-size: 0.92em; font-weight: var(--fw-semibold); }
 .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--color-fg-muted); text-decoration: none; font-size: 0.9em; font-weight: var(--fw-semibold); margin-bottom: 10px; }
 .back-link:hover { color: var(--color-fg); }
+
+/* ===== Voice-Field (🎙 Diktieren + ✨ Optimieren neben jedem Textfeld) ===== */
+[x-cloak] { display: none !important; }
+.voice-row { display: flex; gap: 8px; align-items: stretch; }
+.voice-textarea { flex: 1; }
+.voice-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+.voice-btn {
+  width: 40px; height: 40px; border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-strong); background: var(--color-surface);
+  cursor: pointer; font-size: 1.1em; line-height: 1; display: grid; place-items: center;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease), transform var(--dur-fast) var(--ease);
+}
+.voice-btn:hover { background: var(--color-bg); border-color: var(--color-accent); }
+.voice-btn:active { transform: translateY(1px); }
+.voice-btn:disabled { opacity: .5; cursor: not-allowed; }
+.voice-btn-ai { color: var(--green-700); }
+.voice-btn.is-rec {
+  background: var(--danger); border-color: var(--danger); color: #fff;
+  animation: voice-pulse 1.4s var(--ease) infinite;
+}
+@keyframes voice-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(210,73,47,.45); }
+  70% { box-shadow: 0 0 0 10px rgba(210,73,47,0); }
+  100% { box-shadow: 0 0 0 0 rgba(210,73,47,0); }
+}
+.voice-status { display: block; min-height: 1.1em; margin-top: 3px; }
+@media (prefers-reduced-motion: reduce) { .voice-btn.is-rec { animation: none; } }

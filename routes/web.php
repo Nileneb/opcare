@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\SpeechController;
 use App\Livewire\Admin\Tenants;
 use App\Livewire\Admin\Users;
 use App\Livewire\Auth\ForgotPassword;
@@ -42,6 +43,10 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::get('/bewohner/{resident}/medikation', Stellplan::class)->name('medikation.stellplan');
     Route::get('/controlling', Controlling::class)->name('controlling');
     Route::get('/qualitaet/report', QualityReport::class)->name('quality.report');
+
+    // Querschnitts-Sprachfunktionen für jedes Textfeld (inline, synchron).
+    Route::post('/speech/transcribe', [SpeechController::class, 'transcribe'])->name('speech.transcribe');
+    Route::post('/speech/optimize', [SpeechController::class, 'optimize'])->name('speech.optimize');
     Route::get('/qdvs', QdvsExport::class)->name('qdvs.export');
     Route::get('/qdvs/{export}/download', function (App\Domains\Qdvs\Models\QdvsExport $export) {
         // WHY(DSGVO Art. 9): pseudonymisierte Gesundheitsdaten — Download nur für Leitung (admin/pflegefachkraft/super-admin).

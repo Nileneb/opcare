@@ -111,9 +111,9 @@
 
         <div class="section-label" style="margin-top:18px">Neue SIS-Erhebung anlegen</div>
         <form wire:submit="createSis">
-            <div class="field"><label>Eingangsfrage / Sichtweise der/des Pflegebedürftigen</label><textarea wire:model="sis_eingangsfrage" rows="2"></textarea></div>
+            <x-voice-field model="sis_eingangsfrage" label="Eingangsfrage / Sichtweise der/des Pflegebedürftigen" :rows="2" />
             @foreach ($topicFields as $f)
-                <div class="field"><label>{{ $f->label() }}</label><textarea wire:model="sis_felder.{{ $f->value }}" rows="2"></textarea></div>
+                <x-voice-field wire:key="vf-{{ $f->value }}" model="sis_felder.{{ $f->value }}" :label="$f->label()" :context="$f->label()" :rows="2" />
             @endforeach
             <div class="field"><label>Eingeschätzte Risiken</label>
                 <div style="display:flex;flex-wrap:wrap;gap:10px">
@@ -137,7 +137,7 @@
                 <div class="field"><label>Lebensbereich</label>
                     <select wire:model="m_themenfeld">@foreach ($topicFields as $f)<option value="{{ $f->value }}">{{ $f->label() }}</option>@endforeach</select>
                 </div>
-                <div class="field"><label>Maßnahme</label><input type="text" wire:model="m_beschreibung" />@error('m_beschreibung')<span class="err">{{ $message }}</span>@enderror</div>
+                <x-voice-field model="m_beschreibung" label="Maßnahme" :context="'Maßnahme'" :rows="2" />
                 <div class="field"><label>Ziel</label><input type="text" wire:model="m_ziel" /></div>
                 <button class="btn btn-ghost btn-sm">+ Maßnahme</button>
             </form>
@@ -170,7 +170,7 @@
                 <div class="field"><label>Datum/Zeit</label><input type="datetime-local" wire:model="r_datum" />@error('r_datum')<span class="err">{{ $message }}</span>@enderror</div>
                 <div class="field"><label>Schicht</label><select wire:model="r_schicht"><option value="frueh">Früh</option><option value="spaet">Spät</option><option value="nacht">Nacht</option></select></div>
             </div>
-            <div class="field"><label>Eintrag</label><textarea wire:model="r_text" rows="2"></textarea>@error('r_text')<span class="err">{{ $message }}</span>@enderror</div>
+            <x-voice-field model="r_text" label="Eintrag" :context="'Pflegebericht'" :rows="2" />
             <button class="btn btn-primary btn-sm">Bericht speichern</button>
         </form>
     </div>

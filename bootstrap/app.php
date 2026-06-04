@@ -27,7 +27,9 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // WHY: fetch()-Calls (z. B. /speech/*) senden Accept: application/json — Fehler
+        // (Validation 422, Auth 401) müssen dann als JSON kommen, nicht als HTML-Redirect.
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*'),
+            fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
     })->create();
