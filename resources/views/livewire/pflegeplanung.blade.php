@@ -3,10 +3,10 @@
 
     {{-- ============================ TOP BAR ============================ --}}
     <header class="sis-top">
-        <div class="sis-brand">
+        <a class="sis-brand" href="{{ route('overview') }}" style="text-decoration:none" title="Zurück zur Übersicht">
             <img src="{{ asset('sis/assets/logo.png') }}" alt="Bergische Diakonie" />
-            <span class="sis-product">Pflegeplanung<small>SIS®</small></span>
-        </div>
+            <span class="sis-product">Pflegeplanung<small>SIS® · ← OPCare</small></span>
+        </a>
         <div class="sis-top-search">
             <x-sis-icon name="search" :size="18" />
             <input placeholder="Bewohner:in oder Zimmer suchen…" x-model="query" />
