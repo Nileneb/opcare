@@ -3,6 +3,7 @@
 use App\Http\Controllers\SpeechController;
 use App\Livewire\Admin\Tenants;
 use App\Livewire\Admin\Users;
+use App\Livewire\Assessment\AssessmentDurchfuehren;
 use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
@@ -60,6 +61,9 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::get('/qdvs', QdvsExport::class)->name('qdvs.export');
     Route::get('/dienstplan', Dienstplan::class)->name('dienstplan');
     Route::get('/kalender', Kalender::class)->name('kalender');
+    Route::get('/bewohner/{resident}/assessment/{instrument}', AssessmentDurchfuehren::class)->name('assessment.durchfuehren');
+    // WHY: assessment.verlauf kommt in Task 8 — temporärer Stub auf Bewohnerprofil.
+    Route::get('/bewohner/{resident}/assessments', ResidentShow::class)->name('assessment.verlauf');
     Route::get('/qdvs/{export}/download', function (App\Domains\Qdvs\Models\QdvsExport $export) {
         // WHY(DSGVO Art. 9): pseudonymisierte Gesundheitsdaten — Download nur für Leitung (admin/pflegefachkraft/super-admin).
         abort_unless(
