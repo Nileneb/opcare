@@ -12,6 +12,7 @@ use App\Livewire\Medication\Stammdaten;
 use App\Livewire\Medication\Stellplan;
 use App\Livewire\Medication\VerordnungAnlegen;
 use App\Livewire\Medication\Verordnungen;
+use App\Livewire\Medication\Vitalwerte;
 use App\Livewire\Overview;
 use App\Livewire\Pflegeplanung;
 use App\Livewire\Profile;
@@ -49,6 +50,7 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::get('/medikation/stamm', Stammdaten::class)->name('medikation.stammdaten');
     Route::get('/bewohner/{resident}/verordnung/neu', VerordnungAnlegen::class)->name('medikation.verordnung-anlegen');
     Route::get('/bewohner/{resident}/verordnungen', Verordnungen::class)->name('medikation.verordnungen');
+    Route::get('/bewohner/{resident}/vitalwerte', Vitalwerte::class)->name('medikation.vitalwerte');
     Route::get('/controlling', Controlling::class)->name('controlling');
     Route::get('/qualitaet/report', QualityReport::class)->name('quality.report');
 
