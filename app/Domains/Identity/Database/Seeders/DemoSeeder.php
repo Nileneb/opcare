@@ -19,6 +19,7 @@ use App\Domains\Medication\Actions\GenerateAdministrations;
 use App\Domains\Medication\Data\PrescriptionData;
 use App\Domains\Medication\Data\ScheduleData;
 use App\Domains\Medication\Data\StockData;
+use App\Domains\Medication\Database\Seeders\MedicationReferenceSeeder;
 use App\Domains\Medication\Enums\ScheduleFrequency;
 use App\Domains\Medication\Models\MedProduct;
 use App\Domains\Medication\Models\TradeForm;
@@ -38,6 +39,7 @@ class DemoSeeder extends Seeder
 
         $tenant = Tenant::create(['name' => 'Bergische Diakonie — Wohnbereich Aprath', 'slug' => 'aprath']);
         app(CurrentTenant::class)->set($tenant);
+        $this->call(MedicationReferenceSeeder::class);
 
         $admin = User::create([
             'name' => 'Bettina Mertens',
@@ -112,7 +114,7 @@ class DemoSeeder extends Seeder
 
         // WHY: Medikation sofort sichtbar/testbar nach migrate:fresh --seed.
         app(CurrentTenant::class)->set($tenant);
-        $tablette = TradeForm::create(['name' => 'Tablette', 'einheit' => 'Stk', 'teilbar' => true]);
+        $tablette = TradeForm::firstOrCreate(['name' => 'Tablette'], ['einheit' => 'Stück', 'teilbar' => true]);
         $ramipril = MedProduct::create([
             'trade_form_id' => $tablette->id,
             'name' => 'Ramipril 5 mg',
@@ -193,6 +195,7 @@ class DemoSeeder extends Seeder
         // Zweites Heim — Haus Birkenhof (2 Bewohner, kein SIS für Minimal-Demo)
         $birkenhof = Tenant::create(['name' => 'Haus Birkenhof', 'slug' => 'birkenhof']);
         app(CurrentTenant::class)->set($birkenhof);
+        $this->call(MedicationReferenceSeeder::class);
 
         $birkenhofAdmin = User::create([
             'name' => 'Karl Birken',
