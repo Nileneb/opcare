@@ -18,6 +18,7 @@ use App\Domains\Masterdata\Models\HealthInsurance;
 use App\Domains\Masterdata\Models\IcdCode;
 use App\Domains\Masterdata\Models\Physician;
 use App\Domains\Masterdata\Models\Resident;
+use App\Support\Concerns\ScopesTenantValidation;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -25,6 +26,8 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class ResidentShow extends Component
 {
+    use ScopesTenantValidation;
+
     #[Locked]
     public Resident $resident;
 
@@ -98,7 +101,7 @@ class ResidentShow extends Component
 
     public function addInsurance(): void
     {
-        $this->validate(['ins_id' => ['required', 'exists:health_insurances,id'], 'ins_nr' => ['nullable', 'string', 'max:60']]);
+        $this->validate(['ins_id' => ['required', $this->tenantExists('health_insurances')], 'ins_nr' => ['nullable', 'string', 'max:60']]);
         $this->resident->insurances()->create([
             'health_insurance_id' => $this->ins_id,
             'versichertennr' => $this->ins_nr ?: null,
@@ -123,7 +126,7 @@ class ResidentShow extends Component
 
     public function attachPhysician(): void
     {
-        $this->validate(['phys_id' => ['required', 'exists:physicians,id']]);
+        $this->validate(['phys_id' => ['required', $this->tenantExists('physicians')]]);
         $this->resident->physicians()->syncWithoutDetaching([$this->phys_id]);
         $this->reset('phys_id');
         session()->flash('status', 'Arzt/Ärztin zugeordnet.');
@@ -187,7 +190,7 @@ class ResidentShow extends Component
 
     public function addEvaluation(CreateEvaluation $createEvaluation): void
     {
-        $this->validate(['e_measure' => ['required', 'exists:care_measures,id'], 'e_zielerreichung' => ['required', 'in:erreicht,teilweise,nicht']]);
+        $this->validate(['e_measure' => ['required', $this->tenantExists('care_measures')], 'e_zielerreichung' => ['required', 'in:erreicht,teilweise,nicht']]);
         $createEvaluation->handle(new EvaluationData(
             evaluable_type: CareMeasure::class,
             evaluable_id: $this->e_measure,

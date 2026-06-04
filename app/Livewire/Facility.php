@@ -11,12 +11,15 @@ use App\Domains\Masterdata\Models\IcdCode;
 use App\Domains\Masterdata\Models\Physician;
 use App\Domains\Masterdata\Models\Room;
 use App\Domains\Masterdata\Models\Station;
+use App\Support\Concerns\ScopesTenantValidation;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
 class Facility extends Component
 {
+    use ScopesTenantValidation;
+
     public string $b_name = '';
 
     public ?int $f_building = null;
@@ -57,7 +60,7 @@ class Facility extends Component
 
     public function addFloor(): void
     {
-        $this->validate(['f_building' => ['required', 'exists:buildings,id'], 'f_name' => ['required', 'string']]);
+        $this->validate(['f_building' => ['required', $this->tenantExists('buildings')], 'f_name' => ['required', 'string']]);
         Floor::create(['building_id' => $this->f_building, 'name' => $this->f_name]);
         $this->reset('f_name');
         session()->flash('status', 'Etage angelegt.');
@@ -65,7 +68,7 @@ class Facility extends Component
 
     public function addStation(): void
     {
-        $this->validate(['s_floor' => ['required', 'exists:floors,id'], 's_name' => ['required', 'string']]);
+        $this->validate(['s_floor' => ['required', $this->tenantExists('floors')], 's_name' => ['required', 'string']]);
         Station::create(['floor_id' => $this->s_floor, 'name' => $this->s_name]);
         $this->reset('s_name');
         session()->flash('status', 'Station angelegt.');
@@ -73,7 +76,7 @@ class Facility extends Component
 
     public function addRoom(): void
     {
-        $this->validate(['r_station' => ['required', 'exists:stations,id'], 'r_nummer' => ['required', 'string'], 'r_betten' => ['required', 'integer', 'min:1']]);
+        $this->validate(['r_station' => ['required', $this->tenantExists('stations')], 'r_nummer' => ['required', 'string'], 'r_betten' => ['required', 'integer', 'min:1']]);
         Room::create(['station_id' => $this->r_station, 'nummer' => $this->r_nummer, 'betten' => $this->r_betten]);
         $this->reset('r_nummer');
         $this->r_betten = 1;
