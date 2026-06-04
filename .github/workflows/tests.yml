@@ -1,0 +1,43 @@
+name: tests
+
+permissions:
+  contents: read
+
+on:
+  workflow_call:
+  push:
+    branches:
+      - master
+      - 'feat/**'
+      - 'fix/**'
+      - 'chore/**'
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          # Tests laufen gegen SQLite in-memory (phpunit.xml) — kein DB-/Redis-Service nötig.
+          extensions: pdo_sqlite, sqlite3, mbstring, intl, bcmath, gd
+          tools: composer:v2
+          coverage: none
+
+      - name: Install Dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress --optimize-autoloader
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Run Tests (Pest)
+        run: php -d memory_limit=512M ./vendor/bin/pest --ci

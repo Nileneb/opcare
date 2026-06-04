@@ -1,0 +1,28 @@
+name: mayring-watch
+
+# Meldet jeden Push und jeden CI-Abschluss (tests/linter) an den MayringCoder.
+# Auf diese Weise landen fehlgeschlagene Tests + andere Probleme automatisch im
+# Memory/Notify-System (siehe app.linn.games, gleiches Muster).
+on:
+  push:
+    branches: ['**']
+  workflow_run:
+    workflows:
+      - 'tests'
+      - 'linter'
+    types: [completed]
+
+permissions:
+  contents: read
+  id-token: write   # primär: secretless GitHub-OIDC-Auth gegen /repo-events
+
+jobs:
+  watch:
+    permissions:
+      contents: read
+      id-token: write
+    uses: Nileneb/mayring-claude-plugin/.github/workflows/repo-watch.yml@main
+    secrets:
+      # Legacy-Fallback — OIDC ist primär. Bleibt, damit ein transienter
+      # OIDC-Mint-Fehler das Event trotzdem ausliefert.
+      MAYRING_TOKEN: ${{ secrets.MCP_SERVICE_TOKEN }}
