@@ -13,6 +13,7 @@
         </div>
         <div style="display:flex;gap:8px">
             <a href="{{ route('medikation.stellplan', $resident) }}" class="btn btn-primary" wire:navigate>💊 Medikation/Stellplan</a>
+            <a href="{{ route('medikation.verordnungen', $resident) }}" class="btn" wire:navigate>Verordnungen</a>
             <a href="{{ route('pflegeplanung') }}" class="btn btn-ghost">Im SIS-Board ansehen</a>
         </div>
     </div>
