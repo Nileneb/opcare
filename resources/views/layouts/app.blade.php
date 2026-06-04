@@ -31,6 +31,11 @@
                 <a href="{{ route($item['route']) }}" @class(['is-active' => request()->routeIs($item['route'])])>{{ $item['label'] }}</a>
             @endforeach
         </nav>
+        @if (auth()->user()?->hasAnyRole(['admin', 'super-admin']))
+            <nav class="app-nav app-nav-admin">
+                <a href="{{ route('admin.tenants') }}" @class(['is-active' => request()->routeIs('admin.tenants')])>Einrichtungen</a>
+            </nav>
+        @endif
         <div class="app-user">
             <a href="{{ route('profile') }}" class="who" wire:navigate style="text-decoration:none;color:inherit">
                 <b>{{ $u?->name ?? 'Gast' }}</b>
