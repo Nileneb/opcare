@@ -2,6 +2,7 @@
 
 namespace App\Domains\Identity\Database\Seeders;
 
+use App\Domains\Assessment\Database\Seeders\InstrumentSeeder;
 use App\Domains\CarePlanning\Models\CareMeasure;
 use App\Domains\CarePlanning\Models\SisAssessment;
 use App\Domains\Identity\Models\Tenant;
@@ -42,6 +43,7 @@ class DemoSeeder extends Seeder
         app(CurrentTenant::class)->set($tenant);
         $this->call(MedicationReferenceSeeder::class);
         $this->call(ShiftSeeder::class);
+        $this->call(InstrumentSeeder::class);
 
         $admin = User::create([
             'name' => 'Bettina Mertens',
@@ -199,6 +201,7 @@ class DemoSeeder extends Seeder
         app(CurrentTenant::class)->set($birkenhof);
         $this->call(MedicationReferenceSeeder::class);
         $this->call(ShiftSeeder::class);
+        $this->call(InstrumentSeeder::class);
 
         $birkenhofAdmin = User::create([
             'name' => 'Karl Birken',

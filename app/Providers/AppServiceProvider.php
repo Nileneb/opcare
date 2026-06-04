@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Domains\Assessment\Models\Assessment;
+use App\Domains\Assessment\Models\Instrument;
+use App\Domains\Assessment\Policies\AssessmentPolicy;
+use App\Domains\Assessment\Policies\InstrumentPolicy;
 use App\Domains\CarePlanning\Models\CareReport;
 use App\Domains\CarePlanning\Models\SisAssessment;
 use App\Domains\CarePlanning\Policies\CareReportPolicy;
@@ -48,6 +52,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(CareEvent::class, CareEventPolicy::class);
         Gate::policy(Shift::class, ShiftPolicy::class);
         Gate::policy(CalendarEvent::class, CalendarEventPolicy::class);
+        Gate::policy(Assessment::class, AssessmentPolicy::class);
+        Gate::policy(Instrument::class, InstrumentPolicy::class);
         Gate::before(fn ($user) => $user?->isSuperAdmin() ? true : null);
     }
 }
