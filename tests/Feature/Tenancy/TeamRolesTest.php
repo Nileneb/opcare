@@ -1,11 +1,12 @@
 <?php
 
+use App\Domains\Identity\Database\Seeders\RolesSeeder;
 use App\Domains\Identity\Models\Tenant;
 use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Support\CurrentTenant;
 use Spatie\Permission\PermissionRegistrar;
 
-beforeEach(fn () => $this->seed(\App\Domains\Identity\Database\Seeders\RolesSeeder::class));
+beforeEach(fn () => $this->seed(RolesSeeder::class));
 
 it('isoliert Rollen je Mandant (teams)', function () {
     $a = Tenant::create(['name' => 'Haus A', 'slug' => 'a']);

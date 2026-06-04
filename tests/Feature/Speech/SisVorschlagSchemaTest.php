@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\Speech\Data\SisVorschlagData;
+use Illuminate\Validation\ValidationException;
 
 it('validiert einen wohlgeformten LLM-Vorschlag', function () {
     $vorschlag = SisVorschlagData::from([
@@ -15,4 +16,4 @@ it('validiert einen wohlgeformten LLM-Vorschlag', function () {
 
 it('weist einen Vorschlag mit unbekanntem Themenfeld ab', function () {
     SisVorschlagData::validateAndCreate(['felder' => [['themenfeld' => 'quatsch', 'freitext' => 'x']]]);
-})->throws(\Illuminate\Validation\ValidationException::class);
+})->throws(ValidationException::class);

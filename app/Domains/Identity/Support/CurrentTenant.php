@@ -3,6 +3,7 @@
 namespace App\Domains\Identity\Support;
 
 use App\Domains\Identity\Models\Tenant;
+use Spatie\Permission\PermissionRegistrar;
 
 class CurrentTenant
 {
@@ -11,7 +12,7 @@ class CurrentTenant
     public function set(Tenant $tenant): void
     {
         $this->tenant = $tenant;
-        app(\Spatie\Permission\PermissionRegistrar::class)->setPermissionsTeamId($tenant->id);
+        app(PermissionRegistrar::class)->setPermissionsTeamId($tenant->id);
     }
 
     public function get(): ?Tenant

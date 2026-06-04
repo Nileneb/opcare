@@ -1,7 +1,9 @@
 <?php
 
-use App\Domains\Identity\Database\Seeders\{RolesSeeder, SuperAdminRoleSeeder};
-use App\Domains\Identity\Models\{Tenant, User};
+use App\Domains\Identity\Database\Seeders\RolesSeeder;
+use App\Domains\Identity\Database\Seeders\SuperAdminRoleSeeder;
+use App\Domains\Identity\Models\Tenant;
+use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Support\CurrentTenant;
 use App\Livewire\Admin\TenantSwitcher;
 use Livewire\Livewire;

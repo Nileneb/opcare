@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Domains\Identity\Actions;
 
 use App\Domains\Identity\Data\AdminUserData;
@@ -13,6 +14,7 @@ class UpdateUser
             $attrs['password'] = $data->password;
         }
         $user->update($attrs);
+
         return $user;
     }
 }

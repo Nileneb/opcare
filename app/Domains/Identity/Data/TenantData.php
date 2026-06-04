@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Domains\Identity\Data;
 
 use Spatie\LaravelData\Data;

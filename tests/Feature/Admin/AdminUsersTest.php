@@ -1,10 +1,12 @@
 <?php
 
 use App\Domains\Identity\Database\Seeders\RolesSeeder;
-use App\Domains\Identity\Models\{Tenant, User};
+use App\Domains\Identity\Models\Tenant;
+use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Support\CurrentTenant;
 use App\Livewire\Admin\Users;
 use Livewire\Livewire;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 beforeEach(function () {
     $this->seed(RolesSeeder::class);
@@ -15,13 +17,13 @@ beforeEach(function () {
 });
 
 it('verhindert, dass ein admin super-admin vergibt', function () {
-    $opfer = \App\Domains\Identity\Models\User::factory()->create(['tenant_id' => $this->t->id]);
+    $opfer = User::factory()->create(['tenant_id' => $this->t->id]);
     $opfer->assignRole('pflegehilfskraft');
 
     try {
         Livewire::actingAs($this->admin)->test(Users::class)
             ->call('setRole', $opfer->id, 'super-admin');
-    } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+    } catch (HttpException $e) {
         expect($e->getStatusCode())->toBe(403);
     }
 

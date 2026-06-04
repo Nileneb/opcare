@@ -2,6 +2,9 @@
 
 namespace App\Domains\Masterdata\Models;
 
+use App\Domains\CarePlanning\Models\CareMeasure;
+use App\Domains\CarePlanning\Models\SisAssessment;
+use App\Domains\Masterdata\Database\Factories\ResidentFactory;
 use App\Support\Models\BaseModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -48,12 +51,12 @@ class Resident extends BaseModel implements HasMedia
 
     public function sisAssessments(): HasMany
     {
-        return $this->hasMany(\App\Domains\CarePlanning\Models\SisAssessment::class);
+        return $this->hasMany(SisAssessment::class);
     }
 
     public function careMeasures(): HasMany
     {
-        return $this->hasMany(\App\Domains\CarePlanning\Models\CareMeasure::class);
+        return $this->hasMany(CareMeasure::class);
     }
 
     public function physicians(): BelongsToMany
@@ -66,8 +69,8 @@ class Resident extends BaseModel implements HasMedia
         $this->addMediaCollection('documents')->useDisk('media');
     }
 
-    protected static function newFactory(): \App\Domains\Masterdata\Database\Factories\ResidentFactory
+    protected static function newFactory(): ResidentFactory
     {
-        return \App\Domains\Masterdata\Database\Factories\ResidentFactory::new();
+        return ResidentFactory::new();
     }
 }

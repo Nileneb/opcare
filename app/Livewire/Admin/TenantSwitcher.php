@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin;
 
 use App\Domains\Identity\Models\Tenant;
+use App\Domains\Identity\Support\CurrentTenant;
 use Livewire\Component;
 
 class TenantSwitcher extends Component
@@ -19,7 +20,7 @@ class TenantSwitcher extends Component
     {
         return view('livewire.admin.tenant-switcher', [
             'tenants' => auth()->user()->isSuperAdmin() ? Tenant::aktiv()->orderBy('name')->get() : collect(),
-            'current' => app(\App\Domains\Identity\Support\CurrentTenant::class)->id(),
+            'current' => app(CurrentTenant::class)->id(),
         ]);
     }
 }

@@ -1,11 +1,12 @@
 <?php
 
-use App\Domains\Identity\Actions\{CreateUser, AssignRole};
+use App\Domains\Identity\Actions\CreateUser;
 use App\Domains\Identity\Data\AdminUserData;
+use App\Domains\Identity\Database\Seeders\RolesSeeder;
 use App\Domains\Identity\Models\Tenant;
 use App\Domains\Identity\Support\CurrentTenant;
 
-beforeEach(fn () => $this->seed(\App\Domains\Identity\Database\Seeders\RolesSeeder::class));
+beforeEach(fn () => $this->seed(RolesSeeder::class));
 
 it('legt einen Mitarbeitenden im aktiven Mandanten an und vergibt eine Rolle', function () {
     $t = Tenant::create(['name' => 'A', 'slug' => 'a']);

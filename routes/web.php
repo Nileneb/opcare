@@ -1,5 +1,7 @@
 <?php
 
+use App\Livewire\Admin\Tenants;
+use App\Livewire\Admin\Users;
 use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
@@ -30,8 +32,8 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::get('/einrichtung', Facility::class)->name('einrichtung');
     Route::get('/pflegeplanung', Pflegeplanung::class)->name('pflegeplanung');
     Route::get('/profil', Profile::class)->name('profile');
-    Route::get('/admin/einrichtungen', \App\Livewire\Admin\Tenants::class)->name('admin.tenants');
-    Route::get('/admin/benutzer', \App\Livewire\Admin\Users::class)->name('admin.users');
+    Route::get('/admin/einrichtungen', Tenants::class)->name('admin.tenants');
+    Route::get('/admin/benutzer', Users::class)->name('admin.users');
 
     Route::post('/logout', function (Request $request) {
         Auth::logout();

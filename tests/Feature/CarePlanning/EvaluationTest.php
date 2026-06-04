@@ -4,7 +4,6 @@ use App\Domains\CarePlanning\Actions\CreateEvaluation;
 use App\Domains\CarePlanning\Data\EvaluationData;
 use App\Domains\CarePlanning\Enums\ZielErreichung;
 use App\Domains\CarePlanning\Models\CareMeasure;
-use App\Domains\CarePlanning\Models\Evaluation;
 use App\Domains\Identity\Models\Tenant;
 use App\Domains\Identity\Support\CurrentTenant;
 use App\Domains\Masterdata\Models\Resident;

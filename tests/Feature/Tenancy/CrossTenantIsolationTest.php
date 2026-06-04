@@ -1,6 +1,6 @@
 <?php
 
-use App\Domains\Identity\Models\{Tenant, User};
+use App\Domains\Identity\Models\Tenant;
 use App\Domains\Identity\Support\CurrentTenant;
 use App\Domains\Masterdata\Models\Resident;
 

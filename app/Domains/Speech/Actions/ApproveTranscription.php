@@ -15,7 +15,7 @@ class ApproveTranscription
 
     /**
      * @param  array{felder: array<int, array{themenfeld:string, freitext:string}>}  $korrigiert
-     *                                                                                Die vom Menschen geprüften/korrigierten Felder.
+     *                                                                                            Die vom Menschen geprüften/korrigierten Felder.
      */
     public function handle(TranscriptionJob $job, int $reviewerId, array $korrigiert): SisAssessment
     {

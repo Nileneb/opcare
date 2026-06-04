@@ -1,9 +1,12 @@
 <?php
+
 namespace App\Livewire\Admin;
 
-use App\Domains\Identity\Actions\{AssignRole, CreateUser};
+use App\Domains\Identity\Actions\AssignRole;
+use App\Domains\Identity\Actions\CreateUser;
 use App\Domains\Identity\Data\AdminUserData;
 use App\Domains\Identity\Models\User;
+use App\Domains\Identity\Support\CurrentTenant;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Spatie\Permission\Models\Role;
@@ -12,20 +15,26 @@ use Spatie\Permission\Models\Role;
 class Users extends Component
 {
     public string $name = '';
+
     public string $email = '';
+
     public string $password = '';
+
     public string $role = 'pflegehilfskraft';
 
-    public function mount(): void { $this->authorize('viewAny', User::class); }
+    public function mount(): void
+    {
+        $this->authorize('viewAny', User::class);
+    }
 
     public function save(CreateUser $create): void
     {
         $this->authorize('create', User::class);
         $data = $this->validate([
-            'name'     => ['required', 'string', 'max:255'],
-            'email'    => ['required', 'email', 'unique:users,email'],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8'],
-            'role'     => ['required', 'exists:roles,name'],
+            'role' => ['required', 'exists:roles,name'],
         ]);
         $create->handle(new AdminUserData(...$data));
         $this->reset('name', 'email', 'password');
@@ -37,7 +46,7 @@ class Users extends Component
         $target = User::findOrFail($userId);
         $this->authorize('update', $target);
 
-        $erlaubte = \Spatie\Permission\Models\Role::pluck('name')->all();
+        $erlaubte = Role::pluck('name')->all();
         abort_unless(in_array($role, $erlaubte, true), 422);
         // WHY(privilege-escalation): admin darf keine super-admin-Rolle vergeben
         abort_if($role === 'super-admin' && ! auth()->user()->isSuperAdmin(), 403);
@@ -49,7 +58,7 @@ class Users extends Component
     public function render()
     {
         return view('livewire.admin.users', [
-            'users' => User::where('tenant_id', app(\App\Domains\Identity\Support\CurrentTenant::class)->id())->with('roles')->orderBy('name')->get(),
+            'users' => User::where('tenant_id', app(CurrentTenant::class)->id())->with('roles')->orderBy('name')->get(),
             'roles' => Role::orderBy('name')->pluck('name'),
         ]);
     }

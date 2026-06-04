@@ -28,16 +28,21 @@ class ResidentShow extends Component
 
     // Diagnose
     public ?int $diag_icd = null;
+
     public string $diag_art = 'sekundär';
 
     // Versicherung
     public ?int $ins_id = null;
+
     public string $ins_nr = '';
+
     public bool $ins_primary = true;
 
     // Betreuer
     public string $cust_name = '';
+
     public string $cust_umfang = '';
+
     public string $cust_kontakt = '';
 
     // Arzt
@@ -45,22 +50,30 @@ class ResidentShow extends Component
 
     // SIS
     public string $sis_eingangsfrage = '';
+
     public array $sis_felder = [];
+
     public array $sis_risiken = [];
 
     // Maßnahme
     public string $m_themenfeld = 'mobilitaet';
+
     public string $m_beschreibung = '';
+
     public string $m_ziel = '';
 
     // Bericht
     public string $r_datum = '';
+
     public string $r_schicht = 'frueh';
+
     public string $r_text = '';
 
     // Evaluation
     public ?int $e_measure = null;
+
     public string $e_zielerreichung = 'teilweise';
+
     public string $e_anlass = '';
 
     public function mount(Resident $resident): void

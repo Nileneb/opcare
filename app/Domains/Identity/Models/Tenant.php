@@ -12,7 +12,7 @@ class Tenant extends Model
 
     protected $casts = [
         'settings' => 'array',
-        'aktiv'    => 'boolean',
+        'aktiv' => 'boolean',
     ];
 
     public function users(): HasMany

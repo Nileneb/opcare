@@ -18,19 +18,33 @@ use Livewire\Component;
 class Facility extends Component
 {
     public string $b_name = '';
+
     public ?int $f_building = null;
+
     public string $f_name = '';
+
     public ?int $s_floor = null;
+
     public string $s_name = '';
+
     public ?int $r_station = null;
+
     public string $r_nummer = '';
+
     public int $r_betten = 1;
+
     public string $icd_code = '';
+
     public string $icd_bez = '';
+
     public string $ins_name = '';
+
     public string $ins_ik = '';
+
     public string $phys_name = '';
+
     public string $phys_fach = '';
+
     public string $phys_kontakt = '';
 
     public function addBuilding(CreateBuilding $create): void

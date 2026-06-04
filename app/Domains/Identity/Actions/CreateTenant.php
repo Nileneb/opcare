@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Domains\Identity\Actions;
 
 use App\Domains\Identity\Data\TenantData;

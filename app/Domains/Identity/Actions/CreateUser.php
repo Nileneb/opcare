@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Domains\Identity\Actions;
 
 use App\Domains\Identity\Data\AdminUserData;
@@ -18,6 +19,7 @@ class CreateUser
                 'tenant_id' => app(CurrentTenant::class)->id(),
             ]);
             $user->assignRole($data->role);
+
             return $user;
         });
     }

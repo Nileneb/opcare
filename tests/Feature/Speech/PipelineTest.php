@@ -16,7 +16,7 @@ beforeEach(function () {
     Storage::fake('local');
     config(['queue.default' => 'sync']);
     app()->instance(AudioTranscriber::class, new FakeAudioTranscriber('Frau M. geht am Rollator.'));
-    app()->instance(SisStructurer::class, new FakeSisStructurer());
+    app()->instance(SisStructurer::class, new FakeSisStructurer);
     $t = Tenant::create(['name' => 'A', 'slug' => 'a']);
     app(CurrentTenant::class)->set($t);
 });

@@ -2,7 +2,6 @@
 
 namespace App\Livewire;
 
-use App\Domains\CarePlanning\Models\SisAssessment;
 use App\Domains\CarePlanning\Support\SisAreaCatalog;
 use App\Domains\Identity\Models\Tenant;
 use App\Domains\Identity\Support\CurrentTenant;

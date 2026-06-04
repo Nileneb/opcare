@@ -11,6 +11,7 @@ use App\Domains\Speech\Models\TranscriptionJob;
 use App\Livewire\Residents;
 use App\Livewire\ResidentShow;
 use App\Livewire\Speech;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -59,7 +60,7 @@ it('legt eine SIS-Erhebung über die Detailseite an', function () {
 });
 
 it('durchläuft den Sprach-Workflow bis zur Freigabe (Fakes)', function () {
-    \Illuminate\Support\Facades\Storage::fake('local');
+    Storage::fake('local');
     $resident = Resident::factory()->create();
 
     $component = Livewire::test(Speech::class)

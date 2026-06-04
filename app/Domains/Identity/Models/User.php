@@ -2,10 +2,12 @@
 
 namespace App\Domains\Identity\Models;
 
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
@@ -32,7 +34,7 @@ class User extends Authenticatable
     // WHY: super-admin ist tenant-übergreifend — Check ignoriert bewusst den spatie-Team-Scope.
     public function isSuperAdmin(): bool
     {
-        return \Illuminate\Support\Facades\DB::table('model_has_roles')
+        return DB::table('model_has_roles')
             ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
             ->where('model_has_roles.model_id', $this->getKey())
             ->where('model_has_roles.model_type', $this->getMorphClass())
@@ -40,8 +42,8 @@ class User extends Authenticatable
             ->exists();
     }
 
-    protected static function newFactory(): \Database\Factories\UserFactory
+    protected static function newFactory(): UserFactory
     {
-        return \Database\Factories\UserFactory::new();
+        return UserFactory::new();
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Domains\CarePlanning\Models;
 
+use App\Domains\CarePlanning\Database\Factories\SisAssessmentFactory;
 use App\Domains\Masterdata\Models\Resident;
 use App\Support\Concerns\Versionable;
 use App\Support\Models\BaseModel;
@@ -43,8 +44,8 @@ class SisAssessment extends BaseModel
         return $this->morphMany(Evaluation::class, 'evaluable');
     }
 
-    protected static function newFactory(): \App\Domains\CarePlanning\Database\Factories\SisAssessmentFactory
+    protected static function newFactory(): SisAssessmentFactory
     {
-        return \App\Domains\CarePlanning\Database\Factories\SisAssessmentFactory::new();
+        return SisAssessmentFactory::new();
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Livewire\Admin;
 
 use App\Domains\Identity\Actions\CreateTenant;
@@ -11,11 +12,17 @@ use Livewire\Component;
 class Tenants extends Component
 {
     public string $name = '';
+
     public string $slug = '';
+
     public string $traeger = '';
+
     public string $ik_nummer = '';
 
-    public function mount(): void { $this->authorize('viewAny', Tenant::class); }
+    public function mount(): void
+    {
+        $this->authorize('viewAny', Tenant::class);
+    }
 
     public function save(CreateTenant $create): void
     {
