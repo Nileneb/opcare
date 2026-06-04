@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Domains\Identity\Support\CurrentTenant;
+use App\Domains\Identity\Support\TenantResolver;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,7 +19,7 @@ class SetCurrentTenant
     {
         $user = $request->user();
         if ($user) {
-            $tenant = app(\App\Domains\Identity\Support\TenantResolver::class)
+            $tenant = app(TenantResolver::class)
                 ->resolveFor($user, $request->session()->get('active_tenant_id'));
             if ($tenant) {
                 app(CurrentTenant::class)->set($tenant);

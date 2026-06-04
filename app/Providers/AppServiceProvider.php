@@ -27,6 +27,6 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Resident::class, ResidentPolicy::class);
         Gate::policy(SisAssessment::class, SisAssessmentPolicy::class);
         Gate::policy(CareReport::class, CareReportPolicy::class);
-        \Illuminate\Support\Facades\Gate::before(fn ($user) => $user->hasRole('super-admin') ? true : null);
+        Gate::before(fn ($user) => $user?->isSuperAdmin() ? true : null);
     }
 }

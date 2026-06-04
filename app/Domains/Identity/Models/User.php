@@ -29,6 +29,17 @@ class User extends Authenticatable
         return $this->belongsTo(Tenant::class);
     }
 
+    // WHY: super-admin ist tenant-übergreifend — Check ignoriert bewusst den spatie-Team-Scope.
+    public function isSuperAdmin(): bool
+    {
+        return \Illuminate\Support\Facades\DB::table('model_has_roles')
+            ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+            ->where('model_has_roles.model_id', $this->getKey())
+            ->where('model_has_roles.model_type', $this->getMorphClass())
+            ->where('roles.name', 'super-admin')
+            ->exists();
+    }
+
     protected static function newFactory(): \Database\Factories\UserFactory
     {
         return \Database\Factories\UserFactory::new();

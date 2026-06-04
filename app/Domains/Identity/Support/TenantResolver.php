@@ -11,8 +11,8 @@ class TenantResolver
 {
     public function resolveFor(User $user, ?int $sessionTenantId): ?Tenant
     {
-        if ($sessionTenantId && $user->hasRole('super-admin')) {
-            return Tenant::find($sessionTenantId) ?? $user->tenant;
+        if ($sessionTenantId && $user->isSuperAdmin()) {
+            return Tenant::aktiv()->find($sessionTenantId) ?? $user->tenant;
         }
 
         return $user->tenant;
