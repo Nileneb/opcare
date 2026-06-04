@@ -11,6 +11,7 @@ use App\Livewire\Medication\Stellplan;
 use App\Livewire\Overview;
 use App\Livewire\Pflegeplanung;
 use App\Livewire\Profile;
+use App\Livewire\Qdvs\Export as QdvsExport;
 use App\Livewire\Quality\Controlling;
 use App\Livewire\Quality\QualityReport;
 use App\Livewire\Residents;
@@ -19,6 +20,7 @@ use App\Livewire\Speech;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', Login::class)->name('login');
@@ -40,6 +42,13 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::get('/bewohner/{resident}/medikation', Stellplan::class)->name('medikation.stellplan');
     Route::get('/controlling', Controlling::class)->name('controlling');
     Route::get('/qualitaet/report', QualityReport::class)->name('quality.report');
+    Route::get('/qdvs', QdvsExport::class)->name('qdvs.export');
+    Route::get('/qdvs/{export}/download', function (App\Domains\Qdvs\Models\QdvsExport $export) {
+        abort_unless($export->pfad && Storage::disk(config('qdvs.disk'))->exists($export->pfad), 404);
+
+        return Storage::disk(config('qdvs.disk'))
+            ->download($export->pfad, basename($export->pfad));
+    })->name('qdvs.download');
 
     Route::post('/logout', function (Request $request) {
         Auth::logout();
