@@ -49,7 +49,8 @@ class ValueRangePattern extends AbstractPattern
 
     private function bound(string $token, EvaluationContext $ctx): float
     {
-        if ($token === 'year-from-date(current-date())') {
+        // erscheint roh oder als xs:int(xs:string(year-from-date(current-date())))
+        if (str_contains($token, 'year-from-date(current-date())')) {
             return (float) $ctx->today->year;
         }
 
