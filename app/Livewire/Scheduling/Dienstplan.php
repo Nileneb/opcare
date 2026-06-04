@@ -8,6 +8,7 @@ use App\Domains\Scheduling\Actions\AssignShift;
 use App\Domains\Scheduling\Data\ShiftAssignmentData;
 use App\Domains\Scheduling\Models\Shift;
 use App\Domains\Scheduling\Models\ShiftAssignment;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -30,9 +31,12 @@ class Dienstplan extends Component
     public function zuweisen(AssignShift $assign): void
     {
         abort_unless(auth()->user()?->can('manage', Shift::class), 403);
+        // WHY(tenant-scope): exists: prüft die Roh-Tabelle und umgeht den globalen TenantScope —
+        // ohne tenant_id-Bindung könnte die Leitung fremde User/Schichten zuweisen (IDOR-Write).
+        $tenantId = app(CurrentTenant::class)->id();
         $data = $this->validate([
-            'userId' => ['required', 'exists:users,id'],
-            'shiftId' => ['required', 'exists:shifts,id'],
+            'userId' => ['required', Rule::exists('users', 'id')->where('tenant_id', $tenantId)],
+            'shiftId' => ['required', Rule::exists('shifts', 'id')->where('tenant_id', $tenantId)],
             'dienstAm' => ['required', 'date'],
         ]);
 

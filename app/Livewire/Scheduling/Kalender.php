@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Scheduling;
 
+use App\Domains\Identity\Support\CurrentTenant;
 use App\Domains\Scheduling\Actions\CreateCalendarEvent;
 use App\Domains\Scheduling\Data\CalendarEventData;
 use App\Domains\Scheduling\Data\RecurrenceData;
@@ -10,6 +11,7 @@ use App\Domains\Scheduling\Enums\RecurrenceFreq;
 use App\Domains\Scheduling\Models\CalendarEvent;
 use App\Domains\Scheduling\Support\RecurrenceExpander;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -46,7 +48,9 @@ class Kalender extends Component
             'titel' => ['required', 'string', 'max:255'],
             'beginntAm' => ['required', 'date'],
             'endetAm' => ['nullable', 'date', 'after_or_equal:beginntAm'],
-            'residentId' => ['nullable', 'exists:residents,id'],
+            // WHY(tenant-scope): exists: umgeht den globalen TenantScope — fremde Bewohner dürfen
+            // nicht an einen Termin gebunden werden.
+            'residentId' => ['nullable', Rule::exists('residents', 'id')->where('tenant_id', app(CurrentTenant::class)->id())],
             'wiederholung' => ['nullable', 'in:daily,weekly,monthly'],
         ]);
 
