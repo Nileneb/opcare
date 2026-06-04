@@ -15,6 +15,8 @@ use App\Domains\Masterdata\Models\Building;
 use App\Domains\Masterdata\Models\Resident;
 use App\Domains\Masterdata\Policies\BuildingPolicy;
 use App\Domains\Masterdata\Policies\ResidentPolicy;
+use App\Domains\Medication\Models\Prescription;
+use App\Domains\Medication\Policies\PrescriptionPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -33,6 +35,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Resident::class, ResidentPolicy::class);
         Gate::policy(SisAssessment::class, SisAssessmentPolicy::class);
         Gate::policy(CareReport::class, CareReportPolicy::class);
+        Gate::policy(Prescription::class, PrescriptionPolicy::class);
         Gate::before(fn ($user) => $user?->isSuperAdmin() ? true : null);
     }
 }
