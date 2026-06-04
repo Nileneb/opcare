@@ -1,6 +1,5 @@
 <?php
 
-use App\Domains\Assessment\Enums\RiskBand;
 use App\Domains\Assessment\Enums\ScaleDirection;
 use App\Domains\Assessment\Models\Instrument;
 use App\Domains\CarePlanning\Enums\RiskType;

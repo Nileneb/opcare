@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\Assessment\Actions\ConductAssessment;
+use App\Domains\Assessment\Actions\ReviseAssessment;
 use App\Domains\Assessment\Data\AssessmentInputData;
 use App\Domains\Assessment\Enums\RiskBand;
 use App\Domains\Assessment\Models\Assessment;
@@ -49,6 +50,48 @@ it('berechnet Score + Band, persistiert Antworten und setzt die Fälligkeit', fu
         ->and($assessment->faellig_am->toDateString())->toBe('2026-07-15'); // +30 Tage
 });
 
+it('ignoriert Option-IDs, die zu einem FREMDEN Instrument desselben Mandanten gehören (Scoring-Integrität)', function () {
+    $items = $this->instrument->items()->with('options')->get();
+    // legitime Antwort für Item 1 (1 Punkt)
+    $answers = [$items[0]->id => $items[0]->options->first()->id];
+
+    // zweites Instrument im selben Mandanten mit einer hochpunktigen Option
+    $fremd = Instrument::factory()->create();
+    $fremdItem = InstrumentItem::create(['instrument_id' => $fremd->id, 'label' => 'Fremd', 'reihenfolge' => 0]);
+    $fremdOption = AssessmentOption::create(['instrument_item_id' => $fremdItem->id, 'label' => 'manipuliert', 'punkte' => 99]);
+
+    // Angreifer schiebt unter dem ZWEITEN echten Item eine Option des Fremd-Instruments unter
+    $answers[$items[1]->id] = $fremdOption->id;
+
+    $assessment = (new ConductAssessment)->handle(new AssessmentInputData(
+        resident_id: $this->resident->id,
+        instrument_id: $this->instrument->id,
+        created_by: $this->user->id,
+        answers: $answers,
+    ));
+
+    // nur das legitime Item zählt (1 Punkt); die 99 der Fremd-Option werden verworfen
+    expect($assessment->score)->toBe(1)
+        ->and($assessment->answers()->count())->toBe(1)
+        ->and($assessment->answers()->where('assessment_option_id', $fremdOption->id)->exists())->toBeFalse();
+});
+
+it('verwirft eine Option, die unter einem falschen (aber eigenen) Item eingereicht wird', function () {
+    $items = $this->instrument->items()->with('options')->get();
+    // Option von Item 0 unter Item 1 eingereicht → muss verworfen werden
+    $answers = [$items[1]->id => $items[0]->options->first()->id];
+
+    $assessment = (new ConductAssessment)->handle(new AssessmentInputData(
+        resident_id: $this->resident->id,
+        instrument_id: $this->instrument->id,
+        created_by: $this->user->id,
+        answers: $answers,
+    ));
+
+    expect($assessment->score)->toBe(0)
+        ->and($assessment->answers()->count())->toBe(0);
+});
+
 it('revidiert ein Assessment append-only (neue Version, alte abgelöst)', function () {
     $items = $this->instrument->items()->with('options')->get();
     $low = $items->mapWithKeys(fn ($item) => [$item->id => $item->options->first()->id])->all();
@@ -56,7 +99,7 @@ it('revidiert ein Assessment append-only (neue Version, alte abgelöst)', functi
 
     $action = new ConductAssessment;
     $v1 = $action->handle(new AssessmentInputData($this->resident->id, $this->instrument->id, $this->user->id, $low));
-    $v2 = (new \App\Domains\Assessment\Actions\ReviseAssessment)->handle($v1, new AssessmentInputData(
+    $v2 = (new ReviseAssessment)->handle($v1, new AssessmentInputData(
         $this->resident->id, $this->instrument->id, $this->user->id, $high,
     ));
 

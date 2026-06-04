@@ -3,7 +3,6 @@
 use App\Domains\Assessment\Database\Seeders\InstrumentSeeder;
 use App\Domains\Assessment\Models\AssessmentOption;
 use App\Domains\Assessment\Models\Instrument;
-use App\Domains\Assessment\Models\InstrumentItem;
 use App\Domains\CarePlanning\Enums\RiskType;
 use App\Domains\Identity\Models\Tenant;
 use App\Domains\Identity\Support\CurrentTenant;

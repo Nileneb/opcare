@@ -3,11 +3,11 @@
 use App\Domains\Assessment\Enums\RiskBand;
 use App\Domains\Assessment\Models\Assessment;
 use App\Domains\Assessment\Models\Instrument;
-use App\Livewire\Assessment\AssessmentVerlauf;
 use App\Domains\Identity\Models\Tenant;
 use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Support\CurrentTenant;
 use App\Domains\Masterdata\Models\Resident;
+use App\Livewire\Assessment\AssessmentVerlauf;
 use Livewire\Livewire;
 
 beforeEach(function () {
