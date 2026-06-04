@@ -7,6 +7,7 @@ use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Facility;
+use App\Livewire\Medication\Stellplan;
 use App\Livewire\Overview;
 use App\Livewire\Pflegeplanung;
 use App\Livewire\Profile;
@@ -34,6 +35,7 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::get('/profil', Profile::class)->name('profile');
     Route::get('/admin/einrichtungen', Tenants::class)->name('admin.tenants');
     Route::get('/admin/benutzer', Users::class)->name('admin.users');
+    Route::get('/bewohner/{resident}/medikation', Stellplan::class)->name('medikation.stellplan');
 
     Route::post('/logout', function (Request $request) {
         Auth::logout();

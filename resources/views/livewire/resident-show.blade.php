@@ -11,7 +11,10 @@
                 · aufgenommen {{ $resident->aufnahme_am?->format('d.m.Y') }}
             </p>
         </div>
-        <a href="{{ route('pflegeplanung') }}" class="btn btn-ghost">Im SIS-Board ansehen</a>
+        <div style="display:flex;gap:8px">
+            <a href="{{ route('medikation.stellplan', $resident) }}" class="btn btn-primary" wire:navigate>💊 Medikation/Stellplan</a>
+            <a href="{{ route('pflegeplanung') }}" class="btn btn-ghost">Im SIS-Board ansehen</a>
+        </div>
     </div>
 
     @if (session('status'))<div class="flash">{{ session('status') }}</div>@endif
