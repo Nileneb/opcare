@@ -1,0 +1,118 @@
+# OPCare — kompletter Stack. EIN .env, dann:  docker compose up --build
+#
+# Es gibt KEINE .env.dev/.env.prod. Compose liest ./.env (für ${VAR} unten) und
+# mountet dieselbe .env in die PHP-Container (Laravel liest sie zur Laufzeit).
+# Der App-Container migriert + seedet bei frischer DB automatisch und erzeugt den
+# APP_KEY, falls leer. Code + Vite-Assets sind ins Image gebacken (self-contained).
+
+x-php: &php
+  build:
+    context: .
+    dockerfile: docker/php/Dockerfile
+    target: app
+  image: opcare/php:latest
+  restart: unless-stopped
+  volumes:
+    - ./.env:/var/www/.env:ro
+    - storage-data:/var/www/storage
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  app:
+    <<: *php
+    # Nur dieser Container initialisiert DB/Key (siehe entrypoint.sh).
+    environment:
+      RUN_SETUP: "true"
+    volumes:
+      - ./.env:/var/www/.env:rw        # rw, damit key:generate die .env persistieren kann
+      - storage-data:/var/www/storage
+    healthcheck:
+      test: ["CMD-SHELL", "php artisan migrate:status >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 90s
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      target: web
+    image: opcare/web:latest
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8099}:80"
+    volumes:
+      - storage-data:/var/www/storage:ro   # für /storage-Media-Auslieferung
+    depends_on:
+      app:
+        condition: service_healthy
+
+  horizon:
+    <<: *php
+    command: php artisan horizon
+    depends_on:
+      app:
+        condition: service_healthy
+
+  reverb:
+    <<: *php
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    ports:
+      - "${REVERB_PORT:-8080}:8080"
+    depends_on:
+      app:
+        condition: service_healthy
+
+  scheduler:
+    <<: *php
+    command: php artisan schedule:work
+    depends_on:
+      app:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-opcare}
+      POSTGRES_USER: ${DB_USERNAME:-opcare}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    # Kein Host-Port: Postgres ist nur im Compose-Netz erreichbar (konfliktfrei).
+    # Für direkten psql-Zugriff bei Bedarf:  docker compose exec postgres psql -U opcare
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Pest-Suite (läuft NICHT bei `up`):  docker compose run --rm test
+  test:
+    profiles: [test]
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      target: testing
+    image: opcare/php-test:latest
+
+volumes:
+  postgres-data:
+  redis-data:
+  storage-data:
