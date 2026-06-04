@@ -4,6 +4,7 @@ namespace App\Livewire\Qdvs;
 
 use App\Domains\Qdvs\Actions\BuildQdvsExport;
 use App\Domains\Qdvs\Models\QdvsExport;
+use App\Domains\Qdvs\Services\QdvsValidator;
 use App\Domains\Qdvs\Support\SpecRegistry;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -46,11 +47,12 @@ class Export extends Component
         session()->flash('status', 'Export erstellt.');
     }
 
-    public function render(SpecRegistry $registry): View
+    public function render(SpecRegistry $registry, QdvsValidator $validator): View
     {
         return view('livewire.qdvs.export', [
             'specs' => $registry->all(),
             'exports' => QdvsExport::latest('id')->take(20)->get(),
+            'coverage' => $validator->report()?->toSummary(),
         ]);
     }
 }

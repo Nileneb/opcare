@@ -21,7 +21,9 @@ it('erstellt eine valide Export-Datei und protokolliert sie', function () {
 
     expect($export->status)->toBe('exportiert')
         ->and($export->bewohner_count)->toBe(1)
-        ->and($export->pfad)->not->toBeNull();
+        ->and($export->pfad)->not->toBeNull()
+        ->and($export->regel_coverage['total'])->toBe(440)
+        ->and($export->regel_coverage['applicable'])->toBeGreaterThanOrEqual(38);
     Storage::disk('local')->assertExists($export->pfad);
 });
 

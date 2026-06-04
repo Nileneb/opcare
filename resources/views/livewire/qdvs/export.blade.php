@@ -13,6 +13,15 @@
 
     <div class="card" style="margin-bottom:var(--space-5)">
         <div class="card-head"><h3>Neuer Export</h3></div>
+        @if ($coverage)
+            <p class="hint" style="padding:0 var(--space-3);color:var(--c-muted);font-size:.85rem">
+                DAS-Plausibilitätsprüfung: <b>{{ $coverage['applicable'] }}</b> von {{ $coverage['total'] }} Regeln aktiv scharf geschaltet.
+                @php($skip = $coverage['skipped'] ?? [])
+                <span title="Felder, die OPCare (noch) nicht erhebt">{{ $skip['unmapped_field'] ?? 0 }} ⌀ Datenfeld</span>,
+                <span title="datensatzübergreifende Regeln">{{ $skip['out_of_scope_aggregate'] ?? 0 }} aggregat</span>,
+                <span title="komplexe Mehrfeld-Muster">{{ $skip['unknown_pattern'] ?? 0 }} ungestützt</span>.
+            </p>
+        @endif
         <form wire:submit="erstellen" style="padding:var(--space-3);display:flex;gap:var(--space-3);align-items:flex-end;flex-wrap:wrap">
             <div class="form-group">
                 <label class="label" for="stichtag">Stichtag</label>
@@ -50,6 +59,7 @@
                         <th>Spezifikation</th>
                         <th>Status</th>
                         <th style="text-align:right">Bewohner</th>
+                        <th style="text-align:right">Regeln</th>
                         <th>Erstellt</th>
                         <th></th>
                     </tr>
@@ -71,6 +81,13 @@
                                 @endif
                             </td>
                             <td style="text-align:right">{{ $export->bewohner_count }}</td>
+                            <td style="text-align:right">
+                                @if ($export->regel_coverage)
+                                    <span title="aktiv geprüfte DAS-Regeln">{{ $export->regel_coverage['applicable'] }}/{{ $export->regel_coverage['total'] }}</span>
+                                @else
+                                    <span class="empty">—</span>
+                                @endif
+                            </td>
                             <td>{{ $export->created_at->format('d.m.Y H:i') }}</td>
                             <td>
                                 @if ($export->status === 'exportiert')
