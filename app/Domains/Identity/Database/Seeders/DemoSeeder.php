@@ -2,6 +2,7 @@
 
 namespace App\Domains\Identity\Database\Seeders;
 
+use App\Domains\Assessment\Database\Seeders\InstrumentSeeder;
 use App\Domains\CarePlanning\Models\CareMeasure;
 use App\Domains\CarePlanning\Models\SisAssessment;
 use App\Domains\Identity\Models\Tenant;
@@ -26,7 +27,6 @@ use App\Domains\Medication\Models\TradeForm;
 use App\Domains\Quality\Enums\EventSeverity;
 use App\Domains\Quality\Enums\QualityIndicator;
 use App\Domains\Quality\Models\CareEvent;
-use App\Domains\Assessment\Database\Seeders\InstrumentSeeder;
 use App\Domains\Scheduling\Database\Seeders\ShiftSeeder;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
