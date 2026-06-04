@@ -7,6 +7,7 @@ use App\Domains\Speech\Contracts\SisStructurer;
 use App\Domains\Speech\Contracts\TextOptimizer;
 use App\Domains\Speech\Services\OllamaStructurer;
 use App\Domains\Speech\Services\OllamaTextOptimizer;
+use App\Domains\Speech\Services\WhisperMcpTranscriber;
 use App\Domains\Speech\Services\WhisperTranscriber;
 use App\Domains\Speech\Testing\FakeAudioTranscriber;
 use App\Domains\Speech\Testing\FakeSisStructurer;
@@ -25,7 +26,9 @@ class SpeechServiceProvider extends ServiceProvider
             return;
         }
 
-        $this->app->bind(AudioTranscriber::class, WhisperTranscriber::class);
+        $this->app->bind(AudioTranscriber::class, config('speech.whisper.driver') === 'asr'
+            ? WhisperTranscriber::class
+            : WhisperMcpTranscriber::class);
         $this->app->bind(SisStructurer::class, OllamaStructurer::class);
         $this->app->bind(TextOptimizer::class, OllamaTextOptimizer::class);
     }

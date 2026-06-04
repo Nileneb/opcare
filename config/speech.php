@@ -5,13 +5,17 @@ return [
     'fake' => (bool) env('SPEECH_FAKE', false),
 
     'whisper' => [
-        'url' => env('WHISPER_URL', 'http://127.0.0.1:9000'),
-        'model' => env('WHISPER_MODEL', 'large-v3'),
-        'timeout' => (int) env('WHISPER_TIMEOUT', 120),
+        // 'mcp' = lokaler whisperx-mcp (Streamable-HTTP /mcp/, Bearer-Token);
+        // 'asr' = generischer whisper-asr-webservice (/asr Multipart).
+        'driver' => env('WHISPER_DRIVER', 'mcp'),
+        'url' => env('WHISPER_URL', 'http://localhost:8000'),
+        'token' => env('WHISPER_TOKEN'),
+        'model' => env('WHISPER_MODEL', 'large-v3-turbo'),
+        'timeout' => (int) env('WHISPER_TIMEOUT', 180),
     ],
     'ollama' => [
-        'url' => env('OLLAMA_URL', 'http://192.168.178.11:11434'),
-        'model' => env('OLLAMA_MODEL', 'llama3.1:8b'),
+        'url' => env('OLLAMA_URL', 'http://localhost:11434'),
+        'model' => env('OLLAMA_MODEL', 'qwen3.5:latest'),
         'timeout' => (int) env('OLLAMA_TIMEOUT', 120),
     ],
 ];

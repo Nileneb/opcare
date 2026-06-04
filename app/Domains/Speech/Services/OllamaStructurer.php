@@ -25,6 +25,7 @@ class OllamaStructurer implements SisStructurer
                 'prompt' => $prompt,
                 'format' => 'json',
                 'stream' => false,
+                'think' => false,
             ])
             ->throw();
 

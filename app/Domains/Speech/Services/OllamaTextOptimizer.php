@@ -24,6 +24,7 @@ class OllamaTextOptimizer implements TextOptimizer
                 'model' => config('speech.ollama.model'),
                 'prompt' => $prompt,
                 'stream' => false,
+                'think' => false, // qwen3 u. a.: keine <think>-Ausgabe
             ])
             ->throw();
 
