@@ -7,7 +7,9 @@ use App\Domains\CarePlanning\Models\SisAssessment;
 use App\Domains\CarePlanning\Policies\CareReportPolicy;
 use App\Domains\CarePlanning\Policies\SisAssessmentPolicy;
 use App\Domains\Identity\Models\Tenant;
+use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Policies\TenantPolicy;
+use App\Domains\Identity\Policies\UserPolicy;
 use App\Domains\Identity\Support\CurrentTenant;
 use App\Domains\Masterdata\Models\Building;
 use App\Domains\Masterdata\Models\Resident;
@@ -26,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::policy(Tenant::class, TenantPolicy::class);
+        Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Building::class, BuildingPolicy::class);
         Gate::policy(Resident::class, ResidentPolicy::class);
         Gate::policy(SisAssessment::class, SisAssessmentPolicy::class);
