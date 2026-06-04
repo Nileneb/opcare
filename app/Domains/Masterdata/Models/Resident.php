@@ -46,6 +46,16 @@ class Resident extends BaseModel implements HasMedia
         return $this->hasMany(Custodian::class);
     }
 
+    public function sisAssessments(): HasMany
+    {
+        return $this->hasMany(\App\Domains\CarePlanning\Models\SisAssessment::class);
+    }
+
+    public function careMeasures(): HasMany
+    {
+        return $this->hasMany(\App\Domains\CarePlanning\Models\CareMeasure::class);
+    }
+
     public function physicians(): BelongsToMany
     {
         return $this->belongsToMany(Physician::class, 'resident_physician');
