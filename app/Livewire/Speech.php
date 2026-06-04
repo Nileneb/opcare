@@ -8,6 +8,7 @@ use App\Domains\Speech\Actions\ApproveTranscription;
 use App\Domains\Speech\Actions\StartTranscription;
 use App\Domains\Speech\Enums\TranscriptionStatus;
 use App\Domains\Speech\Models\TranscriptionJob;
+use App\Support\Concerns\ScopesTenantValidation;
 use Illuminate\Http\UploadedFile;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -15,6 +16,8 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class Speech extends Component
 {
+    use ScopesTenantValidation;
+
     public ?int $resident_id = null;
 
     public string $kontext = 'mobilitaet';
@@ -22,7 +25,7 @@ class Speech extends Component
     public function startDemo(StartTranscription $start): void
     {
         $this->validate([
-            'resident_id' => ['required', 'exists:residents,id'],
+            'resident_id' => ['required', $this->tenantExists('residents')],
             'kontext' => ['required', 'string'],
         ]);
 

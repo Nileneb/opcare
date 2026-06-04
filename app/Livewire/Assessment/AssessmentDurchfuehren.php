@@ -9,6 +9,7 @@ use App\Domains\Assessment\Data\AssessmentInputData;
 use App\Domains\Assessment\Models\Assessment;
 use App\Domains\Assessment\Models\Instrument;
 use App\Domains\Masterdata\Models\Resident;
+use App\Support\Concerns\ScopesTenantValidation;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -16,6 +17,8 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class AssessmentDurchfuehren extends Component
 {
+    use ScopesTenantValidation;
+
     #[Locked]
     public Resident $resident;
 
@@ -40,7 +43,7 @@ class AssessmentDurchfuehren extends Component
 
         $itemIds = $this->instrument->items->pluck('id')->all();
         $this->validate(
-            collect($itemIds)->mapWithKeys(fn ($id) => ["answers.$id" => ['required', 'exists:assessment_options,id']])->all(),
+            collect($itemIds)->mapWithKeys(fn ($id) => ["answers.$id" => ['required', $this->tenantExists('assessment_options')]])->all(),
             [],
             collect($itemIds)->mapWithKeys(fn ($id) => ["answers.$id" => 'Antwort'])->all(),
         );

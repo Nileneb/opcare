@@ -6,12 +6,15 @@ use App\Domains\Masterdata\Actions\CreateResident;
 use App\Domains\Masterdata\Data\ResidentData;
 use App\Domains\Masterdata\Models\Resident;
 use App\Domains\Masterdata\Models\Room;
+use App\Support\Concerns\ScopesTenantValidation;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
 class Residents extends Component
 {
+    use ScopesTenantValidation;
+
     public bool $showForm = false;
 
     public string $name = '';
@@ -34,7 +37,7 @@ class Residents extends Component
             'geschlecht' => ['required', 'in:m,w,d'],
             'pflegegrad' => ['nullable', 'integer', 'between:1,5'],
             'aufnahme_am' => ['required', 'date'],
-            'room_id' => ['nullable', 'integer', 'exists:rooms,id'],
+            'room_id' => ['nullable', 'integer', $this->tenantExists('rooms')],
         ];
     }
 
