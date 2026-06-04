@@ -34,6 +34,7 @@
         @if (auth()->user()?->hasAnyRole(['admin', 'super-admin']))
             <nav class="app-nav app-nav-admin">
                 <a href="{{ route('admin.tenants') }}" @class(['is-active' => request()->routeIs('admin.tenants')])>Einrichtungen</a>
+                <a href="{{ route('admin.users') }}" @class(['is-active' => request()->routeIs('admin.users')])>Benutzer</a>
             </nav>
         @endif
         <div class="app-user">

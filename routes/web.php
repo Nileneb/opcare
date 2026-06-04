@@ -31,6 +31,7 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::get('/pflegeplanung', Pflegeplanung::class)->name('pflegeplanung');
     Route::get('/profil', Profile::class)->name('profile');
     Route::get('/admin/einrichtungen', \App\Livewire\Admin\Tenants::class)->name('admin.tenants');
+    Route::get('/admin/benutzer', \App\Livewire\Admin\Users::class)->name('admin.users');
 
     Route::post('/logout', function (Request $request) {
         Auth::logout();
