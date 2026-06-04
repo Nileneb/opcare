@@ -26,6 +26,7 @@ use App\Domains\Medication\Models\TradeForm;
 use App\Domains\Quality\Enums\EventSeverity;
 use App\Domains\Quality\Enums\QualityIndicator;
 use App\Domains\Quality\Models\CareEvent;
+use App\Domains\Assessment\Database\Seeders\InstrumentSeeder;
 use App\Domains\Scheduling\Database\Seeders\ShiftSeeder;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
@@ -42,6 +43,7 @@ class DemoSeeder extends Seeder
         app(CurrentTenant::class)->set($tenant);
         $this->call(MedicationReferenceSeeder::class);
         $this->call(ShiftSeeder::class);
+        $this->call(InstrumentSeeder::class);
 
         $admin = User::create([
             'name' => 'Bettina Mertens',
@@ -199,6 +201,7 @@ class DemoSeeder extends Seeder
         app(CurrentTenant::class)->set($birkenhof);
         $this->call(MedicationReferenceSeeder::class);
         $this->call(ShiftSeeder::class);
+        $this->call(InstrumentSeeder::class);
 
         $birkenhofAdmin = User::create([
             'name' => 'Karl Birken',
