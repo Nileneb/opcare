@@ -12,7 +12,18 @@ use App\Domains\Masterdata\Models\Floor;
 use App\Domains\Masterdata\Models\Resident;
 use App\Domains\Masterdata\Models\Room;
 use App\Domains\Masterdata\Models\Station;
+use App\Domains\Medication\Actions\AddSchedule;
+use App\Domains\Medication\Actions\AddStock;
+use App\Domains\Medication\Actions\CreatePrescription;
+use App\Domains\Medication\Actions\GenerateAdministrations;
+use App\Domains\Medication\Data\PrescriptionData;
+use App\Domains\Medication\Data\ScheduleData;
+use App\Domains\Medication\Data\StockData;
+use App\Domains\Medication\Enums\ScheduleFrequency;
+use App\Domains\Medication\Models\MedProduct;
+use App\Domains\Medication\Models\TradeForm;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 
@@ -95,6 +106,43 @@ class DemoSeeder extends Seeder
                 }
             }
         }
+
+        // WHY: Medikation sofort sichtbar/testbar nach migrate:fresh --seed.
+        app(CurrentTenant::class)->set($tenant);
+        $tablette = TradeForm::create(['name' => 'Tablette', 'einheit' => 'Stk', 'teilbar' => true]);
+        $ramipril = MedProduct::create([
+            'trade_form_id' => $tablette->id,
+            'name' => 'Ramipril 5 mg',
+            'wirkstoff' => 'Ramipril',
+            'staerke' => '5 mg',
+            'btm' => false,
+        ]);
+
+        $maria = Resident::query()->where('name', 'Maria Schneider')->first();
+        $prescription = app(CreatePrescription::class)->handle(new PrescriptionData(
+            resident_id: $maria->id,
+            created_by: $admin->id,
+            med_product_id: $ramipril->id,
+            gueltig_von: Carbon::today()->toDateString(),
+        ));
+
+        $schedule = app(AddSchedule::class)->handle($prescription, new ScheduleData(
+            frequenz: ScheduleFrequency::Taeglich->value,
+            dosis: ['morgens' => 1],
+        ));
+
+        app(AddStock::class)->handle(new StockData(
+            resident_id: $maria->id,
+            med_product_id: $ramipril->id,
+            menge: 100,
+            einheit: 'Stk',
+        ));
+
+        app(GenerateAdministrations::class)->handle(
+            $schedule,
+            Carbon::today()->toDateString(),
+            Carbon::today()->addDays(3)->toDateString(),
+        );
 
         // Zweites Heim — Haus Birkenhof (2 Bewohner, kein SIS für Minimal-Demo)
         $birkenhof = Tenant::create(['name' => 'Haus Birkenhof', 'slug' => 'birkenhof']);
