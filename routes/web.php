@@ -44,6 +44,11 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::get('/qualitaet/report', QualityReport::class)->name('quality.report');
     Route::get('/qdvs', QdvsExport::class)->name('qdvs.export');
     Route::get('/qdvs/{export}/download', function (App\Domains\Qdvs\Models\QdvsExport $export) {
+        // WHY(DSGVO Art. 9): pseudonymisierte Gesundheitsdaten — Download nur für Leitung (admin/pflegefachkraft/super-admin).
+        abort_unless(
+            auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'pflegefachkraft']),
+            403,
+        );
         abort_unless($export->pfad && Storage::disk(config('qdvs.disk'))->exists($export->pfad), 404);
 
         return Storage::disk(config('qdvs.disk'))

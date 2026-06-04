@@ -5,6 +5,7 @@ namespace App\Livewire\Qdvs;
 use App\Domains\Qdvs\Actions\BuildQdvsExport;
 use App\Domains\Qdvs\Models\QdvsExport;
 use App\Domains\Qdvs\Support\SpecRegistry;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -36,7 +37,8 @@ class Export extends Component
 
         $this->validate([
             'stichtag' => ['required', 'date'],
-            'specKey' => ['required', 'string'],
+            // WHY: ungültiger Key warf bisher InvalidArgumentException (500) aus der Registry statt Validierungsfehler.
+            'specKey' => ['required', Rule::in(array_keys(app(SpecRegistry::class)->all()))],
         ]);
 
         $build->handle($this->stichtag, $this->specKey);
