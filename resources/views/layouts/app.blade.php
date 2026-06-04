@@ -37,6 +37,11 @@
                 <a href="{{ route('qdvs.export') }}" @class(['is-active' => request()->routeIs('qdvs.export')])>QDVS-Export</a>
             </nav>
         @endif
+        @can('manage', \App\Domains\Scheduling\Models\Shift::class)
+            <nav class="app-nav app-nav-dienstplan">
+                <a href="{{ route('dienstplan') }}" @class(['is-active' => request()->routeIs('dienstplan')])>Dienstplan</a>
+            </nav>
+        @endcan
         @if (auth()->user()?->hasAnyRole(['admin', 'super-admin']))
             <nav class="app-nav app-nav-admin">
                 <a href="{{ route('admin.tenants') }}" @class(['is-active' => request()->routeIs('admin.tenants')])>Einrichtungen</a>
