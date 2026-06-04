@@ -10,6 +10,7 @@ use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Facility;
 use App\Livewire\Medication\Stammdaten;
 use App\Livewire\Medication\Stellplan;
+use App\Livewire\Medication\VerordnungAnlegen;
 use App\Livewire\Overview;
 use App\Livewire\Pflegeplanung;
 use App\Livewire\Profile;
@@ -45,6 +46,9 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::get('/admin/benutzer', Users::class)->name('admin.users');
     Route::get('/bewohner/{resident}/medikation', Stellplan::class)->name('medikation.stellplan');
     Route::get('/medikation/stamm', Stammdaten::class)->name('medikation.stammdaten');
+    Route::get('/bewohner/{resident}/verordnung/neu', VerordnungAnlegen::class)->name('medikation.verordnung-anlegen');
+    // Stub-Route für Task-3-Komponente (wird in Task 3 durch Verordnungen::class ersetzt)
+    Route::get('/bewohner/{resident}/verordnungen', ResidentShow::class)->name('medikation.verordnungen');
     Route::get('/controlling', Controlling::class)->name('controlling');
     Route::get('/qualitaet/report', QualityReport::class)->name('quality.report');
 
