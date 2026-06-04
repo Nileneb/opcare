@@ -31,6 +31,11 @@
                 <a href="{{ route($item['route']) }}" @class(['is-active' => request()->routeIs($item['route'])])>{{ $item['label'] }}</a>
             @endforeach
         </nav>
+        @if (auth()->user()?->hasAnyRole(['admin', 'pflegefachkraft', 'super-admin']))
+            <nav class="app-nav app-nav-controlling">
+                <a href="{{ route('controlling') }}" @class(['is-active' => request()->routeIs('controlling') || request()->routeIs('quality.report')])>Controlling</a>
+            </nav>
+        @endif
         @if (auth()->user()?->hasAnyRole(['admin', 'super-admin']))
             <nav class="app-nav app-nav-admin">
                 <a href="{{ route('admin.tenants') }}" @class(['is-active' => request()->routeIs('admin.tenants')])>Einrichtungen</a>

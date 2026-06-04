@@ -11,6 +11,8 @@ use App\Livewire\Medication\Stellplan;
 use App\Livewire\Overview;
 use App\Livewire\Pflegeplanung;
 use App\Livewire\Profile;
+use App\Livewire\Quality\Controlling;
+use App\Livewire\Quality\QualityReport;
 use App\Livewire\Residents;
 use App\Livewire\ResidentShow;
 use App\Livewire\Speech;
@@ -36,6 +38,8 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::get('/admin/einrichtungen', Tenants::class)->name('admin.tenants');
     Route::get('/admin/benutzer', Users::class)->name('admin.users');
     Route::get('/bewohner/{resident}/medikation', Stellplan::class)->name('medikation.stellplan');
+    Route::get('/controlling', Controlling::class)->name('controlling');
+    Route::get('/qualitaet/report', QualityReport::class)->name('quality.report');
 
     Route::post('/logout', function (Request $request) {
         Auth::logout();
