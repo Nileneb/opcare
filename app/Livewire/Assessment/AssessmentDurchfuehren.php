@@ -57,8 +57,7 @@ class AssessmentDurchfuehren extends Component
         $escalate->handle($assessment);
 
         session()->flash('status', 'Assessment gespeichert: '.$assessment->risk_band?->label());
-        // WHY: assessment.verlauf kommt in Task 8 — vorerst auf Bewohnerprofil umleiten.
-        $this->redirectRoute('bewohner.show', ['resident' => $this->resident->id], navigate: true);
+        $this->redirectRoute('assessment.verlauf', ['resident' => $this->resident->id], navigate: true);
     }
 
     public function render()
