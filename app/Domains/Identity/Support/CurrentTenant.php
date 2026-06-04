@@ -11,6 +11,7 @@ class CurrentTenant
     public function set(Tenant $tenant): void
     {
         $this->tenant = $tenant;
+        app(\Spatie\Permission\PermissionRegistrar::class)->setPermissionsTeamId($tenant->id);
     }
 
     public function get(): ?Tenant
