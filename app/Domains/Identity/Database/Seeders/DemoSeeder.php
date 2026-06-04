@@ -14,11 +14,14 @@ use App\Domains\Masterdata\Models\Room;
 use App\Domains\Masterdata\Models\Station;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class DemoSeeder extends Seeder
 {
     public function run(): void
     {
+        Role::findOrCreate('super-admin');
+
         $tenant = Tenant::create(['name' => 'Bergische Diakonie — Wohnbereich Aprath', 'slug' => 'aprath']);
         app(CurrentTenant::class)->set($tenant);
 
@@ -33,6 +36,14 @@ class DemoSeeder extends Seeder
         $building = Building::create(['name' => 'Haus Aprath']);
         $floor = Floor::create(['building_id' => $building->id, 'name' => 'Erdgeschoss']);
         $station = Station::create(['floor_id' => $floor->id, 'name' => 'Wohnbereich 1']);
+
+        $superAdmin = User::create([
+            'name' => 'Super Admin',
+            'email' => 'super@opcare.local',
+            'password' => Hash::make('password'),
+            'tenant_id' => $tenant->id,
+        ]);
+        $superAdmin->assignRole('super-admin');
 
         foreach ($this->residents() as $r) {
             $room = Room::create(['station_id' => $station->id, 'nummer' => $r['room'], 'betten' => 1]);
@@ -84,6 +95,44 @@ class DemoSeeder extends Seeder
                 }
             }
         }
+
+        // Zweites Heim — Haus Birkenhof (2 Bewohner, kein SIS für Minimal-Demo)
+        $birkenhof = Tenant::create(['name' => 'Haus Birkenhof', 'slug' => 'birkenhof']);
+        app(CurrentTenant::class)->set($birkenhof);
+
+        $birkenhofAdmin = User::create([
+            'name' => 'Karl Birken',
+            'email' => 'admin@birkenhof.local',
+            'password' => Hash::make('password'),
+            'tenant_id' => $birkenhof->id,
+        ]);
+        $birkenhofAdmin->assignRole('admin');
+
+        $birkenhofBuilding = Building::create(['name' => 'Haus Birkenhof']);
+        $birkenhofFloor = Floor::create(['building_id' => $birkenhofBuilding->id, 'name' => 'Erdgeschoss']);
+        $birkenhofStation = Station::create(['floor_id' => $birkenhofFloor->id, 'name' => 'Wohnbereich A']);
+
+        $birkenhofRoom1 = Room::create(['station_id' => $birkenhofStation->id, 'nummer' => '01', 'betten' => 1]);
+        Resident::create([
+            'room_id' => $birkenhofRoom1->id,
+            'name' => 'Gerda Birkenwald',
+            'geburtsdatum' => now()->subYears(81)->format('Y-m-d'),
+            'geschlecht' => 'w',
+            'pflegegrad' => 2,
+            'aufnahme_am' => '2024-02-10',
+            'status' => 'aktiv',
+        ]);
+
+        $birkenhofRoom2 = Room::create(['station_id' => $birkenhofStation->id, 'nummer' => '02', 'betten' => 1]);
+        Resident::create([
+            'room_id' => $birkenhofRoom2->id,
+            'name' => 'Otto Birkenwald',
+            'geburtsdatum' => now()->subYears(77)->format('Y-m-d'),
+            'geschlecht' => 'm',
+            'pflegegrad' => 3,
+            'aufnahme_am' => '2023-11-05',
+            'status' => 'aktiv',
+        ]);
     }
 
     /** Demo-Bewohner mit 6 SIS-Lebensbereichen (Ressource↔Belastung, Ampel, Ziele, Maßnahmen). */

@@ -38,6 +38,7 @@
             </nav>
         @endif
         <div class="app-user">
+            @livewire('admin.tenant-switcher')
             <a href="{{ route('profile') }}" class="who" wire:navigate style="text-decoration:none;color:inherit">
                 <b>{{ $u?->name ?? 'Gast' }}</b>
                 <span>{{ $u?->tenant?->name ?? 'Wohnbereich' }}</span>
