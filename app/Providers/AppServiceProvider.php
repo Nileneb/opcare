@@ -23,6 +23,7 @@ use App\Domains\Medication\Models\MedicationAdministration;
 use App\Domains\Medication\Models\Prescription;
 use App\Domains\Medication\Policies\MedicationAdministrationPolicy;
 use App\Domains\Medication\Policies\PrescriptionPolicy;
+use App\Domains\Qdvs\Engine\QdvsRuleRepository;
 use App\Domains\Quality\Models\CareEvent;
 use App\Domains\Quality\Policies\CareEventPolicy;
 use App\Domains\Scheduling\Models\CalendarEvent;
@@ -37,6 +38,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(CurrentTenant::class);
+        $this->app->singleton(QdvsRuleRepository::class, fn () => new QdvsRuleRepository(config('qdvs.rules_csv')));
     }
 
     public function boot(): void

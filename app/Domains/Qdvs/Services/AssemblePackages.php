@@ -3,6 +3,8 @@
 namespace App\Domains\Qdvs\Services;
 
 use App\Domains\Masterdata\Models\Resident;
+use App\Domains\Medication\Enums\VitalType;
+use App\Domains\Medication\Models\VitalReading;
 use App\Domains\Qdvs\Data\QdvsResidentPackage;
 use App\Domains\Quality\Enums\QualityIndicator;
 use App\Domains\Quality\Models\CareEvent;
@@ -22,7 +24,15 @@ class AssemblePackages
             ->get()
             ->groupBy('resident_id');
 
-        return $residents->map(function (Resident $r) use ($aktive) {
+        $gewichte = VitalReading::query()
+            ->whereIn('resident_id', $cohort->ids())
+            ->where('typ', VitalType::Gewicht)
+            ->whereDate('gemessen_am', '<=', $cohort->stichtag)
+            ->orderByDesc('gemessen_am')
+            ->get()
+            ->groupBy('resident_id');
+
+        return $residents->map(function (Resident $r) use ($aktive, $gewichte, $cohort) {
             $vorhanden = ($aktive[$r->id] ?? collect())->pluck('indicator')
                 ->map(fn ($i) => $i instanceof QualityIndicator ? $i->value : $i)->all();
 
@@ -30,6 +40,8 @@ class AssemblePackages
             foreach (QualityIndicator::cases() as $i) {
                 $indikatoren[$i->value] = in_array($i->value, $vorhanden, true);
             }
+
+            $gewicht = ($gewichte[$r->id] ?? collect())->first();
 
             return new QdvsResidentPackage(
                 pseudonym: 'R-'.$r->id,
@@ -39,6 +51,11 @@ class AssemblePackages
                 aufnahme_am: $r->aufnahme_am?->toDateString(),
                 icd_codes: $r->diagnoses->pluck('icdCode.code')->filter()->values()->all(),
                 indikatoren: $indikatoren,
+                geburtsmonat: $r->geburtsdatum?->month,
+                gewicht_kg: $gewicht?->wert !== null ? (float) $gewicht->wert : null,
+                gewicht_datum: $gewicht?->gemessen_am?->toDateString(),
+                auszug_am: $r->entlassung_am?->toDateString(),
+                erhebungsdatum: $cohort->stichtag,
             );
         })->all();
     }

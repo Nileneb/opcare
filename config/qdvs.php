@@ -10,4 +10,7 @@ return [
     ],
     'disk' => 'local',
     'path' => 'qdvs',
+
+    // DAS-Pflege V03.0 Plausibilitätsregeln (statische Referenzdaten, global, kein tenant_id)
+    'rules_csv' => database_path('data/qdvs/das_plausibilitaetsregeln_v03.csv'),
 ];

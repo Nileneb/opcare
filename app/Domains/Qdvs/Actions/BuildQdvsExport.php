@@ -31,6 +31,7 @@ class BuildQdvsExport
             'spec' => $spec->key(),
             'bewohner_count' => count($packages),
             'fehler' => collect($issues)->map->toArray()->all(),
+            'regel_coverage' => $this->validator->report()?->toSummary(),
             'erstellt_von' => auth()->id(),
             'status' => 'validiert',
         ]);

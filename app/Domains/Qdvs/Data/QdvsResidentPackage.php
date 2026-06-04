@@ -17,5 +17,14 @@ class QdvsResidentPackage extends Data
         public array $icd_codes = [],
         /** @var array<string, bool|string> indikator => befund (bool oder Schweregrad) */
         public array $indikatoren = [],
+        // DAS-Feld-Ausbau (Plan: QDVS-Regel-Engine) — nullable, damit Altaufrufer kompatibel bleiben
+        public ?int $geburtsmonat = null,
+        public ?float $gewicht_kg = null,
+        public ?string $gewicht_datum = null,
+        public ?string $auszug_am = null,
+        // Stichtag der Erhebung (= ERHEBUNGSDATUM); Bezug für Datums-Plausibilität
+        public ?string $erhebungsdatum = null,
+        /** @var array<string, string> indikator => ereignisdatum (ISO) für „Ereignis nach Einzug"-Regeln */
+        public array $ereignis_daten = [],
     ) {}
 }
