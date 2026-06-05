@@ -9,6 +9,7 @@ use App\Domains\Qdvs\Data\QdvsResidentPackage;
 use App\Domains\Quality\Enums\QualityIndicator;
 use App\Domains\Quality\Models\CareEvent;
 use App\Domains\Quality\Support\Cohort;
+use Illuminate\Support\Collection;
 
 class AssemblePackages
 {
@@ -45,6 +46,9 @@ class AssemblePackages
             $dekubitus = $events->first(fn ($e) => ($e->indicator instanceof QualityIndicator ? $e->indicator->value : $e->indicator) === QualityIndicator::Dekubitus->value);
             $dekDetails = is_array($dekubitus?->details) ? $dekubitus->details : [];
 
+            $stuerze = $events->filter(fn ($e) => ($e->indicator instanceof QualityIndicator ? $e->indicator->value : $e->indicator) === QualityIndicator::Sturz->value);
+            [$sturzAnzahl, $sturzfolgen] = $this->sturz($stuerze);
+
             $gewicht = ($gewichte[$r->id] ?? collect())->first();
 
             return new QdvsResidentPackage(
@@ -63,7 +67,28 @@ class AssemblePackages
                 dekubitus_stadium: isset($dekDetails['stadium']) ? (int) $dekDetails['stadium'] : null,
                 dekubitus_beginn: $dekDetails['beginn'] ?? null,
                 dekubitus_ende: $dekDetails['ende'] ?? null,
+                sturz_anzahl: $sturzAnzahl,
+                sturzfolgen: $sturzfolgen,
             );
         })->all();
+    }
+
+    /**
+     * Leitet DAS-Feld 71 (STURZ) + 72 (STURZFOLGEN) aus den aktiven Sturz-Ereignissen ab.
+     * Mehr als ein Ereignis ⇒ „mehrmals" (2); Fraktur in irgendeinem Ereignis ⇒ Folge-Code 1, sonst 0.
+     *
+     * @param  Collection<int, CareEvent>  $stuerze
+     * @return array{0: ?int, 1: array<int, int>}
+     */
+    private function sturz($stuerze): array
+    {
+        if ($stuerze->isEmpty()) {
+            return [0, []];
+        }
+
+        $anzahl = $stuerze->count() > 1 ? 2 : (int) (($stuerze->first()->details['anzahl'] ?? 1));
+        $fraktur = $stuerze->contains(fn ($e) => is_array($e->details) && ! empty($e->details['fraktur']));
+
+        return [max(1, min(2, $anzahl)), [$fraktur ? 1 : 0]];
     }
 }

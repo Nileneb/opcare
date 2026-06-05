@@ -107,6 +107,11 @@ class ResidentShow extends Component
 
     public string $ce_dek_ende = '';
 
+    // Sturz-Detail (nur bei indicator=sturz) — DAS-Feld 71/72
+    public int $ce_sturz_anzahl = 1;
+
+    public bool $ce_sturz_fraktur = false;
+
     // Evaluation
     public ?int $e_measure = null;
 
@@ -141,6 +146,11 @@ class ResidentShow extends Component
             $rules['ce_dek_ende'] = ['nullable', 'date', 'after_or_equal:ce_dek_beginn'];
             $rules['ce_dek_stelle'] = ['nullable', 'string', 'max:120'];
         }
+        // WHY(DAS_REGELN): Ein Sturz ist DAS-Feld 71 (1=einmal/2=mehrmals); STURZFOLGEN (Feld 72) ist
+        // bei Sturz Pflichtfeld (Regel 60039) — die Fraktur-Angabe füllt es verifiziert (Code 0/1).
+        if ($this->ce_indicator === QualityIndicator::Sturz->value) {
+            $rules['ce_sturz_anzahl'] = ['required', 'integer', 'between:1,2'];
+        }
         $this->validate($rules);
 
         $action->handle(new CareEventData(
@@ -151,7 +161,7 @@ class ResidentShow extends Component
             details: $this->buildDetails(),
         ));
 
-        $this->reset('ce_severity', 'ce_notiz', 'ce_dek_stadium', 'ce_dek_stelle', 'ce_dek_beginn', 'ce_dek_ende');
+        $this->reset('ce_severity', 'ce_notiz', 'ce_dek_stadium', 'ce_dek_stelle', 'ce_dek_beginn', 'ce_dek_ende', 'ce_sturz_anzahl', 'ce_sturz_fraktur');
         session()->flash('status', 'Vorkommnis dokumentiert.');
     }
 
@@ -171,6 +181,10 @@ class ResidentShow extends Component
             if (trim($this->ce_dek_stelle) !== '') {
                 $details['stelle'] = $this->ce_dek_stelle;
             }
+        }
+        if ($this->ce_indicator === QualityIndicator::Sturz->value) {
+            $details['anzahl'] = $this->ce_sturz_anzahl;
+            $details['fraktur'] = $this->ce_sturz_fraktur;
         }
 
         return $details === [] ? null : $details;
