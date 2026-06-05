@@ -119,9 +119,14 @@ it('mappt Vitalwerte auf Observation mit LOINC + Maßnahmen auf CarePlan', funct
     $observation = $resources->firstWhere('resourceType', 'Observation');
     $carePlan = $resources->firstWhere('resourceType', 'CarePlan');
 
-    expect($observation['code']['coding'][0]['system'])->toBe('http://loinc.org')
-        ->and($observation['code']['coding'][0]['code'])->toBe('29463-7')
+    $loinc = collect($observation['code']['coding'])->firstWhere('system', 'http://loinc.org');
+    expect($loinc['code'])->toBe('29463-7')
         ->and($observation['valueQuantity']['value'])->toBe(68.5)
+        // WHY(Track A Phase 6): KBV-Vitalzeichen-Profil + SNOMED-Coding + performer, kein code.text
+        ->and($observation['meta']['profile'][0])->toContain('Observation_Body_Weight')
+        ->and(collect($observation['code']['coding'])->firstWhere('system', 'http://snomed.info/sct')['code'])->toBe('27113001')
+        ->and($observation['performer'][0]['reference'])->toContain('PractitionerRole/')
+        ->and($observation['code'])->not->toHaveKey('text')
         ->and($carePlan['status'])->toBe('active')
         ->and($carePlan['activity'][0]['detail']['description'])->toContain('Gehübungen');
 });

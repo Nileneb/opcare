@@ -113,7 +113,12 @@ Kontinenz/Ernährung, soziale Felder).
     aus dem Tenant) einmal je Bundle erzeugt + als Pflicht-`recorder` referenziert. Damit **AllergyIntolerance**
     ÜLB-konform (`meta.profile`, version 1.0.1 auf clinical/verificationStatus, recorder, `recordedDate` entfernt).
     Bundle 0 errors. Diese Einheit ist auch der künftige `performer` (Observations) + `author` (Composition).
-  - ⬜ Schritt 6+: Vital-Observations (performer), MedicationStatement, dann zuletzt Composition + Bundle.
+  - ✅ Schritt 6: **Vital-Observations** ÜLB-konform (Body_Weight/Height, Blood_Pressure, Heart_Rate, SpO2,
+    Respiratory_Rate, Glucose — 7 Arten): SNOMED+LOINC-Coding (Version 2.72 / SNOMED-Edition), zweiter
+    Vitalzeichen-Category-Slice (SNOMED 1184593002), Pflicht-`performer` (dokumentierende Einheit), `code.text`
+    entfernt, fixe Einheiten (z. B. „mm Hg" für RR-Komponenten). Codes aus den kbv.basis-Beispielen verifiziert.
+    Temperatur (kein Beispiel) + Schmerz (numerisch statt CodeableConcept) bleiben generisch. Bundle 0 errors.
+  - ⬜ Schritt 7+: MedicationStatement, dann zuletzt Composition + Bundle.
   - **Tooling-Hinweis:** `kbv.basis 1.3.0` erzeugt im aktuellen Validator einen Snapshot-Fehler
     (`Same id 'Observation.dataAbsentReason'`) — bekannte KBV/Validator-Inkompatibilität, nicht unsere Daten.
 
