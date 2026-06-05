@@ -13,6 +13,7 @@ use App\Domains\CarePlanning\Data\SisAssessmentData;
 use App\Domains\CarePlanning\Enums\RiskType;
 use App\Domains\CarePlanning\Enums\SisTopicField;
 use App\Domains\CarePlanning\Models\CareMeasure;
+use App\Domains\CarePlanning\Models\MeasureCatalogItem;
 use App\Domains\CarePlanning\Support\SisAreaCatalog;
 use App\Domains\Masterdata\Models\HealthInsurance;
 use App\Domains\Masterdata\Models\IcdCode;
@@ -69,6 +70,8 @@ class ResidentShow extends Component
     public string $m_themenfeld = 'mobilitaet';
 
     public string $m_beschreibung = '';
+
+    public string $m_katalog_search = '';
 
     public string $m_ziel = '';
 
@@ -205,8 +208,33 @@ class ResidentShow extends Component
             ziel: $this->m_ziel ?: null,
             verantwortlich: auth()->user()->name,
         ));
-        $this->reset('m_beschreibung', 'm_ziel');
+        $this->reset('m_beschreibung', 'm_ziel', 'm_katalog_search');
         session()->flash('status', 'Maßnahme geplant.');
+    }
+
+    public function pickMeasure(int $id): void
+    {
+        $item = MeasureCatalogItem::find($id);
+        if (! $item) {
+            return;
+        }
+        $this->m_beschreibung = $item->bezeichnung;
+        $this->m_katalog_search = '';
+    }
+
+    /** @return Collection<int, MeasureCatalogItem> */
+    private function measureSuggestions(): Collection
+    {
+        $term = trim($this->m_katalog_search);
+        if (mb_strlen($term) < 2) {
+            return collect();
+        }
+
+        return MeasureCatalogItem::query()
+            ->whereRaw('LOWER(bezeichnung) LIKE ?', ['%'.mb_strtolower($term).'%'])
+            ->orderBy('bezeichnung')
+            ->limit(25)
+            ->get();
     }
 
     public function addReport(CreateCareReport $createReport): void
@@ -252,6 +280,7 @@ class ResidentShow extends Component
             'topicFields' => SisTopicField::cases(),
             'riskTypes' => RiskType::cases(),
             'diagnosisResults' => $this->diagnosisResults(),
+            'measureSuggestions' => $this->measureSuggestions(),
             'insurances' => HealthInsurance::orderBy('name')->get(),
             'physicians' => Physician::orderBy('name')->get(),
             'measures' => $this->resident->careMeasures,

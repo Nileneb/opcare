@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Domains\CarePlanning\Database\Seeders\MeasureCatalogSeeder;
 use App\Domains\Identity\Database\Seeders\DemoSeeder;
 use App\Domains\Identity\Database\Seeders\RolesSeeder;
 use App\Domains\Identity\Database\Seeders\SuperAdminRoleSeeder;
@@ -16,6 +17,7 @@ class DatabaseSeeder extends Seeder
             RolesSeeder::class,
             SuperAdminRoleSeeder::class,
             IcdCodeSeeder::class,
+            MeasureCatalogSeeder::class,
             DemoSeeder::class,
         ]);
     }

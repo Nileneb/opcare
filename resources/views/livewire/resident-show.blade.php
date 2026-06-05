@@ -156,6 +156,19 @@
                 <div class="field"><label>Lebensbereich</label>
                     <select wire:model="m_themenfeld">@foreach ($topicFields as $f)<option value="{{ $f->value }}">{{ $f->label() }}</option>@endforeach</select>
                 </div>
+                <div class="field" style="position:relative"><label>Aus Katalog übernehmen <span style="color:var(--c-muted);font-weight:400">(optional)</span></label>
+                    <input type="text" wire:model.live.debounce.300ms="m_katalog_search" placeholder="Standard-Maßnahme suchen (z. B. Gehübungen, Dekub)…" autocomplete="off" />
+                    @if (mb_strlen(trim($m_katalog_search)) >= 2)
+                        <ul class="typeahead" style="list-style:none;margin:4px 0 0;padding:0;max-height:200px;overflow:auto;border:1px solid var(--c-border);border-radius:var(--radius)">
+                            @forelse ($measureSuggestions as $item)
+                                <li><button type="button" class="typeahead-item" style="display:block;width:100%;text-align:left;padding:6px 10px;background:none;border:0;cursor:pointer"
+                                    wire:click="pickMeasure({{ $item->id }})">{{ $item->bezeichnung }}</button></li>
+                            @empty
+                                <li style="padding:6px 10px;color:var(--c-muted)">Kein Treffer.</li>
+                            @endforelse
+                        </ul>
+                    @endif
+                </div>
                 <x-voice-field model="m_beschreibung" label="Maßnahme" :context="'Maßnahme'" :rows="2" />
                 <div class="field"><label>Ziel</label><input type="text" wire:model="m_ziel" /></div>
                 <button class="btn btn-ghost btn-sm">+ Maßnahme</button>
