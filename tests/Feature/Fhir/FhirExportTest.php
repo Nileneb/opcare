@@ -1,5 +1,9 @@
 <?php
 
+use App\Domains\Assessment\Actions\ConductAssessment;
+use App\Domains\Assessment\Data\AssessmentInputData;
+use App\Domains\Assessment\Database\Seeders\InstrumentSeeder;
+use App\Domains\Assessment\Models\Instrument;
 use App\Domains\CarePlanning\Models\CareMeasure;
 use App\Domains\CarePlanning\Models\CareReport;
 use App\Domains\Fhir\FhirDocumentExporter;
@@ -30,6 +34,13 @@ beforeEach(function () {
     $presc = Prescription::create(['resident_id' => $this->resident->id, 'med_product_id' => $product->id, 'created_by' => $user->id, 'bei_bedarf' => false, 'gueltig_von' => '2026-06-01']);
     PrescriptionSchedule::create(['prescription_id' => $presc->id, 'frequenz' => ScheduleFrequency::Taeglich, 'dosis' => ['morgens' => 1]]);
     $this->resident->allergies()->create(['substanz' => 'Penicillin', 'typ' => 'allergie', 'kategorie' => 'medikament', 'kritikalitaet' => 'hoch', 'reaktion' => 'Hautausschlag', 'erfasst_am' => '2025-05-01']);
+
+    $this->seed(InstrumentSeeder::class);
+    $barthel = Instrument::with('items.options')->where('name', 'Barthel-Index')->first();
+    $answers = $barthel->items->mapWithKeys(fn ($i) => [$i->id => $i->options->first()->id])->all();
+    app(ConductAssessment::class)->handle(new AssessmentInputData(
+        resident_id: $this->resident->id, instrument_id: $barthel->id, created_by: $user->id, answers: $answers, durchgefuehrt_am: '2026-06-01',
+    ));
 });
 
 it('liefert ein FHIR-R4-Document-Bundle mit der Composition zuerst', function () {
@@ -123,11 +134,21 @@ it('mappt Allergien auf FHIR AllergyIntolerance', function () {
         ->and($allergy['patient']['reference'])->toContain('Patient/');
 });
 
+it('mappt das Barthel-Assessment auf Funktionsbeurteilungs-Observations (LOINC + Summe)', function () {
+    $resources = collect(app(FhirDocumentExporter::class)->export($this->resident)['entry'])->pluck('resource');
+
+    $total = $resources->first(fn ($r) => $r['resourceType'] === 'Observation' && ($r['code']['coding'][0]['code'] ?? null) === '96761-2');
+    expect($total)->not->toBeNull()
+        ->and($total['category'][0]['coding'][0]['code'])->toBe('survey')
+        ->and($total['hasMember'])->toHaveCount(10)
+        ->and($resources->contains(fn ($r) => ($r['code']['coding'][0]['code'] ?? null) === '83184-2'))->toBeTrue();
+});
+
 it('erzeugt eine Composition mit referenzierten Sektionen + Verlauf-Narrativ', function () {
     $composition = app(FhirDocumentExporter::class)->export($this->resident)['entry'][0]['resource'];
     $titles = collect($composition['section'])->pluck('title')->all();
 
     expect($composition['status'])->toBe('final')
-        ->and($titles)->toContain('Diagnosen')->toContain('Allergien')->toContain('Medikation')->toContain('Pflegeplan')->toContain('Beobachtungen / Vitalwerte')->toContain('Verlauf')
+        ->and($titles)->toContain('Diagnosen')->toContain('Allergien')->toContain('Medikation')->toContain('Pflegeplan')->toContain('Beobachtungen / Vitalwerte')->toContain('Funktionsbeurteilungen')->toContain('Verlauf')
         ->and(collect($composition['section'])->firstWhere('title', 'Verlauf')['text']['div'])->toContain('Bewohnerin wohlauf.');
 });

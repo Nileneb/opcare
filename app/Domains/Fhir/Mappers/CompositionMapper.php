@@ -29,6 +29,7 @@ class CompositionMapper
         array $observationRefs = [],
         array $medicationRefs = [],
         array $allergyRefs = [],
+        array $functionalRefs = [],
     ): array {
         $sections = [];
         if ($conditionRefs !== []) {
@@ -45,6 +46,9 @@ class CompositionMapper
         }
         if ($observationRefs !== []) {
             $sections[] = ['title' => 'Beobachtungen / Vitalwerte', 'entry' => $this->entries($observationRefs)];
+        }
+        if ($functionalRefs !== []) {
+            $sections[] = ['title' => 'Funktionsbeurteilungen', 'entry' => $this->entries($functionalRefs)];
         }
         $sections[] = ['title' => 'Verlauf', 'text' => ['status' => 'generated', 'div' => $this->narrative($reports)]];
 

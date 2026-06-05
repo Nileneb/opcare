@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class InstrumentItem extends BaseModel
 {
-    protected $fillable = ['tenant_id', 'instrument_id', 'label', 'hilfetext', 'reihenfolge'];
+    protected $fillable = ['tenant_id', 'instrument_id', 'label', 'loinc', 'hilfetext', 'reihenfolge'];
 
     protected $casts = ['reihenfolge' => 'integer'];
 

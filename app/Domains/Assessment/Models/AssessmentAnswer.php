@@ -20,4 +20,9 @@ class AssessmentAnswer extends BaseModel
     {
         return $this->belongsTo(AssessmentOption::class, 'assessment_option_id');
     }
+
+    public function instrumentItem(): BelongsTo
+    {
+        return $this->belongsTo(InstrumentItem::class, 'instrument_item_id');
+    }
 }

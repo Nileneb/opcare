@@ -2,8 +2,10 @@
 
 namespace App\Domains\Fhir;
 
+use App\Domains\Assessment\Models\Assessment;
 use App\Domains\CarePlanning\Models\CareReport;
 use App\Domains\Fhir\Mappers\AllergyIntoleranceMapper;
+use App\Domains\Fhir\Mappers\AssessmentObservationMapper;
 use App\Domains\Fhir\Mappers\CarePlanMapper;
 use App\Domains\Fhir\Mappers\CompositionMapper;
 use App\Domains\Fhir\Mappers\ConditionMapper;
@@ -31,6 +33,7 @@ class FhirDocumentExporter
         private readonly ObservationMapper $observationMapper,
         private readonly MedicationStatementMapper $medicationMapper,
         private readonly AllergyIntoleranceMapper $allergyMapper,
+        private readonly AssessmentObservationMapper $assessmentMapper,
     ) {}
 
     /** @return array<string, mixed> */
@@ -91,9 +94,33 @@ class FhirDocumentExporter
             $entry[] = ['fullUrl' => $ref, 'resource' => $resource];
         }
 
+        // WHY: jüngstes LOINC-codiertes Assessment (z. B. Barthel) → ÜLB-Sektion funktionsbeurteilungen
+        $functionalRefs = [];
+        $assessment = Assessment::query()->where('resident_id', $resident->id)->where('status', 'aktiv')
+            ->whereHas('instrument', fn ($q) => $q->whereNotNull('loinc'))
+            ->with(['instrument', 'answers.instrumentItem'])
+            ->latest('durchgefuehrt_am')->first();
+        if ($assessment) {
+            $effective = $assessment->durchgefuehrt_am?->toIso8601String() ?? $date;
+            $memberRefs = [];
+            foreach ($assessment->answers as $answer) {
+                if (! $answer->instrumentItem?->loinc) {
+                    continue;
+                }
+                $resource = $this->assessmentMapper->itemObservation($answer, $patientRef, $effective);
+                $ref = $base.'Observation/'.$resource['id'];
+                $memberRefs[] = $ref;
+                $entry[] = ['fullUrl' => $ref, 'resource' => $resource];
+            }
+            $total = $this->assessmentMapper->totalObservation($assessment, $patientRef, $effective, $memberRefs);
+            $totalRef = $base.'Observation/'.$total['id'];
+            $functionalRefs[] = $totalRef;
+            $entry[] = ['fullUrl' => $totalRef, 'resource' => $total];
+        }
+
         $reports = CareReport::query()->where('resident_id', $resident->id)->current()->latest('datum')->get();
         $composition = $this->compositionMapper->map(
-            $resident, $patientRef, $date, $reports, $conditionRefs, $carePlanRef, $observationRefs, $medicationRefs, $allergyRefs,
+            $resident, $patientRef, $date, $reports, $conditionRefs, $carePlanRef, $observationRefs, $medicationRefs, $allergyRefs, $functionalRefs,
         );
 
         array_unshift(

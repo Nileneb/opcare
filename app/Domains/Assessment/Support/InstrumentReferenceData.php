@@ -9,13 +9,49 @@ class InstrumentReferenceData
 {
     /**
      * @return array<int, array{
-     *   name:string, risk_type:RiskType, direction:ScaleDirection, intervall_tage:int,
-     *   risk_bands:array, items:array<int, array{label:string, options:array<int, array{label:string, punkte:int}>}>
+     *   name:string, loinc?:string, risk_type:RiskType, direction:ScaleDirection, intervall_tage:int,
+     *   risk_bands:array, items:array<int, array{label:string, loinc?:string, options:array<int, array{label:string, punkte:int}>}>
      * }>
      */
     public static function instruments(): array
     {
-        return [self::braden(), self::sturz(), self::besd()];
+        return [self::braden(), self::sturz(), self::besd(), self::barthel()];
+    }
+
+    private static function barthel(): array
+    {
+        // Barthel-Index (ADL): 10 Items, Summe 0–100. Höher = selbstständiger → LowerIsWorse.
+        // LOINC-Codes je Item + Summe aus dem ÜLB-MIO (KBV_PR_MIO_ULB_Observation_Barthel_*).
+        $p = fn (array $stufen) => array_map(fn ($s, $i) => ['label' => $s[0], 'punkte' => $s[1]], $stufen, array_keys($stufen));
+        $items = [
+            ['label' => 'Essen', 'loinc' => '83184-2', 'options' => $p([['unfähig', 0], ['Hilfe nötig', 5], ['selbstständig', 10]])],
+            ['label' => 'Bett-/(Roll-)Stuhl-Transfer', 'loinc' => '83185-9', 'options' => $p([['nicht möglich', 0], ['erhebliche Hilfe', 5], ['geringe Hilfe', 10], ['selbstständig', 15]])],
+            ['label' => 'Waschen / Körperpflege', 'loinc' => '96767-9', 'options' => $p([['Hilfe nötig', 0], ['selbstständig', 5]])],
+            ['label' => 'Toilettenbenutzung', 'loinc' => '83183-4', 'options' => $p([['abhängig', 0], ['Hilfe nötig', 5], ['selbstständig', 10]])],
+            ['label' => 'Baden / Duschen', 'loinc' => '83181-8', 'options' => $p([['Hilfe nötig', 0], ['selbstständig', 5]])],
+            ['label' => 'Aufstehen & Gehen', 'loinc' => '83186-7', 'options' => $p([['immobil', 0], ['Rollstuhl selbstständig', 5], ['Gehen mit Hilfe', 10], ['selbstständig > 50 m', 15]])],
+            ['label' => 'Treppensteigen', 'loinc' => '96758-8', 'options' => $p([['nicht möglich', 0], ['mit Hilfe', 5], ['selbstständig', 10]])],
+            ['label' => 'An-/Auskleiden', 'loinc' => '83182-6', 'options' => $p([['abhängig', 0], ['Hilfe nötig', 5], ['selbstständig', 10]])],
+            ['label' => 'Stuhlkontinenz', 'loinc' => '96759-6', 'options' => $p([['inkontinent', 0], ['gelegentlich inkontinent', 5], ['kontinent', 10]])],
+            ['label' => 'Harnkontinenz', 'loinc' => '96760-4', 'options' => $p([['inkontinent', 0], ['gelegentlich inkontinent', 5], ['kontinent', 10]])],
+        ];
+
+        return [
+            'name' => 'Barthel-Index',
+            'loinc' => '96761-2', // Total_Barthel_Index
+            'risk_type' => RiskType::Mobilitaet,
+            'direction' => ScaleDirection::LowerIsWorse,
+            'intervall_tage' => 90,
+            // Mahoney-Barthel Abhängigkeitsgrade (0–100)
+            'risk_bands' => [
+                ['band' => 'sehr_hoch', 'min' => null, 'max' => 20],
+                ['band' => 'hoch', 'min' => 21, 'max' => 60],
+                ['band' => 'mittel', 'min' => 61, 'max' => 90],
+                ['band' => 'gering', 'min' => 91, 'max' => 99],
+                ['band' => 'kein', 'min' => 100, 'max' => null],
+            ],
+            'items' => $items,
+        ];
     }
 
     private static function braden(): array
