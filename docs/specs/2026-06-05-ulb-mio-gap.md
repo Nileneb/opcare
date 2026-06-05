@@ -122,8 +122,18 @@ Kontinenz/Ernährung, soziale Felder).
     (separate `KBV_PR_MIO_ULB_Medication`-Ressource statt inline) → neuer MedicationMapper (Code als Freitext;
     PZN/ATC + status sind Profil-verboten/-versioniert, spätere Verfeinerung). MedicationStatement: meta.profile,
     medicationReference, effectivePeriod, dosage. Bundle 0 errors.
-  - ⬜ Schritt 8 (final): **Composition + Bundle** — Dokument-Rückgrat (Pflicht-`author`=dokumentierende Einheit,
-    Pflicht-Sektion `pflegegrad`, geschlossenes Sektions-Slicing mit fixen Codes, `section.entry`→konforme Profile).
+  - ⬜ Schritt 8 (final, GROSSER BLOCK — präzise charakterisiert): **Composition + Bundle**. Empirisch geprüft
+    (Composition+Bundle-meta geclaimt → Fehler analysiert): die ÜLB-Composition referenziert **nicht** die
+    Blatt-Ressourcen direkt. Jede Sektion erwartet eine eigene **Wrapper-Ressource** mit fixem Profil:
+    - `vitalparameter` → **DiagnosticReport** (bündelt die Vital-Observations), nicht Observation direkt
+    - `allergien` → **Presence_Allergies-Observation** (+ AllergyIntolerance als Member), nicht AllergyIntolerance direkt
+    - `pflegerischeMassnahme` → **Procedure**, nicht CarePlan
+    - `medikationsplan`/`funktionsbeurteilungen`/`medizinprodukte`/Kontinenz/Atmung → je eigene Presence-/Wrapper-Observation
+    - `pflegegrad` → Care_Level-Observation **mit Beantragungsstatus-Extension** (obs-9/obs-10-Constraints)
+    - Sektionstitel sind **fix** (z. B. „Vitalzeichen und Körpermaße"), Sektions-Slicing geschlossen.
+    Das ist eine eigene **Sektions-Wrapper-Schicht** (≈10 neue Mapper + DiagnosticReport/Procedure), vergleichbar
+    mit dem gesamten Blatt-Aufwand — **bewusst nicht halbfertig geclaimt** (würde das grüne Gate brechen). Bleibt
+    als nächster großer Block. Die generische Composition (deutsche Titel) bleibt bis dahin als valides FHIR.
   - **Tooling-Hinweis:** `kbv.basis 1.3.0` erzeugt im aktuellen Validator einen Snapshot-Fehler
     (`Same id 'Observation.dataAbsentReason'`) — bekannte KBV/Validator-Inkompatibilität, nicht unsere Daten.
 
