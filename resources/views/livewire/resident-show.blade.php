@@ -97,6 +97,40 @@
         </div>
 
         <div class="card">
+            <div class="card-head"><h3>Pflegerische Einschätzungen</h3></div>
+            @forelse ($resident->statusObservations->sortByDesc('erfasst_am') as $o)
+                <div class="chip">
+                    <b>{{ $statusCatalog[$o->typ]['label'] ?? $o->typ }}</b>
+                    <span>{{ $o->wert_code ? ($statusCatalog[$o->typ]['options'][$o->wert_code] ?? $o->wert_code) : $o->wert_text }}</span>
+                    <span style="color:var(--c-muted)">{{ optional($o->erfasst_am)->format('d.m.Y') }}</span>
+                    <button type="button" class="btn btn-ghost btn-sm" style="margin-left:auto" wire:click="removeStatusObservation({{ $o->id }})" wire:confirm="Eintrag entfernen?" title="Entfernen">✕</button>
+                </div>
+            @empty <p class="empty">Keine Einschätzungen erfasst.</p> @endforelse
+            @can('update', $resident)
+                <form wire:submit="addStatusObservation" style="margin-top:14px">
+                    <div class="form-row">
+                        <div class="field"><label>Merkmal</label>
+                            <select wire:model.live="so_typ">
+                                @foreach ($statusCatalog as $key => $def)<option value="{{ $key }}">{{ $def['label'] }} ({{ $def['section'] }})</option>@endforeach
+                            </select>
+                        </div>
+                        <div class="field"><label>Wert</label>
+                            @if (($statusCatalog[$so_typ]['kind'] ?? 'coded') === 'coded')
+                                <select wire:model="so_wert_code">
+                                    <option value="">– wählen –</option>
+                                    @foreach ($statusCatalog[$so_typ]['options'] as $code => $label)<option value="{{ $code }}">{{ $label }}</option>@endforeach
+                                </select>@error('so_wert_code')<span class="err">{{ $message }}</span>@enderror
+                            @else
+                                <input type="text" wire:model="so_wert_text" placeholder="z. B. ruhig, unauffällig" />@error('so_wert_text')<span class="err">{{ $message }}</span>@enderror
+                            @endif
+                        </div>
+                    </div>
+                    <button class="btn btn-ghost btn-sm">+ Einschätzung</button>
+                </form>
+            @endcan
+        </div>
+
+        <div class="card">
             <div class="card-head"><h3>Krankenkassen</h3></div>
             @forelse ($resident->insurances as $i)
                 <div class="chip"><b>{{ $i->healthInsurance->name }}</b> {{ $i->versichertennr }} @if ($i->ist_primaer)<span class="badge green" style="margin-left:auto">primär</span>@endif</div>

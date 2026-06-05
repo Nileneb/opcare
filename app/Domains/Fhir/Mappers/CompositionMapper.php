@@ -30,6 +30,7 @@ class CompositionMapper
         array $medicationRefs = [],
         array $allergyRefs = [],
         array $functionalRefs = [],
+        array $extraSections = [],
     ): array {
         $sections = [];
         if ($conditionRefs !== []) {
@@ -49,6 +50,12 @@ class CompositionMapper
         }
         if ($functionalRefs !== []) {
             $sections[] = ['title' => 'Funktionsbeurteilungen', 'entry' => $this->entries($functionalRefs)];
+        }
+        // WHY(ÜLB): dynamische codierte Sektionen (Kontinenz/Ernährung/Bewusstsein/Atmung) aus dem Status-Katalog
+        foreach ($extraSections as $title => $refs) {
+            if ($refs !== []) {
+                $sections[] = ['title' => $title, 'entry' => $this->entries($refs)];
+            }
         }
         $sections[] = ['title' => 'Verlauf', 'text' => ['status' => 'generated', 'div' => $this->narrative($reports)]];
 

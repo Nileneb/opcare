@@ -12,6 +12,7 @@ use App\Domains\Fhir\Mappers\ConditionMapper;
 use App\Domains\Fhir\Mappers\MedicationStatementMapper;
 use App\Domains\Fhir\Mappers\ObservationMapper;
 use App\Domains\Fhir\Mappers\PatientMapper;
+use App\Domains\Fhir\Mappers\StatusObservationMapper;
 use App\Domains\Masterdata\Models\Resident;
 use App\Domains\Medication\Models\Prescription;
 use App\Domains\Medication\Models\VitalReading;
@@ -34,12 +35,13 @@ class FhirDocumentExporter
         private readonly MedicationStatementMapper $medicationMapper,
         private readonly AllergyIntoleranceMapper $allergyMapper,
         private readonly AssessmentObservationMapper $assessmentMapper,
+        private readonly StatusObservationMapper $statusMapper,
     ) {}
 
     /** @return array<string, mixed> */
     public function export(Resident $resident): array
     {
-        $resident->loadMissing('diagnoses.icdCode', 'allergies');
+        $resident->loadMissing('diagnoses.icdCode', 'allergies', 'statusObservations');
         $base = rtrim(config('app.url'), '/').'/fhir/';
         $patientRef = $base.'Patient/'.PatientMapper::id($resident);
         $date = Carbon::now()->toIso8601String();
@@ -118,9 +120,23 @@ class FhirDocumentExporter
             $entry[] = ['fullUrl' => $totalRef, 'resource' => $total];
         }
 
+        // WHY(ÜLB): codierte Status-Observations (Bewusstsein/Kontinenz/Ernährung/Atmung), jüngster je Typ;
+        // gruppiert in Composition-Sektionen gemäß StatusObservationCatalog.
+        $extraSections = [];
+        $statusObs = $resident->statusObservations->sortByDesc('erfasst_am')->unique('typ');
+        foreach ($statusObs as $status) {
+            $resource = $this->statusMapper->map($status, $patientRef, $status->erfasst_am?->toIso8601String() ?? $date);
+            if ($resource === null) {
+                continue;
+            }
+            $ref = $base.'Observation/'.$resource['id'];
+            $entry[] = ['fullUrl' => $ref, 'resource' => $resource];
+            $extraSections[$this->statusMapper->section($status)][] = $ref;
+        }
+
         $reports = CareReport::query()->where('resident_id', $resident->id)->current()->latest('datum')->get();
         $composition = $this->compositionMapper->map(
-            $resident, $patientRef, $date, $reports, $conditionRefs, $carePlanRef, $observationRefs, $medicationRefs, $allergyRefs, $functionalRefs,
+            $resident, $patientRef, $date, $reports, $conditionRefs, $carePlanRef, $observationRefs, $medicationRefs, $allergyRefs, $functionalRefs, $extraSections,
         );
 
         array_unshift(

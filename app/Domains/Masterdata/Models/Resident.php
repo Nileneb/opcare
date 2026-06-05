@@ -45,6 +45,11 @@ class Resident extends BaseModel implements HasMedia
         return $this->hasMany(ResidentAllergy::class);
     }
 
+    public function statusObservations(): HasMany
+    {
+        return $this->hasMany(ResidentStatusObservation::class);
+    }
+
     public function insurances(): HasMany
     {
         return $this->hasMany(ResidentInsurance::class);
