@@ -27,10 +27,14 @@ class CompositionMapper
         array $conditionRefs = [],
         ?string $carePlanRef = null,
         array $observationRefs = [],
+        array $medicationRefs = [],
     ): array {
         $sections = [];
         if ($conditionRefs !== []) {
             $sections[] = ['title' => 'Diagnosen', 'entry' => $this->entries($conditionRefs)];
+        }
+        if ($medicationRefs !== []) {
+            $sections[] = ['title' => 'Medikation', 'entry' => $this->entries($medicationRefs)];
         }
         if ($carePlanRef !== null) {
             $sections[] = ['title' => 'Pflegeplan', 'entry' => $this->entries([$carePlanRef])];
