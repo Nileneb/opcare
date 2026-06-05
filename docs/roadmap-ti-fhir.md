@@ -10,9 +10,10 @@ unkritisch; Pflichten (DSGVO, ggf. Zulassung) treffen erst den späteren *Betrei
 
 | Track | Inhalt | Status | Rechtsgate |
 |---|---|---|---|
-| **A — Daten-Konformität** | FHIR R4, **ISiK**-Profile, **ePflegebericht-MIO** (mio42/KBV, noch nicht final) | **läuft** (FHIR-Export + CI-Validierung steht) | nein |
-| **B — Security-Hygiene** | Tenant-Isolation, RBAC, Audit-Log, IDOR-Härtung, Dependency-Audit, SAST | **viel da**, ausbauen | nein |
+| **A — Daten-Konformität** | FHIR R4, deutsche Basisprofile (`de.basisprofil.r4`), **ePflegebericht-MIO** (mio42/KBV, noch nicht final). *ISiK ist krankenhausspezifisch → für Pflege sekundär.* | **läuft** (FHIR-Export + CI-Validierung steht) | nein |
+| **B — Security-Hygiene** | Tenant-Isolation, RBAC, Audit-Log, IDOR-Härtung, Dependency-Audit (CVE-Gate ✅), SAST | **viel da**, ausbauen | nein |
 | **C — TI-Anbindung + Zulassung** | Online-Auth (GesundheitsID/TI-IDP), KIM, ePA-Schreibzugriff, eVerordnung, Konnektor-Light, gematik-Zulassung, BSI-TR-Konformität | **aufgeschoben** | **ja** |
+| **D — Domäne/Fachlichkeit** | Pflege-Fachfunktionen nach **Nationalen Expertenstandards** (Dekubitus/Sturz/Schmerz/Ernährung/Kontinenz) | **blockiert** auf Quelle (Expertenstandards nicht frei verfügbar) | nein |
 
 **Wichtig:** „BSI-TR-Konformität" und „Konnektor-Light-Migration" gehören zu **Track C**
 (Anbindung/Zertifizierung) — *nicht* jetzt umbauen (kein TI-Anschluss vorhanden →
@@ -39,15 +40,14 @@ Architektur-Vorsorge: Auth-Schicht abstrahiert halten, damit TI-IDP später ando
 ## Priorisierter Plan (jetzt → später)
 
 ### Jetzt (Open-Source, kein Rechtsgate)
-1. **Domänen-Best-Practice nach Nationalen Expertenstandards** — der substanziellste Block.
-   Erfassungs-/Interventions-Tools nach Expertenstandard (Dekubitus, Sturz, Schmerz,
-   Ernährung, Kontinenz). Deckt die DAS-Indikatoren *fachlich korrekt* ab.
-   **Vorbedingung:** den jeweiligen Expertenstandard als Quelle zugrunde legen.
-2. **FHIR/ISiK-Track vertiefen** — ISiK-Profile ins CI-Gate, mehr Ressourcen mappen
-   (CarePlan aus SIS, Observation aus Vitalwerten/Assessments, MedicationStatement).
-   = „ePflegebericht-Schnittstelle früh pilotieren".
-3. **Security-CI-Gate** — `composer audit` (Dependency-CVEs) + SAST; tenancy/RBAC weiter
-   härten. Macht „IT-Sicherheit genügen" **messbar** (Vorbedingung für stressfreien Betrieb).
+1. **[Track D] Domänen-Best-Practice nach Nationalen Expertenstandards** — der substanziellste
+   Block, aber **blockiert** auf die Quelle (Expertenstandards nicht frei verfügbar → erst organisieren).
+   Erfassungs-/Interventions-Tools (Dekubitus, Sturz, Schmerz, Ernährung, Kontinenz),
+   deckt die DAS-Indikatoren *fachlich korrekt* ab.
+2. **[Track A] FHIR-Track vertiefen** — mehr Ressourcen (CarePlan aus SIS, Observation aus
+   Vitalwerten/Assessments, MedicationStatement) + deutsche Basisprofile (`de.basisprofil.r4`)
+   ins CI-Validierungs-Gate. = „ePflegebericht-Schnittstelle früh pilotieren". *(läuft jetzt)*
+3. **[Track B] Security** — CVE-Gate ✅ (`composer audit`); als Nächstes SAST + tenancy/RBAC-Härtung.
 
 ### Aufgeschoben (Architektur bereithalten, nicht bauen)
 - gematik-Zulassung (Doku in `docs/TelematikAntrag/`), BSI-TR-Konformität,
