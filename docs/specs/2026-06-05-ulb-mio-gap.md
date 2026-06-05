@@ -109,7 +109,11 @@ Kontinenz/Ernährung, soziale Felder).
   - **Reihenfolge-Korrektur:** Die **Composition kommt zuletzt** — geschlossenes Sektions-Slicing + Pflicht-
     `author` + Pflicht-Sektion `pflegegrad` + `section.entry`-Profile setzen voraus, dass alle Blatt-Ressourcen
     konform sind.
-  - ⬜ Schritt 5+: dokumentierende Organisation/Practitioner → dann Allergy/Observations/Medikation → Composition/Bundle.
+  - ✅ Schritt 5: **Dokumentierende Einheit** (`Organization`←`PractitionerRole`→`Practitioner`, alle ÜLB-konform,
+    aus dem Tenant) einmal je Bundle erzeugt + als Pflicht-`recorder` referenziert. Damit **AllergyIntolerance**
+    ÜLB-konform (`meta.profile`, version 1.0.1 auf clinical/verificationStatus, recorder, `recordedDate` entfernt).
+    Bundle 0 errors. Diese Einheit ist auch der künftige `performer` (Observations) + `author` (Composition).
+  - ⬜ Schritt 6+: Vital-Observations (performer), MedicationStatement, dann zuletzt Composition + Bundle.
   - **Tooling-Hinweis:** `kbv.basis 1.3.0` erzeugt im aktuellen Validator einen Snapshot-Fehler
     (`Same id 'Observation.dataAbsentReason'`) — bekannte KBV/Validator-Inkompatibilität, nicht unsere Daten.
 

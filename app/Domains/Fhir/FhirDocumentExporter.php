@@ -10,6 +10,7 @@ use App\Domains\Fhir\Mappers\CarePlanMapper;
 use App\Domains\Fhir\Mappers\CompositionMapper;
 use App\Domains\Fhir\Mappers\ConditionMapper;
 use App\Domains\Fhir\Mappers\DeviceMapper;
+use App\Domains\Fhir\Mappers\DocumentingEntityMapper;
 use App\Domains\Fhir\Mappers\MedicationStatementMapper;
 use App\Domains\Fhir\Mappers\ObservationMapper;
 use App\Domains\Fhir\Mappers\PatientMapper;
@@ -40,12 +41,13 @@ class FhirDocumentExporter
         private readonly StatusObservationMapper $statusMapper,
         private readonly DeviceMapper $deviceMapper,
         private readonly RelatedPersonMapper $relatedPersonMapper,
+        private readonly DocumentingEntityMapper $documentingEntityMapper,
     ) {}
 
     /** @return array<string, mixed> */
     public function export(Resident $resident): array
     {
-        $resident->loadMissing('diagnoses.icdCode', 'allergies', 'statusObservations', 'devices', 'contacts');
+        $resident->loadMissing('diagnoses.icdCode', 'allergies', 'statusObservations', 'devices', 'contacts', 'tenant');
         $base = rtrim(config('app.url'), '/').'/fhir/';
         $patientRef = $base.'Patient/'.PatientMapper::id($resident);
         $date = Carbon::now()->toIso8601String();
@@ -54,6 +56,12 @@ class FhirDocumentExporter
         $conditionRefs = [];
         $observationRefs = [];
         $carePlanRef = null;
+
+        // Dokumentierende Einheit (Organization/Practitioner/PractitionerRole) — einmal je Bundle,
+        // als Pflicht-recorder/performer/author wiederverwendet (KBV-MIO-Anforderung).
+        $documenting = $this->documentingEntityMapper->build((string) ($resident->tenant?->name ?? ''), $base);
+        $entry = [...$entry, ...$documenting['entries']];
+        $recorderRef = $documenting['recorderReference'];
 
         foreach ($resident->diagnoses as $diagnosis) {
             if (! $diagnosis->icdCode) {
@@ -67,7 +75,7 @@ class FhirDocumentExporter
 
         $allergyRefs = [];
         foreach ($resident->allergies as $allergy) {
-            $resource = $this->allergyMapper->map($allergy, $patientRef);
+            $resource = $this->allergyMapper->map($allergy, $patientRef, $recorderRef);
             $ref = $base.'AllergyIntolerance/'.$resource['id'];
             $allergyRefs[] = $ref;
             $entry[] = ['fullUrl' => $ref, 'resource' => $resource];
