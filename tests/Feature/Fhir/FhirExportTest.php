@@ -76,7 +76,12 @@ it('mappt Diagnosen auf Condition mit ICD-10-GM-Codesystem', function () {
         ->pluck('resource')->firstWhere('resourceType', 'Condition');
 
     expect($condition['code']['coding'][0]['system'])->toBe('http://fhir.de/CodeSystem/bfarm/icd-10-gm')
-        ->and($condition['code']['coding'][0]['code'])->toBe('I10');
+        ->and($condition['code']['coding'][0]['code'])->toBe('I10')
+        ->and($condition['code']['coding'][0]['version'])->toBe('2017')
+        // WHY(Track A Phase 6): ÜLB-Diagnose-Profil + verificationStatus (Pflicht), kein recordedDate
+        ->and($condition['meta']['profile'][0])->toContain('Condition_Medical_Problem_Diagnosis')
+        ->and($condition['verificationStatus']['coding'][0]['code'])->toBe('confirmed')
+        ->and($condition)->not->toHaveKey('recordedDate');
 });
 
 it('hält alle internen Referenzen auflösbar (subject → Patient-fullUrl)', function () {
