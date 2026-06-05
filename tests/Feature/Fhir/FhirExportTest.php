@@ -7,6 +7,7 @@ use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Support\CurrentTenant;
 use App\Domains\Masterdata\Models\IcdCode;
 use App\Domains\Masterdata\Models\Resident;
+use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
     $t = Tenant::create(['name' => 'A', 'slug' => 'a']);
@@ -57,7 +58,7 @@ it('hält alle internen Referenzen auflösbar (subject → Patient-fullUrl)', fu
 
 it('liefert das Bundle über die Download-Route an Leitungsrollen', function () {
     foreach (['admin', 'pflegefachkraft', 'pflegehilfskraft', 'leserecht'] as $r) {
-        \Spatie\Permission\Models\Role::findOrCreate($r);
+        Role::findOrCreate($r);
     }
     $user = User::factory()->create(['tenant_id' => $this->resident->tenant_id]);
     $user->assignRole('pflegefachkraft');
@@ -68,7 +69,7 @@ it('liefert das Bundle über die Download-Route an Leitungsrollen', function () 
 });
 
 it('verwehrt Leserecht den FHIR-Download (DSGVO-Guard)', function () {
-    \Spatie\Permission\Models\Role::findOrCreate('leserecht');
+    Role::findOrCreate('leserecht');
     $user = User::factory()->create(['tenant_id' => $this->resident->tenant_id]);
     $user->assignRole('leserecht');
 

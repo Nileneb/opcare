@@ -19,6 +19,12 @@ jobs:
     env:
       DB_CONNECTION: sqlite
       DB_DATABASE: ${{ github.workspace }}/database/ci.sqlite
+      # WHY: .env.example fährt Session/Queue/Cache über Redis (Horizon) — im CI nicht vorhanden.
+      # Reale Env-Vars überschreiben die .env-Werte (phpdotenv-immutable).
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+      BROADCAST_CONNECTION: log
     steps:
       - name: Checkout
         uses: actions/checkout@v4
