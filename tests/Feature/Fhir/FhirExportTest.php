@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\CarePlanning\Models\CareMeasure;
 use App\Domains\CarePlanning\Models\CareReport;
 use App\Domains\Fhir\FhirDocumentExporter;
 use App\Domains\Identity\Models\Tenant;
@@ -7,6 +8,8 @@ use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Support\CurrentTenant;
 use App\Domains\Masterdata\Models\IcdCode;
 use App\Domains\Masterdata\Models\Resident;
+use App\Domains\Medication\Enums\VitalType;
+use App\Domains\Medication\Models\VitalReading;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
@@ -17,6 +20,8 @@ beforeEach(function () {
     $icd = IcdCode::create(['code' => 'I10', 'bezeichnung' => 'Essentielle (primäre) Hypertonie']);
     $this->resident->diagnoses()->create(['icd_code_id' => $icd->id, 'art' => 'primär', 'diagnostiziert_am' => '2025-01-01']);
     CareReport::create(['resident_id' => $this->resident->id, 'created_by' => $user->id, 'datum' => '2026-06-01 08:00:00', 'schicht' => 'frueh', 'text' => 'Bewohnerin wohlauf.']);
+    CareMeasure::create(['resident_id' => $this->resident->id, 'themenfeld' => 'mobilitaet', 'beschreibung' => 'Gehübungen täglich', 'ziel' => 'Mobilität erhalten']);
+    VitalReading::create(['resident_id' => $this->resident->id, 'typ' => VitalType::Gewicht, 'wert' => 68.5, 'einheit' => 'kg', 'gemessen_am' => '2026-06-01 07:00:00', 'gemessen_von' => $user->id]);
 });
 
 it('liefert ein FHIR-R4-Document-Bundle mit der Composition zuerst', function () {
@@ -76,11 +81,24 @@ it('verwehrt Leserecht den FHIR-Download (DSGVO-Guard)', function () {
     $this->actingAs($user)->get(route('fhir.export', $this->resident))->assertForbidden();
 });
 
-it('erzeugt eine Composition mit XHTML-Narrativ', function () {
+it('mappt Vitalwerte auf Observation mit LOINC + Maßnahmen auf CarePlan', function () {
+    $resources = collect(app(FhirDocumentExporter::class)->export($this->resident)['entry'])->pluck('resource');
+
+    $observation = $resources->firstWhere('resourceType', 'Observation');
+    $carePlan = $resources->firstWhere('resourceType', 'CarePlan');
+
+    expect($observation['code']['coding'][0]['system'])->toBe('http://loinc.org')
+        ->and($observation['code']['coding'][0]['code'])->toBe('29463-7')
+        ->and($observation['valueQuantity']['value'])->toBe(68.5)
+        ->and($carePlan['status'])->toBe('active')
+        ->and($carePlan['activity'][0]['detail']['description'])->toContain('Gehübungen');
+});
+
+it('erzeugt eine Composition mit referenzierten Sektionen + Verlauf-Narrativ', function () {
     $composition = app(FhirDocumentExporter::class)->export($this->resident)['entry'][0]['resource'];
+    $titles = collect($composition['section'])->pluck('title')->all();
 
     expect($composition['status'])->toBe('final')
-        ->and($composition['title'])->toBe('Pflegebericht')
-        ->and($composition['section'][0]['text']['div'])->toContain('http://www.w3.org/1999/xhtml')
-        ->and($composition['section'][0]['text']['div'])->toContain('Bewohnerin wohlauf.');
+        ->and($titles)->toContain('Diagnosen')->toContain('Pflegeplan')->toContain('Beobachtungen / Vitalwerte')->toContain('Verlauf')
+        ->and(collect($composition['section'])->firstWhere('title', 'Verlauf')['text']['div'])->toContain('Bewohnerin wohlauf.');
 });

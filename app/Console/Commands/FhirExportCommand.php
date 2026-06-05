@@ -6,6 +6,7 @@ use App\Domains\Fhir\FhirDocumentExporter;
 use App\Domains\Identity\Models\Tenant;
 use App\Domains\Identity\Support\CurrentTenant;
 use App\Domains\Masterdata\Models\Resident;
+use App\Domains\Masterdata\Models\ResidentDiagnosis;
 use Illuminate\Console\Command;
 
 class FhirExportCommand extends Command
@@ -16,9 +17,11 @@ class FhirExportCommand extends Command
 
     public function handle(FhirDocumentExporter $exporter): int
     {
-        $resident = $this->argument('resident')
-            ? Resident::withoutGlobalScopes()->find($this->argument('resident'))
-            : Resident::withoutGlobalScopes()->orderBy('id')->first();
+        // Default: ein Bewohner mit Diagnosen (vollständiges Dokument fürs CI-Gate), sonst der erste
+        $id = $this->argument('resident')
+            ?? ResidentDiagnosis::withoutGlobalScopes()->orderBy('resident_id')->value('resident_id')
+            ?? Resident::withoutGlobalScopes()->orderBy('id')->value('id');
+        $resident = $id ? Resident::withoutGlobalScopes()->find($id) : null;
 
         if (! $resident) {
             $this->error('Kein Bewohner gefunden.');

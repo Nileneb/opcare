@@ -10,7 +10,9 @@ use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Support\CurrentTenant;
 use App\Domains\Masterdata\Models\Building;
 use App\Domains\Masterdata\Models\Floor;
+use App\Domains\Masterdata\Models\IcdCode;
 use App\Domains\Masterdata\Models\Resident;
+use App\Domains\Masterdata\Models\ResidentDiagnosis;
 use App\Domains\Masterdata\Models\Room;
 use App\Domains\Masterdata\Models\Station;
 use App\Domains\Medication\Actions\AddSchedule;
@@ -22,8 +24,10 @@ use App\Domains\Medication\Data\ScheduleData;
 use App\Domains\Medication\Data\StockData;
 use App\Domains\Medication\Database\Seeders\MedicationReferenceSeeder;
 use App\Domains\Medication\Enums\ScheduleFrequency;
+use App\Domains\Medication\Enums\VitalType;
 use App\Domains\Medication\Models\MedProduct;
 use App\Domains\Medication\Models\TradeForm;
+use App\Domains\Medication\Models\VitalReading;
 use App\Domains\Quality\Enums\EventSeverity;
 use App\Domains\Quality\Enums\QualityIndicator;
 use App\Domains\Quality\Models\CareEvent;
@@ -175,6 +179,29 @@ class DemoSeeder extends Seeder
             'details' => ['lokalisation' => 'Steißbein', 'grad' => 1],
             'reported_by' => $admin->id,
         ]);
+
+        // Diagnosen + Vitalwerte für Maria — realistische Demo UND vollständige FHIR-Export-Abdeckung
+        foreach (['I10', 'E11.9'] as $i => $code) {
+            if ($icd = IcdCode::where('code', $code)->first()) {
+                ResidentDiagnosis::create([
+                    'resident_id' => $maria->id,
+                    'icd_code_id' => $icd->id,
+                    'art' => $i === 0 ? 'primär' : 'sekundär',
+                    'diagnostiziert_am' => now()->subMonths(8)->toDateString(),
+                ]);
+            }
+        }
+        foreach ([[VitalType::Gewicht, 68.5, null, 'kg'], [VitalType::Blutdruck, 135, 85, 'mmHg'], [VitalType::Puls, 72, null, '/min']] as [$typ, $wert, $wert2, $einheit]) {
+            VitalReading::create([
+                'resident_id' => $maria->id,
+                'typ' => $typ,
+                'wert' => $wert,
+                'wert2' => $wert2,
+                'einheit' => $einheit,
+                'gemessen_am' => now()->subDays(2),
+                'gemessen_von' => $admin->id,
+            ]);
+        }
 
         $wilhelm = Resident::query()->where('name', 'Wilhelm Müller')->firstOrFail();
         CareEvent::create([
