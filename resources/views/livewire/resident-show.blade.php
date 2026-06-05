@@ -131,6 +131,30 @@
         </div>
 
         <div class="card">
+            <div class="card-head"><h3>Medizinprodukte & Hilfsmittel</h3></div>
+            @forelse ($resident->devices as $d)
+                <div class="chip">
+                    <b>{{ $d->bezeichnung }}</b>
+                    <span class="badge gray">{{ $d->kategorie }}</span>
+                    @if ($d->hinweis)<span style="color:var(--c-muted)">— {{ $d->hinweis }}</span>@endif
+                    <button type="button" class="btn btn-ghost btn-sm" style="margin-left:auto" wire:click="removeDevice({{ $d->id }})" wire:confirm="Eintrag entfernen?" title="Entfernen">✕</button>
+                </div>
+            @empty <p class="empty">Keine Medizinprodukte/Hilfsmittel erfasst.</p> @endforelse
+            @can('update', $resident)
+                <form wire:submit="addDevice" style="margin-top:14px">
+                    <div class="form-row">
+                        <div class="field"><label>Bezeichnung *</label><input type="text" wire:model="dev_bezeichnung" placeholder="z. B. Rollator, Hörgerät, PEG-Sonde" />@error('dev_bezeichnung')<span class="err">{{ $message }}</span>@enderror</div>
+                        <div class="field"><label>Kategorie</label>
+                            <select wire:model="dev_kategorie"><option value="hilfsmittel">Hilfsmittel</option><option value="implantat">Implantat</option><option value="sonstiges">Sonstiges</option></select>
+                        </div>
+                    </div>
+                    <div class="field"><label>Hinweis</label><input type="text" wire:model="dev_hinweis" placeholder="optional" />@error('dev_hinweis')<span class="err">{{ $message }}</span>@enderror</div>
+                    <button class="btn btn-ghost btn-sm">+ Medizinprodukt</button>
+                </form>
+            @endcan
+        </div>
+
+        <div class="card">
             <div class="card-head"><h3>Krankenkassen</h3></div>
             @forelse ($resident->insurances as $i)
                 <div class="chip"><b>{{ $i->healthInsurance->name }}</b> {{ $i->versichertennr }} @if ($i->ist_primaer)<span class="badge green" style="margin-left:auto">primär</span>@endif</div>
