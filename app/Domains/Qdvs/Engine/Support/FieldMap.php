@@ -73,6 +73,21 @@ class FieldMap
             'DEKUBITUSSTADIUM' => new FieldBinding(fn (QdvsResidentPackage $p) => $p->dekubitus_stadium, 'int'),
             'DEKUBITUS1BEGINNDATUM' => new FieldBinding(fn (QdvsResidentPackage $p) => $p->dekubitus_beginn, 'date'),
             'DEKUBITUS1ENDEDATUM' => new FieldBinding(fn (QdvsResidentPackage $p) => $p->dekubitus_ende, 'date'),
+            // WHY(DAS_REGELN): STURZ (Feld 71) ist Pflichtfeld 0/1/2 (nein/einmal/mehrmals) — ohne Sturzereignis
+            // immer '0' (nein), sonst die erfasste Anzahl. Schaltet 10055/20056/30075/60039 scharf.
+            'STURZ' => new FieldBinding(
+                fn (QdvsResidentPackage $p) => $p->sturz_anzahl,
+                'int',
+                fn ($v) => (string) ($v ?? 0),
+            ),
+            // WHY(DAS_REGELN): STURZFOLGEN (Feld 72, Mehrfachwerte) — nur die aus dem Regeltext verifizierten
+            // Codes 0=keine/1=Fraktur werden gemappt. Codes 2–4 (SHT etc.) bleiben bewusst ungemappt
+            // (amtliches Erhebungsinstrument nicht frei verfügbar), daher klassifizieren 30076/60040/70003
+            // weiter als nicht erkanntes Muster bzw. werden nicht gefälscht.
+            'STURZFOLGEN' => new FieldBinding(
+                fn (QdvsResidentPackage $p) => $p->sturzfolgen === [] ? null : array_map('strval', $p->sturzfolgen),
+                'list',
+            ),
             // WHY(DAS_REGELN): DAS-DIAGNOSEN ist ein codiertes 0/1/2/3-Feld (Regeln 20011/70001),
             // NICHT die ICD-10-Codes von OPCare → bewusst nicht gemappt (Regeln laufen als UNMAPPED).
             // Die „keine Diagnose hinterlegt"-Warnung bleibt native im QdvsValidator.

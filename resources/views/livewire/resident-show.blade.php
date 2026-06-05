@@ -261,6 +261,19 @@
                     </div>
                     <div class="field"><label>Körperstelle</label><input type="text" wire:model="ce_dek_stelle" placeholder="z. B. Steißbein, Ferse links" />@error('ce_dek_stelle')<span class="err">{{ $message }}</span>@enderror</div>
                 @endif
+                @if ($ce_indicator === 'sturz')
+                    <div class="form-row-3" style="background:var(--c-surface-2);padding:8px;border-radius:var(--radius)">
+                        <div class="field"><label>Häufigkeit *</label>
+                            <select wire:model="ce_sturz_anzahl">
+                                <option value="1">einmal</option>
+                                <option value="2">mehrmals</option>
+                            </select>@error('ce_sturz_anzahl')<span class="err">{{ $message }}</span>@enderror
+                        </div>
+                        <div class="field"><label>Sturzfolge (DAS-Feld 72)</label>
+                            <label style="font-weight:400"><input type="checkbox" wire:model="ce_sturz_fraktur" /> Fraktur aufgetreten</label>
+                        </div>
+                    </div>
+                @endif
                 <div class="field"><label>Notiz <span style="color:var(--c-muted);font-weight:400">(optional)</span></label>
                     <input type="text" wire:model="ce_notiz" placeholder="z. B. Sturz im Bad, Folgen…" />
                     @error('ce_notiz')<span class="err">{{ $message }}</span>@enderror

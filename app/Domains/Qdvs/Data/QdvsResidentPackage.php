@@ -30,5 +30,9 @@ class QdvsResidentPackage extends Data
         public ?int $dekubitus_stadium = null,
         public ?string $dekubitus_beginn = null,
         public ?string $dekubitus_ende = null,
+        // Sturz (DAS-Feld 71 STURZ: 0=nein, 1=einmal, 2=mehrmals) + Folgen (Feld 72 STURZFOLGEN, Mehrfachwerte)
+        public ?int $sturz_anzahl = null,
+        /** @var array<int, int> DAS-Schlüssel der Sturzfolgen (nur verifizierte Codes: 0=keine, 1=Fraktur) */
+        public array $sturzfolgen = [],
     ) {}
 }

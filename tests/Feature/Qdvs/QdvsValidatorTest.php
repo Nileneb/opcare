@@ -58,6 +58,23 @@ it('erzeugt pro Verstoß genau ein Issue (keine Dataset-Doppelung)', function ()
     expect($geburtsmonat)->toHaveCount(1);
 });
 
+it('akzeptiert einen erfassten Sturz mit Folge-Angabe ohne DAS-Verstoß', function () {
+    $issues = app(QdvsValidator::class)->validate([
+        vollesPaket(['sturz_anzahl' => 1, 'sturzfolgen' => [0]]),
+    ]);
+
+    expect(collect($issues)->pluck('feld')->all())->not->toContain('STURZ')->not->toContain('STURZFOLGEN');
+});
+
+it('meldet einen Sturz ohne Sturzfolgen-Angabe als Fehler (DAS 60039)', function () {
+    // STURZ = 2 (mehrmals) verlangt das Pflichtfeld STURZFOLGEN (Feld 72)
+    $issues = app(QdvsValidator::class)->validate([
+        vollesPaket(['sturz_anzahl' => 2, 'sturzfolgen' => []]),
+    ]);
+
+    expect(collect($issues)->where('schwere', 'fehler')->pluck('feld')->all())->toContain('STURZ');
+});
+
 it('liefert einen Coverage-Report nach der Validierung', function () {
     $validator = app(QdvsValidator::class);
     $validator->validate([vollesPaket()]);

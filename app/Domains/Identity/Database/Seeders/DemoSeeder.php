@@ -167,7 +167,7 @@ class DemoSeeder extends Seeder
             'indicator' => QualityIndicator::Sturz,
             'datum' => now()->startOfQuarter()->addDays(5)->toDateString(),
             'severity' => EventSeverity::MitFolgen,
-            'details' => ['ort' => 'Bad', 'verletzung' => 'Platzwunde Kopf'],
+            'details' => ['ort' => 'Bad', 'verletzung' => 'Platzwunde Kopf', 'anzahl' => 1, 'fraktur' => false],
             'reported_by' => $admin->id,
         ]);
         CareEvent::create([
@@ -209,7 +209,7 @@ class DemoSeeder extends Seeder
             'indicator' => QualityIndicator::Sturz,
             'datum' => now()->startOfQuarter()->addDays(12)->toDateString(),
             'severity' => EventSeverity::OhneFolgen,
-            'details' => ['ort' => 'Flur', 'verletzung' => 'keine'],
+            'details' => ['ort' => 'Flur', 'verletzung' => 'keine', 'anzahl' => 1, 'fraktur' => false],
             'reported_by' => $admin->id,
         ]);
 
