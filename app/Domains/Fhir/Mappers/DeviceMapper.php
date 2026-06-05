@@ -10,6 +10,12 @@ use App\Domains\Masterdata\Models\ResidentDevice;
  */
 class DeviceMapper
 {
+    // WHY(Track A Phase 6): ÜLB-Device-Profil (Other_Item) geclaimt. status + note sind im Profil verboten;
+    // eine Terminologie-Assoziations-Extension (SNOMED 260787004) ist Pflicht.
+    public const ULB_PROFILE = 'https://fhir.kbv.de/StructureDefinition/KBV_PR_MIO_ULB_Device_Other_Item|1.0.0';
+
+    private const SNOMED_VERSION = 'http://snomed.info/sct/900000000000207008/version/20220331';
+
     public static function id(ResidentDevice $d): string
     {
         return 'device-'.$d->id;
@@ -18,18 +24,21 @@ class DeviceMapper
     /** @return array<string, mixed> */
     public function map(ResidentDevice $d, string $patientReference): array
     {
-        $device = [
+        return [
             'resourceType' => 'Device',
             'id' => self::id($d),
-            'status' => 'active',
+            'meta' => ['profile' => [self::ULB_PROFILE]],
+            'extension' => [[
+                'url' => 'https://fhir.kbv.de/StructureDefinition/KBV_EX_MIO_ULB_Terminologie_Assoziation',
+                'valueCodeableConcept' => ['coding' => [[
+                    'system' => 'http://snomed.info/sct',
+                    'version' => self::SNOMED_VERSION,
+                    'code' => '260787004',
+                    'display' => 'Physical object (physical object)',
+                ]]],
+            ]],
             'type' => ['text' => $d->bezeichnung],
             'patient' => ['reference' => $patientReference],
         ];
-
-        if ($d->hinweis) {
-            $device['note'] = [['text' => $d->hinweis]];
-        }
-
-        return $device;
     }
 }

@@ -179,7 +179,11 @@ it('mappt Medizinprodukte auf FHIR Device + Sektion Medizinprodukte', function (
 
     expect($device['type']['text'])->toBe('Rollator')
         ->and($device['patient']['reference'])->toContain('Patient/')
-        ->and($titles)->toContain('Medizinprodukte');
+        ->and($titles)->toContain('Medizinprodukte')
+        // WHY(Track A Phase 6): ÜLB-Device-Profil + Terminologie-Assoziation; status/note verboten
+        ->and($device['meta']['profile'][0])->toContain('Device_Other_Item')
+        ->and($device['extension'][0]['valueCodeableConcept']['coding'][0]['code'])->toBe('260787004')
+        ->and($device)->not->toHaveKey('status');
 });
 
 it('mappt Kontaktpersonen auf FHIR RelatedPerson + Sektion', function () {
