@@ -22,9 +22,9 @@ it('gibt jeder geskippten Regel einen dokumentierten Grund', function () {
     }
 });
 
-it('schaltet mindestens 38 DAS-Regeln scharf (Feld-Ausbau-Hebel)', function () {
-    // Regression-Guard: Feld-Ausbau hob die aktiv geprüften Regeln von 4 auf 38
-    expect($this->report->applicable)->toBeGreaterThanOrEqual(38);
+it('schaltet mindestens 52 DAS-Regeln scharf (Feld-Ausbau-Hebel)', function () {
+    // Regression-Guard: Feld-Ausbau hob die aktiv geprüften Regeln 4 → 38 → 52 (Dekubitus-Detail)
+    expect($this->report->applicable)->toBeGreaterThanOrEqual(52);
 });
 
 it('klassifiziert die 13 datensatzübergreifenden Regeln als Aggregat', function () {
@@ -34,5 +34,5 @@ it('klassifiziert die 13 datensatzübergreifenden Regeln als Aggregat', function
 it('begrenzt nicht erkannte Muster (Guard gegen stille CSV-Drift)', function () {
     // Fixe Erwartung: ändert die CSV ihre Regel-Formen, muss dieser Wert bewusst nachgezogen werden
     expect($this->report->skipped[SkipReason::UnknownPattern->value] ?? 0)->toBe(119)
-        ->and($this->report->skipped[SkipReason::UnmappedField->value] ?? 0)->toBe(270);
+        ->and($this->report->skipped[SkipReason::UnmappedField->value] ?? 0)->toBe(256);
 });

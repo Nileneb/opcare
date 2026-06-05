@@ -61,6 +61,18 @@ class FieldMap
             'AUSZUGSDATUM' => new FieldBinding(fn (QdvsResidentPackage $p) => $p->auszug_am, 'date'),
             'KOERPERGEWICHT' => new FieldBinding(fn (QdvsResidentPackage $p) => $p->gewicht_kg, 'decimal'),
             'KOERPERGEWICHTDATUM' => new FieldBinding(fn (QdvsResidentPackage $p) => $p->gewicht_datum, 'date'),
+            // WHY(DAS_REGELN): DEKUBITUS als 0/1 (vorhanden) — die DAS-1-vs-2-Unterscheidung + LOK-Herkunftscode
+            // bleiben bewusst ungemappt (amtliche DAS-Codesemantik nicht verifiziert). Stadium/Beginn/Ende
+            // werden aus dem am Stichtag aktiven Dekubitus-CareEvent gespeist; ein Dekubitus ohne Stadium
+            // meldet Regel 60019 korrekt als Datenlücke.
+            'DEKUBITUS' => new FieldBinding(
+                fn (QdvsResidentPackage $p) => $p->indikatoren['dekubitus'] ?? false,
+                'int',
+                fn ($v) => $v ? '1' : '0',
+            ),
+            'DEKUBITUSSTADIUM' => new FieldBinding(fn (QdvsResidentPackage $p) => $p->dekubitus_stadium, 'int'),
+            'DEKUBITUS1BEGINNDATUM' => new FieldBinding(fn (QdvsResidentPackage $p) => $p->dekubitus_beginn, 'date'),
+            'DEKUBITUS1ENDEDATUM' => new FieldBinding(fn (QdvsResidentPackage $p) => $p->dekubitus_ende, 'date'),
             // WHY(DAS_REGELN): DAS-DIAGNOSEN ist ein codiertes 0/1/2/3-Feld (Regeln 20011/70001),
             // NICHT die ICD-10-Codes von OPCare → bewusst nicht gemappt (Regeln laufen als UNMAPPED).
             // Die „keine Diagnose hinterlegt"-Warnung bleibt native im QdvsValidator.

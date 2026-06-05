@@ -26,5 +26,9 @@ class QdvsResidentPackage extends Data
         public ?string $erhebungsdatum = null,
         /** @var array<string, string> indikator => ereignisdatum (ISO) für „Ereignis nach Einzug"-Regeln */
         public array $ereignis_daten = [],
+        // Dekubitus-Detail des am Stichtag aktiven Dekubitus (DAS DEKUBITUSSTADIUM/1BEGINN/1ENDE)
+        public ?int $dekubitus_stadium = null,
+        public ?string $dekubitus_beginn = null,
+        public ?string $dekubitus_ende = null,
     ) {}
 }
