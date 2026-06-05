@@ -17,6 +17,9 @@
             <a href="{{ route('medikation.vitalwerte', $resident) }}" class="btn" wire:navigate>Vitalwerte</a>
             <a href="{{ route('assessment.verlauf', $resident) }}" class="btn" wire:navigate>Assessments</a>
             <a href="{{ route('pflegeplanung') }}" class="btn btn-ghost">Im SIS-Board ansehen</a>
+            @if (auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'pflegefachkraft']))
+                <a href="{{ route('fhir.export', $resident) }}" class="btn btn-ghost" title="FHIR-R4-Dokument (Vorstufe ePflegebericht)">⤓ FHIR-Export</a>
+            @endif
         </div>
     </div>
 
