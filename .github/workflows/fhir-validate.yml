@@ -1,0 +1,71 @@
+name: fhir-validate
+
+# Konformitäts-Gate Richtung ePflegebericht-MIO: exportiert ein FHIR-R4-Document-Bundle
+# und validiert es mit dem amtlichen HL7-FHIR-Validator. Wächst mit, wenn KBV/MIO-Profile
+# fest werden (dann -ig hl7.fhir.de... bzw. das ePflegebericht-Package ergänzen).
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [master, 'feat/**', 'fix/**', 'chore/**']
+  pull_request:
+    branches: [master]
+
+jobs:
+  fhir:
+    runs-on: ubuntu-latest
+    env:
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ${{ github.workspace }}/database/ci.sqlite
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_sqlite, sqlite3, mbstring, intl, bcmath, gd
+          tools: composer:v2
+          coverage: none
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install Dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress --optimize-autoloader
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          touch "$DB_DATABASE"
+
+      - name: Migrate + seed (SQLite)
+        run: php artisan migrate --force --seed
+
+      - name: Export FHIR bundle
+        run: php artisan fhir:export --output=fhir_bundle.json
+
+      - name: Cache FHIR validator + terminology
+        uses: actions/cache@v4
+        with:
+          path: |
+            validator_cli.jar
+            ~/.fhir
+          key: fhir-validator-r4-v1
+
+      - name: Download validator (if not cached)
+        run: |
+          if [ ! -f validator_cli.jar ]; then
+            curl -fsSL -o validator_cli.jar \
+              https://github.com/hapifhir/org.hl7.fhir.core/releases/latest/download/validator_cli.jar
+          fi
+
+      - name: Validate against FHIR R4 (fails on errors, warnings allowed)
+        run: java -jar validator_cli.jar fhir_bundle.json -version 4.0.1 -tx n/a

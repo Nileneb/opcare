@@ -1,5 +1,7 @@
 <?php
 
+use App\Domains\Fhir\FhirDocumentExporter;
+use App\Domains\Masterdata\Models\Resident;
 use App\Http\Controllers\SpeechController;
 use App\Livewire\Admin\Tenants;
 use App\Livewire\Admin\Users;
@@ -75,6 +77,20 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         return Storage::disk(config('qdvs.disk'))
             ->download($export->pfad, basename($export->pfad));
     })->name('qdvs.download');
+
+    // FHIR-R4-Document-Bundle (Pflegebericht) — {resident} ist tenant-gescopt (Model-Binding)
+    Route::get('/bewohner/{resident}/fhir', function (Resident $resident, FhirDocumentExporter $exporter) {
+        // WHY(DSGVO Art. 9): Gesundheitsdaten als Klartext-Dokument — nur Leitungs-/Pflegefachrollen.
+        abort_unless(
+            auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'pflegefachkraft']),
+            403,
+        );
+
+        return response($exporter->toJson($resident), 200, [
+            'Content-Type' => 'application/fhir+json; charset=utf-8',
+            'Content-Disposition' => 'attachment; filename="pflegebericht-'.$resident->id.'.fhir.json"',
+        ]);
+    })->name('fhir.export');
 
     Route::post('/logout', function (Request $request) {
         Auth::logout();
