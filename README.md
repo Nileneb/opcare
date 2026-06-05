@@ -1,294 +1,123 @@
-# OPCare — SIS®-basierte Pflegeplanung (Arbeitstitel)
+# OPCare — Open-Source-Pflegedokumentation für die stationäre Altenpflege
 
-Pflegedokumentations- und Pflegeplanungssystem für die stationäre Altenpflege, neu aufgebaut als
-moderner Laravel-Stack. Geistiger Nachfolger des inaktiven Java-Projekts
-**[Offene-Pflege.de (OPDE)](#herkunft)** — dessen erprobtes Stammdaten-Domänenmodell dient als Vorlage,
-die Pflegeplanung wird jedoch von Grund auf nach dem **Strukturmodell / SIS®** neu modelliert.
+OPCare ist eine moderne Pflegedokumentations- und Pflegeplanungs-Software für die vollstationäre
+Altenpflege, ausgerichtet an aktuellen deutschen Standards: **SIS®/Strukturmodell**, **indikatoren­basierte
+Qualitätssicherung (QDVS/DAS-Pflege)** und **FHIR / ÜLB-MIO** (Pflegeüberleitung). Geistiger Nachfolger
+des eingestellten Java-Projekts **[Offene-Pflege.de (OPDE)](#herkunft)** — dessen Domänenwissen dient als
+Vorlage, der Code ist von Grund auf neu.
 
-> **Status:** In Entwurf/Design-Phase. Noch kein Produktivcode. Open Source.
+> **Status:** Funktionsfähig und aktiv in Entwicklung. **239 Tests grün**, CI durchgehend grün
+> (Tests · Linter · Security-Audit · FHIR-Validierung). Open Source (AGPL-3.0), **kein Rechtsgate**,
+> solange keine Echt-Patientendaten verarbeitet werden.
+>
+> 📖 Ausführliche Doku + Screenshots im **[Projekt-Wiki](https://github.com/Nileneb/opcare/wiki)**.
 
 ---
+
+## Was OPCare kann
+
+- **Stammdaten & Bewohnerverwaltung** — Gebäude/Etage/Station/Zimmer, Bewohner, Diagnosen (ICD-10-GM-Katalog,
+  ~16.000 Codes), Versicherungen, Betreuer:innen, Ärzt:innen, **Allergien**, **Medizinprodukte/Hilfsmittel**,
+  **Angehörige/Kontaktpersonen**, **pflegerische Einschätzungen** (Bewusstsein/Kontinenz/Ernährung/Atmung).
+- **SIS®-Pflegeplanung** — Strukturmodell: Informationssammlung → Maßnahmenplanung (Maßnahmen-Katalog,
+  ~230 Einträge) → Berichteblatt → Evaluation. Append-only/versioniert (manipulationssicher).
+- **Assessments** — generische Instrument-Engine mit Scoring + Risiko-Bändern: **Braden** (Dekubitus),
+  **Sturzrisiko**, **BESD** (Schmerz), **Barthel-Index** (Funktion/ADL, mit LOINC-Codes).
+- **Medikation** — Verordnungen, Stellplan, Bestände, Gabe-Dokumentation.
+- **Qualität & Controlling** — Vorkommnis-Erfassung (Sturz strukturiert mit Folgen, Dekubitus mit Stadium,
+  FEM …), QS-Indikatoren, KPI-Dashboard.
+- **QDVS / DAS-Pflege** — datengetriebene **Plausibilitäts-Regel-Engine** (440 DAS-Regeln, Pattern-Matcher
+  statt Voll-XPath; ehrlicher Coverage-Report; aktuell 57 Regeln scharf).
+- **FHIR-Export** — FHIR-R4-Pflegeüberleitungs-**Document-Bundle**, validiert im CI mit dem **amtlichen
+  HL7-FHIR-Validator** (0 errors) — Richtung **ÜLB-MIO** (`kbv.mio.ueberleitungsbogen`). Siehe
+  [FHIR-Konformität](#fhir--ülb-mio-konformität).
+- **Sicherheit** — Row-Level-Mandantentrennung (`tenant_id` + Global Scope), RBAC (Rollen je Mandant),
+  Audit-Log, IDOR-Härtung, DSGVO-Guards auf Export-Routen.
 
 ## Tech-Stack
 
 | Schicht | Technologie |
 |---|---|
-| Backend | **Laravel 12**, **PHP 8.5** |
-| Datenbank | **PostgreSQL** |
-| Frontend/PWA | Blade + **Livewire 3** + Alpine.js, Service Worker (installierbar), **Node (aktuelle LTS)** + Vite |
-| Realtime | **Laravel Reverb** (WebSockets) |
-| Queue/Monitoring | Redis + **Laravel Horizon** |
-| Spracherfassung | lokaler **Whisper**-Dienst (ASR) |
-| KI-Strukturierung | **Ollama**-LLM (on-prem via `three.linn.games`), Human-in-the-Loop |
-| Sicherheit | RBAC (`spatie/laravel-permission`), Audit (`spatie/laravel-activitylog`), Verschlüsselung at-rest |
+| Backend | **Laravel 13**, **PHP 8.3+** |
+| Frontend | Blade + **Livewire 4** + Alpine.js |
+| Datenbank | **SQLite** (Dev/CI) · **PostgreSQL** (Prod) |
+| Tests | **Pest 4** (239 Tests) |
+| Lint/Style | **Laravel Pint** |
+| DTOs / RBAC / Audit | `spatie/laravel-data` · `spatie/laravel-permission` · `spatie/laravel-activitylog` |
+| Deployment | **Docker Compose** (self-contained: eine `.env`, `docker compose up --build`) |
+| FHIR-Validierung (CI) | amtlicher **HL7 FHIR Validator** (`validator_cli.jar`) gegen R4 + `de.basisprofil.r4` + ÜLB |
 
 ## Architektur — Bounded Contexts
 
-Domänen-orientierte Struktur unter `app/Domains/` (PSR-4-Ordnerkonvention; `nwidart/laravel-modules`
-bei wachsender Komplexität nachrüstbar). Pro Domäne: `Models/ Actions/ Data/ Policies/ Events/ Jobs/
-Database/ Tests/`. Layering als Einbahnstraße: **Livewire/Controller → Action → Model/Service**, Daten
-zwischen Schichten als DTOs (`spatie/laravel-data`).
+Domänen-orientierte Struktur unter `app/Domains/`. Layering als Einbahnstraße:
+**Livewire/Controller → Action → Model/Service**, Daten zwischen Schichten als DTOs.
 
-- **Identity** — Auth, Benutzer, Rollen/Rechte, Mandanten-Scoping (`tenant_id` überall)
-- **Masterdata** — Bewohner, Diagnosen/ICD, Krankenkassen, Betreuer, Ärzte, Gebäude/Zimmer
-- **CarePlanning** — SIS®-Strukturmodell: Informationssammlung → Maßnahmenplanung → Berichteblatt → Evaluation
-- **Speech** — Audio-Handling, Transkription, LLM→SIS®-Strukturierung
+| Domäne | Inhalt |
+|---|---|
+| **Identity** | Auth, Benutzer, Rollen/Rechte, Mandanten, Tenant-Scoping |
+| **Masterdata** | Bewohner, Diagnosen/ICD, Versicherungen, Betreuer, Ärzte, Gebäude/Zimmer, Allergien, Medizinprodukte, Kontakte, Status-Observationen |
+| **CarePlanning** | SIS®-Strukturmodell: Informationssammlung → Maßnahmenplan → Bericht → Evaluation |
+| **Assessment** | Instrument-Engine (Braden/Sturz/BESD/Barthel), Scoring, Risiko-Bänder, Eskalation |
+| **Medication** | Verordnungen, Stellplan, Bestände, Gaben, Vitalwerte |
+| **Quality** | Vorkommnisse/CareEvents, QS-Indikatoren, KPIs |
+| **Qdvs** | DAS-Plausibilitäts-Regel-Engine + QDVS-Export |
+| **Fhir** | FHIR-R4-Mapper + Document-Bundle-Export (ÜLB-MIO-Richtung) |
+| **Scheduling** | Dienstplan, Schichten, Kalender |
+| **Speech** | Audio-Handling, Transkription, LLM→SIS®-Strukturierung (Human-in-the-Loop) |
 
-## Datenmodell
+## FHIR / ÜLB-MIO-Konformität
 
-Konventionen: alle Tabellen `bigint id PK` + `tenant_id FK` (globaler Eloquent-Scope) +
-`created_by`/`updated_by` + `timestamps`. Rechtlich relevante Einträge (SIS, Berichte, Evaluationen)
-sind **append-only / versioniert** (manipulationssicher, MDK-konform): Korrekturen erzeugen eine neue
-Version, die alte wird via `superseded_by` verkettet und bleibt erhalten. Audio wird nach erfolgreicher
-Transkription gelöscht (Datensparsamkeit, Art. 5 DSGVO).
+Der FHIR-Export zielt auf den **PIO Überleitungsbogen** (`kbv.mio.ueberleitungsbogen` 1.0.0), den
+veröffentlichten FHIR-MIO der Pflegeüberleitung. Das Document-Bundle wird im CI gegen FHIR R4 +
+`de.basisprofil.r4` + das ÜLB-Paket validiert (**0 errors**).
 
-### Identity & Masterdata
+**ÜLB-konform geclaimt (`meta.profile`, im blockierenden Gate erzwungen):**
+Patient · Condition (Diagnose) · AllergyIntolerance · Device · MedicationStatement + Medication ·
+Vital-Observations (7 Arten) · Organization/Practitioner/PractitionerRole (dokumentierende Einheit).
 
-```mermaid
-erDiagram
-    TENANTS   ||--o{ USERS              : "hat"
-    TENANTS   ||--o{ RESIDENTS          : "hat"
+**Offen (präzise charakterisiert):** Die **Composition/Bundle-Vollkonformität** verlangt eine eigene
+„Sektions-Wrapper"-Schicht (ÜLB-Sektionen referenzieren nicht die Blatt-Ressourcen direkt, sondern
+spezifische Presence-Observations / vital-signs-DiagnosticReport / Procedure). Diese Schicht ist als
+nächster großer Block dokumentiert. Details: [Wiki → Track A](https://github.com/Nileneb/opcare/wiki).
 
-    BUILDINGS ||--o{ FLOORS             : "gliedert"
-    FLOORS    ||--o{ STATIONS           : "gliedert"
-    STATIONS  ||--o{ ROOMS              : "gliedert"
-    ROOMS     ||--o{ RESIDENTS          : "beherbergt"
+## Schnellstart (Docker)
 
-    RESIDENTS ||--o{ RESIDENT_DIAGNOSES : "hat"
-    ICD_CODES ||--o{ RESIDENT_DIAGNOSES : "klassifiziert"
-    RESIDENTS ||--o{ RESIDENT_INSURANCE : "versichert über"
-    HEALTH_INSURANCES ||--o{ RESIDENT_INSURANCE : "deckt"
-    RESIDENTS ||--o{ CUSTODIANS         : "wird betreut von"
-    RESIDENTS }o--o{ PHYSICIANS         : "behandelt durch"
-    RESIDENTS ||--o{ RESIDENT_FILES     : "Anhänge"
-
-    TENANTS {
-        bigint id PK
-        string name "NOT NULL"
-        string slug UK "NOT NULL"
-        timestamp created_at
-    }
-    USERS {
-        bigint id PK
-        bigint tenant_id FK "NOT NULL, idx"
-        string name "NOT NULL"
-        string email UK "NOT NULL"
-        string password "NOT NULL, hashed"
-        timestamp created_at
-    }
-    BUILDINGS {
-        bigint id PK
-        bigint tenant_id FK "NOT NULL, idx"
-        string name "NOT NULL"
-    }
-    FLOORS {
-        bigint id PK
-        bigint building_id FK "NOT NULL"
-        string name "NOT NULL"
-    }
-    STATIONS {
-        bigint id PK
-        bigint floor_id FK "NOT NULL"
-        string name "NOT NULL"
-    }
-    ROOMS {
-        bigint id PK
-        bigint station_id FK "NOT NULL"
-        string nummer "NOT NULL"
-        smallint betten "default 1"
-    }
-    RESIDENTS {
-        bigint id PK
-        bigint tenant_id FK "NOT NULL, idx"
-        bigint room_id FK "nullable"
-        string name "NOT NULL"
-        date geburtsdatum "NOT NULL"
-        string geschlecht "enum m/w/d"
-        smallint pflegegrad "1-5, nullable"
-        date aufnahme_am "NOT NULL"
-        date entlassung_am "nullable"
-        string status "enum aktiv/abwesend/entlassen"
-        timestamp created_at
-    }
-    ICD_CODES {
-        bigint id PK
-        string code UK "NOT NULL, ICD-10"
-        string bezeichnung "NOT NULL"
-    }
-    RESIDENT_DIAGNOSES {
-        bigint id PK
-        bigint resident_id FK "NOT NULL"
-        bigint icd_code_id FK "NOT NULL"
-        string art "enum primär/sekundär"
-        date diagnostiziert_am "nullable"
-    }
-    HEALTH_INSURANCES {
-        bigint id PK
-        string name "NOT NULL"
-        string ik_nummer UK "nullable"
-    }
-    RESIDENT_INSURANCE {
-        bigint id PK
-        bigint resident_id FK "NOT NULL"
-        bigint health_insurance_id FK "NOT NULL"
-        string versichertennr "nullable"
-        boolean ist_primaer "default true"
-    }
-    CUSTODIANS {
-        bigint id PK
-        bigint resident_id FK "NOT NULL"
-        string name "NOT NULL"
-        string umfang "Betreuungsumfang"
-        string kontakt "nullable"
-    }
-    PHYSICIANS {
-        bigint id PK
-        bigint tenant_id FK "NOT NULL, idx"
-        string name "NOT NULL"
-        string fachrichtung "nullable"
-        string kontakt "nullable"
-    }
-    RESIDENT_FILES {
-        bigint id PK
-        bigint resident_id FK "NOT NULL"
-        string collection "medialibrary"
-        string pfad "NOT NULL"
-    }
+```bash
+git clone https://github.com/Nileneb/opcare.git && cd opcare
+cp .env.example .env
+docker compose up --build
+# danach: Migrationen + Demo-Daten werden geseedet; App unter http://localhost:8099
+# Demo-Login: admin@opcare.local / password
 ```
 
-### CarePlanning & Speech
+Lokal ohne Docker:
 
-`RESIDENTS` (oben definiert) ist der gemeinsame Anker; hier verkürzt dargestellt.
-
-```mermaid
-erDiagram
-    RESIDENTS ||--o{ SIS_ASSESSMENTS    : "Informationssammlung"
-    SIS_ASSESSMENTS ||--o{ SIS_TOPIC_FIELDS : "6 Themenfelder"
-    SIS_ASSESSMENTS ||--o{ RISK_ITEMS   : "Risikomatrix"
-    SIS_ASSESSMENTS ||--o| SIS_ASSESSMENTS : "superseded_by"
-
-    RESIDENTS ||--o{ CARE_MEASURES      : "Maßnahmenplan"
-    CARE_MEASURES ||--o{ MEASURE_SCHEDULES : "Turnus"
-    CARE_MEASURES ||--o| CARE_MEASURES  : "superseded_by"
-    RESIDENTS ||--o{ CARE_REPORTS       : "Berichteblatt"
-    CARE_REPORTS ||--o| CARE_REPORTS    : "superseded_by"
-    CARE_MEASURES ||--o{ EVALUATIONS    : "Überprüfung"
-    EVALUATIONS ||--o| EVALUATIONS      : "superseded_by"
-
-    RESIDENTS ||--o{ TRANSCRIPTION_JOBS : "Spracherfassung"
-
-    RESIDENTS {
-        bigint id PK
-        bigint tenant_id FK "NOT NULL, idx"
-        string name "NOT NULL"
-    }
-    SIS_ASSESSMENTS {
-        bigint id PK
-        bigint tenant_id FK "NOT NULL, idx"
-        bigint resident_id FK "NOT NULL"
-        bigint created_by FK "NOT NULL"
-        bigint superseded_by FK "nullable, self"
-        int version "default 1"
-        date erstellt_am "NOT NULL"
-        string status "enum entwurf/aktiv/abgelöst"
-        text eingangsfrage "Sichtweise d. Pflegebed."
-        timestamp created_at
-    }
-    SIS_TOPIC_FIELDS {
-        bigint id PK
-        bigint sis_assessment_id FK "NOT NULL"
-        string themenfeld "enum 6 Felder"
-        text freitext "nullable"
-        jsonb strukturdaten "nullable"
-    }
-    RISK_ITEMS {
-        bigint id PK
-        bigint sis_assessment_id FK "NOT NULL"
-        string risiko "enum Dekubitus/Sturz/..."
-        boolean eingeschaetzt "default false"
-        text begruendung "nullable"
-    }
-    CARE_MEASURES {
-        bigint id PK
-        bigint tenant_id FK "NOT NULL, idx"
-        bigint resident_id FK "NOT NULL"
-        bigint superseded_by FK "nullable, self"
-        int version "default 1"
-        string themenfeld "enum 6 Felder"
-        text beschreibung "NOT NULL"
-        text ziel "nullable"
-        string verantwortlich "nullable"
-        boolean aktiv "default true"
-    }
-    MEASURE_SCHEDULES {
-        bigint id PK
-        bigint care_measure_id FK "NOT NULL"
-        string turnus_typ "enum schicht/uhrzeit/intervall"
-        jsonb turnus_daten "NOT NULL"
-    }
-    CARE_REPORTS {
-        bigint id PK
-        bigint tenant_id FK "NOT NULL, idx"
-        bigint resident_id FK "NOT NULL"
-        bigint created_by FK "NOT NULL"
-        bigint superseded_by FK "nullable, self"
-        timestamp datum "NOT NULL"
-        string schicht "enum früh/spät/nacht"
-        text text "NOT NULL"
-    }
-    EVALUATIONS {
-        bigint id PK
-        bigint tenant_id FK "NOT NULL, idx"
-        string evaluable_type "polymorph (sis/measure)"
-        bigint evaluable_id "polymorph"
-        bigint created_by FK "NOT NULL"
-        bigint superseded_by FK "nullable, self"
-        date datum "NOT NULL"
-        string zielerreichung "enum erreicht/teilweise/nicht"
-        string anlass "nullable"
-    }
-    TRANSCRIPTION_JOBS {
-        bigint id PK
-        bigint tenant_id FK "NOT NULL, idx"
-        bigint resident_id FK "NOT NULL"
-        bigint reviewer_id FK "nullable"
-        string kontext "Themenfeld/Bericht"
-        string audio_ref "temp, nach ASR gelöscht"
-        string status "enum queued/transcribing/structuring/review/done"
-        text rohtranskript "nullable"
-        jsonb sis_vorschlag "nullable"
-        timestamp freigegeben_at "nullable"
-    }
+```bash
+composer install
+cp .env.example .env && php artisan key:generate
+php artisan migrate --seed
+php artisan serve
 ```
 
-## Sprach-Workflow (Human-in-the-Loop)
+## Entwicklung
 
-```
-Tablet (Mikrofon, Alpine/MediaRecorder)
-  → Audio-Upload → Queue-Job
-  → Whisper (lokal): Audio → Rohtranskript
-  → Ollama-LLM: Rohtranskript → SIS®-Themenfeld-Vorschlag (jsonb)
-  → Reverb-Broadcast zurück ins UI
-  → Pflegekraft prüft/korrigiert/gibt frei (Human-in-the-Loop)
-  → Speicherung als SIS-/Bericht-Eintrag · Audio wird gelöscht
+```bash
+php artisan test                 # bzw. vendor/bin/pest   (239 Tests)
+vendor/bin/pint                  # Code-Style
+php artisan fhir:export --output=bundle.json   # FHIR-Document-Bundle erzeugen
 ```
 
-## Scope v1
-
-**Enthalten:** Stammdaten/Bewohnerverwaltung · SIS®-Pflegeplanung (4 Strukturmodell-Elemente) ·
-voller Sprach-Workflow · RBAC · Audit-Trail.
-
-**Bewusst später (Schema lässt Platz):** Medikation/BHP · Controlling/QMS · QDVS-Export ·
-Mehrmandanten-Betrieb über mehrere Heime (`tenant_id` ist aber von Beginn an vorgesehen).
+**CI-Gates** (GitHub Actions): `tests` · `lint` · `security` (composer audit) ·
+`fhir-validate` (amtlicher HL7-Validator). Direkter Push auf `master` ist im Projekt autorisiert;
+jede Änderung läuft über die Gates.
 
 ## Herkunft
 
 Basiert konzeptionell auf **Offene-Pflege.de (OPDE)**, einem freien Java-Swing-Pflegedokumentationssystem,
-das 2025 wegen der regulatorischen Anforderungen (EU Cyber Resilience Act, EU-Produkthaftungsrichtlinie)
-eingestellt wurde. OPCare übernimmt dessen Domänenwissen (Stammdaten, QDVS-Mapping als Referenz), nicht
+das 2025 wegen regulatorischer Anforderungen (EU Cyber Resilience Act, EU-Produkthaftungsrichtlinie)
+eingestellt wurde. OPCare übernimmt dessen Domänenwissen (Stammdaten, QDVS-Mapping als Referenz), **nicht**
 dessen Code.
 
 ## Lizenz
 
-**AGPL-3.0** — schützt die Software auch im SaaS-/Netzwerk-Betrieb (Copyleft erstreckt sich auf
-über das Netzwerk bereitgestellte Dienste).
+**AGPL-3.0** — Copyleft erstreckt sich auch auf über das Netzwerk bereitgestellte Dienste (SaaS).
