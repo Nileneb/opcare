@@ -91,7 +91,11 @@ Kontinenz/Ernährung, soziale Felder).
     tieferen Profil-Anforderungen (meta.profile je Ressource → KBV-Basisprofile → Slices/Identifier).
     *Bewusst noch nicht geclaimt:* `meta.profile` jetzt zu setzen würde Konformität behaupten UND das grüne
     Gate brechen. Reihenfolge: Inhalte konform machen → dann Profil claimen.
-  - ⬜ Schritt 2+: sektionsweise `meta.profile` (Patient → Composition → …), Fehlerliste abarbeiten.
+  - ✅ Schritt 2: **Patient** ist ÜLB-konform (`meta.profile` = `KBV_PR_MIO_ULB_Patient`, Name als
+    family/given statt Freitext, Custom-Identifier entfernt). Das Base-Gate lädt jetzt das ÜLB-Paket mit,
+    sodass das geclaimte Profil im **blockierenden** Gate erzwungen wird — Gesamt-Bundle weiter 0 errors.
+    *Offen:* GKV-KVNR-Identifier-Slice (opcare speichert KVNR nicht am Resident → spätere Iteration).
+  - ⬜ Schritt 3+: nächste Ressourcen (Composition, Condition, …) sektionsweise `meta.profile`.
   - **Tooling-Hinweis:** `kbv.basis 1.3.0` erzeugt im aktuellen Validator einen Snapshot-Fehler
     (`Same id 'Observation.dataAbsentReason'`) — bekannte KBV/Validator-Inkompatibilität, nicht unsere Daten.
 

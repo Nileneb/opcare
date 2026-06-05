@@ -73,8 +73,10 @@ jobs:
               https://github.com/hapifhir/org.hl7.fhir.core/releases/latest/download/validator_cli.jar
           fi
 
-      - name: Validate against FHIR R4 + de.basisprofil.r4 (fails on errors, warnings allowed)
-        run: java -jar validator_cli.jar fhir_bundle.json -version 4.0.1 -ig de.basisprofil.r4#1.5.0 -tx n/a
+      # ÜLB-Paket mitgeladen, damit geclaimte meta.profile (aktuell: Patient → KBV_PR_MIO_ULB_Patient)
+      # auflösen + erzwungen werden. Unprofilierte Ressourcen werden weiter gegen R4 + de.basisprofil geprüft.
+      - name: Validate against FHIR R4 + de.basisprofil.r4 + geclaimte ÜLB-Profile (fails on errors)
+        run: java -jar validator_cli.jar fhir_bundle.json -version 4.0.1 -ig de.basisprofil.r4#1.5.0 -ig kbv.mio.ueberleitungsbogen#1.0.0 -tx n/a
 
       # WHY(Track A Phase 6): ÜLB-MIO-Konformität wird schrittweise erreicht. Dieser Schritt prüft gegen
       # das ÜLB-Bundle-Profil und macht den verbleibenden Konformitäts-Backlog im Log sichtbar — er bricht
