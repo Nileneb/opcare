@@ -228,6 +228,9 @@ class DemoSeeder extends Seeder
         foreach ([['bewusstsein', '271591004', null], ['harnkontinenz', '450841000', null], ['stuhlkontinenz', '24029004', null], ['kostform', '160670007', null], ['atmung', null, 'unauffällig, keine Atemnot']] as [$typ, $code, $text]) {
             $maria->statusObservations()->create(['typ' => $typ, 'wert_code' => $code, 'wert_text' => $text, 'erfasst_am' => now()->subDays(3)->toDateString()]);
         }
+        foreach ([['Rollator', 'hilfsmittel', 'für Strecken > 10 m'], ['Hörgerät rechts', 'hilfsmittel', null]] as [$bez, $kat, $hinweis]) {
+            $maria->devices()->create(['bezeichnung' => $bez, 'kategorie' => $kat, 'hinweis' => $hinweis, 'seit' => now()->subMonths(6)->toDateString()]);
+        }
 
         $wilhelm = Resident::query()->where('name', 'Wilhelm Müller')->firstOrFail();
         CareEvent::create([

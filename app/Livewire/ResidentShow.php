@@ -68,6 +68,13 @@ class ResidentShow extends Component
 
     public string $so_wert_text = '';
 
+    // Medizinprodukt / Hilfsmittel (ÜLB: medizinprodukte)
+    public string $dev_bezeichnung = '';
+
+    public string $dev_kategorie = 'hilfsmittel';
+
+    public string $dev_hinweis = '';
+
     // Versicherung
     public ?int $ins_id = null;
 
@@ -321,6 +328,32 @@ class ResidentShow extends Component
         session()->flash('status', 'Eintrag entfernt.');
     }
 
+    public function addDevice(): void
+    {
+        Gate::authorize('update', $this->resident);
+        $this->validate([
+            'dev_bezeichnung' => ['required', 'string', 'max:255'],
+            'dev_kategorie' => ['required', 'in:hilfsmittel,implantat,sonstiges'],
+            'dev_hinweis' => ['nullable', 'string', 'max:255'],
+        ]);
+        $this->resident->devices()->create([
+            'bezeichnung' => $this->dev_bezeichnung,
+            'kategorie' => $this->dev_kategorie,
+            'hinweis' => $this->dev_hinweis ?: null,
+            'seit' => now()->toDateString(),
+        ]);
+        $this->reset('dev_bezeichnung', 'dev_hinweis');
+        $this->dev_kategorie = 'hilfsmittel';
+        session()->flash('status', 'Medizinprodukt hinzugefügt.');
+    }
+
+    public function removeDevice(int $id): void
+    {
+        Gate::authorize('update', $this->resident);
+        $this->resident->devices()->whereKey($id)->delete();
+        session()->flash('status', 'Eintrag entfernt.');
+    }
+
     public function addInsurance(): void
     {
         $this->validate(['ins_id' => ['required', $this->tenantExists('health_insurances')], 'ins_nr' => ['nullable', 'string', 'max:60']]);
@@ -454,7 +487,7 @@ class ResidentShow extends Component
     {
         $this->resident->load([
             'room.station', 'diagnoses.icdCode', 'insurances.healthInsurance',
-            'custodians', 'physicians', 'allergies', 'statusObservations',
+            'custodians', 'physicians', 'allergies', 'statusObservations', 'devices',
             'sisAssessments' => fn ($q) => $q->current()->latest('id')->with(['topicFields', 'riskItems']),
             'careMeasures' => fn ($q) => $q->current()->latest('id'),
             'careEvents',
