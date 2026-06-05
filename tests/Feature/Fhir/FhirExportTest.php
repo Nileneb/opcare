@@ -144,7 +144,18 @@ it('mappt Allergien auf FHIR AllergyIntolerance', function () {
         ->and($allergy['criticality'])->toBe('high')
         ->and($allergy['code']['text'])->toBe('Penicillin')
         ->and($allergy['reaction'][0]['manifestation'][0]['text'])->toBe('Hautausschlag')
-        ->and($allergy['patient']['reference'])->toContain('Patient/');
+        ->and($allergy['patient']['reference'])->toContain('Patient/')
+        // WHY(Track A Phase 6): ÜLB-Profil + Pflicht-recorder (PractitionerRole), kein recordedDate
+        ->and($allergy['meta']['profile'][0])->toContain('AllergyIntolerance')
+        ->and($allergy['recorder']['reference'])->toContain('PractitionerRole/')
+        ->and($allergy)->not->toHaveKey('recordedDate');
+});
+
+it('fügt die dokumentierende Einheit (Organization/Practitioner/PractitionerRole) hinzu', function () {
+    $types = collect(app(FhirDocumentExporter::class)->export($this->resident)['entry'])
+        ->pluck('resource.resourceType');
+
+    expect($types)->toContain('Organization')->toContain('Practitioner')->toContain('PractitionerRole');
 });
 
 it('mappt das Barthel-Assessment auf Funktionsbeurteilungs-Observations (LOINC + Summe)', function () {

@@ -4,6 +4,7 @@ namespace App\Domains\Masterdata\Models;
 
 use App\Domains\CarePlanning\Models\CareMeasure;
 use App\Domains\CarePlanning\Models\SisAssessment;
+use App\Domains\Identity\Models\Tenant;
 use App\Domains\Masterdata\Database\Factories\ResidentFactory;
 use App\Domains\Quality\Models\CareEvent;
 use App\Support\Models\BaseModel;
@@ -33,6 +34,11 @@ class Resident extends BaseModel implements HasMedia
     public function room(): BelongsTo
     {
         return $this->belongsTo(Room::class);
+    }
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
     }
 
     public function diagnoses(): HasMany
