@@ -1,0 +1,58 @@
+# Roadmap: TI / FHIR / Konformität
+
+**Leitprinzip:** opcare ist ein **Open-Source-Projekt**, kein betriebener regulierter Dienst.
+Wir bauen zur **Daten- und Sicherheits-*Form*** der Standards hin — die **Zertifizierungs-
+und Anbindungs-Bürokratie** wird aufgeschoben. Solange kein Echtbetrieb mit realen
+Patientendaten läuft, besteht **kein regulatorisches Rechtsgate**. Das Projekt selbst ist
+unkritisch; Pflichten (DSGVO, ggf. Zulassung) treffen erst den späteren *Betreiber*.
+
+## Drei Tracks
+
+| Track | Inhalt | Status | Rechtsgate |
+|---|---|---|---|
+| **A — Daten-Konformität** | FHIR R4, **ISiK**-Profile, **ePflegebericht-MIO** (mio42/KBV, noch nicht final) | **läuft** (FHIR-Export + CI-Validierung steht) | nein |
+| **B — Security-Hygiene** | Tenant-Isolation, RBAC, Audit-Log, IDOR-Härtung, Dependency-Audit, SAST | **viel da**, ausbauen | nein |
+| **C — TI-Anbindung + Zulassung** | Online-Auth (GesundheitsID/TI-IDP), KIM, ePA-Schreibzugriff, eVerordnung, Konnektor-Light, gematik-Zulassung, BSI-TR-Konformität | **aufgeschoben** | **ja** |
+
+**Wichtig:** „BSI-TR-Konformität" und „Konnektor-Light-Migration" gehören zu **Track C**
+(Anbindung/Zertifizierung) — *nicht* jetzt umbauen (kein TI-Anschluss vorhanden →
+„gebaut-aber-ungenutzt"-Risiko). Generelle Security-by-Design = Track B = ja.
+Architektur-Vorsorge: Auth-Schicht abstrahiert halten, damit TI-IDP später andockt.
+
+## Externe Termine (Orientierung, kein Gate für uns)
+
+- **ePA-Pflicht:** 07/2025 — Betreiber-Pflicht, nicht Projekt-Pflicht.
+- **eVerordnung (Pflege/Hilfsmittel):** 07/2026 — Track C, später.
+- **MIO-Reife:** selbst der Laborbefund-MIO wird erst **Herbst 2026** verpflichtend →
+  ePflegebericht-MIO ist noch in Entwicklung → **nicht auf bewegliche Spec voll ausbauen**,
+  sondern valides generisches FHIR + wachsendes Validierungs-Gate.
+
+## Was bereits steht
+
+- FHIR-R4-**Document-Bundle**-Export (Patient/Condition/Composition) + `fhir:export` +
+  Download-Route + **CI-Gate mit amtlichem HL7-Validator** (0 errors).
+- QDVS-Engine (DAS-Plausibilität, 52 Regeln aktiv), ICD-10-GM-Katalog, Maßnahmen-Katalog,
+  Vorkommnis-Erfassung, strukturierte Dekubitus-Doku.
+- Security-Basis: row-level Tenancy + `TenantScope`, spatie-RBAC (Teams je Mandant),
+  Audit-Log (`activitylog`), IDOR-Härtung (`tenantExists()`), Policy-Guards.
+
+## Priorisierter Plan (jetzt → später)
+
+### Jetzt (Open-Source, kein Rechtsgate)
+1. **Domänen-Best-Practice nach Nationalen Expertenstandards** — der substanziellste Block.
+   Erfassungs-/Interventions-Tools nach Expertenstandard (Dekubitus, Sturz, Schmerz,
+   Ernährung, Kontinenz). Deckt die DAS-Indikatoren *fachlich korrekt* ab.
+   **Vorbedingung:** den jeweiligen Expertenstandard als Quelle zugrunde legen.
+2. **FHIR/ISiK-Track vertiefen** — ISiK-Profile ins CI-Gate, mehr Ressourcen mappen
+   (CarePlan aus SIS, Observation aus Vitalwerten/Assessments, MedicationStatement).
+   = „ePflegebericht-Schnittstelle früh pilotieren".
+3. **Security-CI-Gate** — `composer audit` (Dependency-CVEs) + SAST; tenancy/RBAC weiter
+   härten. Macht „IT-Sicherheit genügen" **messbar** (Vorbedingung für stressfreien Betrieb).
+
+### Aufgeschoben (Architektur bereithalten, nicht bauen)
+- gematik-Zulassung (Doku in `docs/TelematikAntrag/`), BSI-TR-Konformität,
+  echte TI-Konnektivität (KIM/ePA/eVerordnung), Test-Infrastruktur (Karten/Referenzumgebung).
+
+## Offene DAS-Detailarbeit (siehe Memory)
+STURZ 0/1/2 + Sturzfolgen, akute klinische Ereignisse (Apoplex/Fraktur/…),
+volle Dekubitus-Codesemantik (1-vs-2, LOK) — Letzteres sobald amtliche DAS-Ausfüllanleitung vorliegt.
