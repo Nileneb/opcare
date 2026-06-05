@@ -131,13 +131,19 @@ it('mappt Vitalwerte auf Observation mit LOINC + Maßnahmen auf CarePlan', funct
         ->and($carePlan['activity'][0]['detail']['description'])->toContain('Gehübungen');
 });
 
-it('mappt aktive Verordnungen auf MedicationStatement', function () {
-    $med = collect(app(FhirDocumentExporter::class)->export($this->resident)['entry'])
-        ->pluck('resource')->firstWhere('resourceType', 'MedicationStatement');
+it('mappt aktive Verordnungen auf MedicationStatement + Medication (medicationReference)', function () {
+    $resources = collect(app(FhirDocumentExporter::class)->export($this->resident)['entry'])->pluck('resource');
+    $med = $resources->firstWhere('resourceType', 'MedicationStatement');
+    $medication = $resources->firstWhere('resourceType', 'Medication');
 
     expect($med['status'])->toBe('active')
-        ->and($med['medicationCodeableConcept']['text'])->toBe('Ramipril 5 mg')
-        ->and($med['dosage'][0]['text'])->toBe('morgens 1');
+        ->and($med['dosage'][0]['text'])->toBe('morgens 1')
+        // WHY(Track A Phase 6): ÜLB verlangt medicationReference + separate Medication-Ressource
+        ->and($med['meta']['profile'][0])->toContain('MedicationStatement_Administration_Instruction')
+        ->and($med['medicationReference']['reference'])->toContain('Medication/')
+        ->and($med)->not->toHaveKey('medicationCodeableConcept')
+        ->and($medication['code']['text'])->toBe('Ramipril 5 mg')
+        ->and($medication['meta']['profile'][0])->toContain('KBV_PR_MIO_ULB_Medication');
 });
 
 it('mappt Allergien auf FHIR AllergyIntolerance', function () {
