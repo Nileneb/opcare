@@ -54,6 +54,7 @@ class ObservationMapper
     {
         return match ($typ) {
             VitalType::Gewicht => ['29463-7', 'Körpergewicht', 'kg'],
+            VitalType::Koerpergroesse => ['8302-2', 'Körpergröße', 'cm'],
             VitalType::Blutdruck => ['85354-9', 'Blutdruck', null],
             VitalType::Puls => ['8867-4', 'Herzfrequenz', '/min'],
             VitalType::Temperatur => ['8310-5', 'Körpertemperatur', 'Cel'],

@@ -8,6 +8,7 @@ enum VitalType: string
     case Puls = 'puls';
     case Temperatur = 'temperatur';
     case Gewicht = 'gewicht';
+    case Koerpergroesse = 'koerpergroesse';
     case Blutzucker = 'blutzucker';
     case Schmerz = 'schmerz';
     case SpO2 = 'spo2';
@@ -17,7 +18,7 @@ enum VitalType: string
     {
         return match ($this) {
             self::Blutdruck => 'mmHg', self::Puls => '/min', self::Temperatur => '°C',
-            self::Gewicht => 'kg', self::Blutzucker => 'mg/dl', self::Schmerz => 'NRS 0–10',
+            self::Gewicht => 'kg', self::Koerpergroesse => 'cm', self::Blutzucker => 'mg/dl', self::Schmerz => 'NRS 0–10',
             self::SpO2 => '%', self::Atemfrequenz => '/min',
         };
     }
@@ -26,7 +27,7 @@ enum VitalType: string
     {
         return match ($this) {
             self::Blutdruck => 'Blutdruck', self::Puls => 'Puls', self::Temperatur => 'Temperatur',
-            self::Gewicht => 'Gewicht', self::Blutzucker => 'Blutzucker', self::Schmerz => 'Schmerz',
+            self::Gewicht => 'Gewicht', self::Koerpergroesse => 'Körpergröße', self::Blutzucker => 'Blutzucker', self::Schmerz => 'Schmerz',
             self::SpO2 => 'Sauerstoffsättigung', self::Atemfrequenz => 'Atemfrequenz',
         };
     }

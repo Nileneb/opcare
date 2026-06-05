@@ -64,6 +64,39 @@
         </div>
 
         <div class="card">
+            <div class="card-head"><h3>Allergien & Unverträglichkeiten</h3></div>
+            @forelse ($resident->allergies as $a)
+                <div class="chip">
+                    <b>{{ $a->substanz }}</b>
+                    <span class="badge gray">{{ $a->kategorie }}</span>
+                    @if ($a->reaktion)<span style="color:var(--c-muted)">— {{ $a->reaktion }}</span>@endif
+                    @if ($a->kritikalitaet)<span class="badge {{ $a->kritikalitaet === 'hoch' ? 'red' : 'gray' }}">{{ $a->kritikalitaet }}</span>@endif
+                    <button type="button" class="btn btn-ghost btn-sm" style="margin-left:auto" wire:click="removeAllergy({{ $a->id }})" wire:confirm="Eintrag entfernen?" title="Entfernen">✕</button>
+                </div>
+            @empty <p class="empty">Keine Allergien/Unverträglichkeiten erfasst.</p> @endforelse
+            @can('update', $resident)
+                <form wire:submit="addAllergy" style="margin-top:14px">
+                    <div class="form-row">
+                        <div class="field"><label>Substanz *</label><input type="text" wire:model="alg_substanz" placeholder="z. B. Penicillin, Erdnuss" />@error('alg_substanz')<span class="err">{{ $message }}</span>@enderror</div>
+                        <div class="field"><label>Art</label>
+                            <select wire:model="alg_typ"><option value="allergie">Allergie</option><option value="unvertraeglichkeit">Unverträglichkeit</option></select>
+                        </div>
+                    </div>
+                    <div class="form-row-3">
+                        <div class="field"><label>Kategorie</label>
+                            <select wire:model="alg_kategorie"><option value="medikament">Medikament</option><option value="nahrung">Nahrung</option><option value="umwelt">Umwelt</option><option value="biologisch">Biologisch</option></select>
+                        </div>
+                        <div class="field"><label>Kritikalität</label>
+                            <select wire:model="alg_kritikalitaet"><option value="">—</option><option value="niedrig">niedrig</option><option value="hoch">hoch</option><option value="unbekannt">unbekannt</option></select>
+                        </div>
+                        <div class="field"><label>Reaktion</label><input type="text" wire:model="alg_reaktion" placeholder="z. B. Hautausschlag, Atemnot" />@error('alg_reaktion')<span class="err">{{ $message }}</span>@enderror</div>
+                    </div>
+                    <button class="btn btn-ghost btn-sm">+ Allergie/Unverträglichkeit</button>
+                </form>
+            @endcan
+        </div>
+
+        <div class="card">
             <div class="card-head"><h3>Krankenkassen</h3></div>
             @forelse ($resident->insurances as $i)
                 <div class="chip"><b>{{ $i->healthInsurance->name }}</b> {{ $i->versichertennr }} @if ($i->ist_primaer)<span class="badge green" style="margin-left:auto">primär</span>@endif</div>
