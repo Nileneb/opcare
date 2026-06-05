@@ -1,5 +1,7 @@
 *.log
 .DS_Store
+# WHY: Doku-Screenshots leben im GitHub-Wiki (github.com/Nileneb/opcare/wiki), nicht im Repo
+/docs/screenshots/
 .env
 .env.backup
 .env.production

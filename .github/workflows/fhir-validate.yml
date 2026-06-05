@@ -75,3 +75,15 @@ jobs:
 
       - name: Validate against FHIR R4 + de.basisprofil.r4 (fails on errors, warnings allowed)
         run: java -jar validator_cli.jar fhir_bundle.json -version 4.0.1 -ig de.basisprofil.r4#1.5.0 -tx n/a
+
+      # WHY(Track A Phase 6): ÜLB-MIO-Konformität wird schrittweise erreicht. Dieser Schritt prüft gegen
+      # das ÜLB-Bundle-Profil und macht den verbleibenden Konformitäts-Backlog im Log sichtbar — er bricht
+      # den Build bewusst NICHT (continue-on-error), bis Profile sektionsweise via meta.profile geclaimt sind.
+      - name: ÜLB-MIO-Konformität (nicht-blockierend — Phase-6-Backlog-Sichtbarkeit)
+        continue-on-error: true
+        run: |
+          echo "::group::ÜLB-MIO-Konformitätsprüfung (informativ, bricht den Build nicht)"
+          java -jar validator_cli.jar fhir_bundle.json -version 4.0.1 \
+            -ig kbv.mio.ueberleitungsbogen#1.0.0 \
+            -profile https://fhir.kbv.de/StructureDefinition/KBV_PR_MIO_ULB_Bundle -tx n/a || true
+          echo "::endgroup::"
