@@ -41,6 +41,9 @@ beforeEach(function () {
     app(ConductAssessment::class)->handle(new AssessmentInputData(
         resident_id: $this->resident->id, instrument_id: $barthel->id, created_by: $user->id, answers: $answers, durchgefuehrt_am: '2026-06-01',
     ));
+
+    $this->resident->statusObservations()->create(['typ' => 'harnkontinenz', 'wert_code' => '45850009', 'erfasst_am' => '2026-06-01']);
+    $this->resident->statusObservations()->create(['typ' => 'atmung', 'wert_text' => 'unauffällig', 'erfasst_am' => '2026-06-01']);
 });
 
 it('liefert ein FHIR-R4-Document-Bundle mit der Composition zuerst', function () {
@@ -142,6 +145,20 @@ it('mappt das Barthel-Assessment auf Funktionsbeurteilungs-Observations (LOINC +
         ->and($total['category'][0]['coding'][0]['code'])->toBe('survey')
         ->and($total['hasMember'])->toHaveCount(10)
         ->and($resources->contains(fn ($r) => ($r['code']['coding'][0]['code'] ?? null) === '83184-2'))->toBeTrue();
+});
+
+it('mappt Status-Observationen auf SNOMED-codierte Observations + Sektionen', function () {
+    $bundle = app(FhirDocumentExporter::class)->export($this->resident);
+    $resources = collect($bundle['entry'])->pluck('resource');
+
+    $harn = $resources->first(fn ($r) => $r['resourceType'] === 'Observation' && ($r['code']['coding'][0]['code'] ?? null) === '129009001');
+    $atmung = $resources->first(fn ($r) => $r['resourceType'] === 'Observation' && ($r['code']['coding'][0]['code'] ?? null) === '78064003');
+    $titles = collect($resources->firstWhere('resourceType', 'Composition')['section'])->pluck('title');
+
+    expect($harn['valueCodeableConcept']['coding'][0]['system'])->toBe('http://snomed.info/sct')
+        ->and($harn['valueCodeableConcept']['coding'][0]['code'])->toBe('45850009')
+        ->and($atmung['valueString'])->toBe('unauffällig')
+        ->and($titles)->toContain('Kontinenz')->toContain('Atmung');
 });
 
 it('erzeugt eine Composition mit referenzierten Sektionen + Verlauf-Narrativ', function () {

@@ -19,6 +19,7 @@ use App\Domains\Masterdata\Models\HealthInsurance;
 use App\Domains\Masterdata\Models\IcdCode;
 use App\Domains\Masterdata\Models\Physician;
 use App\Domains\Masterdata\Models\Resident;
+use App\Domains\Masterdata\Support\StatusObservationCatalog;
 use App\Domains\Quality\Actions\RecordCareEvent;
 use App\Domains\Quality\Data\CareEventData;
 use App\Domains\Quality\Enums\EventSeverity;
@@ -59,6 +60,13 @@ class ResidentShow extends Component
     public string $alg_kritikalitaet = '';
 
     public string $alg_reaktion = '';
+
+    // Status-Observation (ÜLB: Bewusstsein/Kontinenz/Ernährung/Atmung)
+    public string $so_typ = 'bewusstsein';
+
+    public string $so_wert_code = '';
+
+    public string $so_wert_text = '';
 
     // Versicherung
     public ?int $ins_id = null;
@@ -283,6 +291,36 @@ class ResidentShow extends Component
         session()->flash('status', 'Eintrag entfernt.');
     }
 
+    public function addStatusObservation(): void
+    {
+        Gate::authorize('update', $this->resident);
+        $def = StatusObservationCatalog::get($this->so_typ);
+        abort_if($def === null, 422);
+
+        if (($def['kind'] ?? 'coded') === 'coded') {
+            $this->validate(['so_wert_code' => ['required', Rule::in(array_keys($def['options']))]]);
+            $wert = ['wert_code' => $this->so_wert_code, 'wert_text' => null];
+        } else {
+            $this->validate(['so_wert_text' => ['required', 'string', 'max:255']]);
+            $wert = ['wert_code' => null, 'wert_text' => $this->so_wert_text];
+        }
+
+        $this->resident->statusObservations()->create([
+            'typ' => $this->so_typ,
+            ...$wert,
+            'erfasst_am' => now()->toDateString(),
+        ]);
+        $this->reset('so_wert_code', 'so_wert_text');
+        session()->flash('status', 'Einschätzung dokumentiert.');
+    }
+
+    public function removeStatusObservation(int $id): void
+    {
+        Gate::authorize('update', $this->resident);
+        $this->resident->statusObservations()->whereKey($id)->delete();
+        session()->flash('status', 'Eintrag entfernt.');
+    }
+
     public function addInsurance(): void
     {
         $this->validate(['ins_id' => ['required', $this->tenantExists('health_insurances')], 'ins_nr' => ['nullable', 'string', 'max:60']]);
@@ -416,7 +454,7 @@ class ResidentShow extends Component
     {
         $this->resident->load([
             'room.station', 'diagnoses.icdCode', 'insurances.healthInsurance',
-            'custodians', 'physicians', 'allergies',
+            'custodians', 'physicians', 'allergies', 'statusObservations',
             'sisAssessments' => fn ($q) => $q->current()->latest('id')->with(['topicFields', 'riskItems']),
             'careMeasures' => fn ($q) => $q->current()->latest('id'),
             'careEvents',
@@ -433,6 +471,7 @@ class ResidentShow extends Component
             'insurances' => HealthInsurance::orderBy('name')->get(),
             'physicians' => Physician::orderBy('name')->get(),
             'measures' => $this->resident->careMeasures,
+            'statusCatalog' => StatusObservationCatalog::all(),
         ]);
     }
 }
