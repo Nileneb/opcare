@@ -155,6 +155,30 @@
         </div>
 
         <div class="card">
+            <div class="card-head"><h3>Angehörige & Kontaktpersonen</h3></div>
+            @forelse ($resident->contacts as $c)
+                <div class="chip">
+                    <b>{{ $c->name }}</b>
+                    @if ($c->beziehung)<span class="badge gray">{{ $c->beziehung }}</span>@endif
+                    @if ($c->telefon)<span style="color:var(--c-muted)">☎ {{ $c->telefon }}</span>@endif
+                    @if ($c->benachrichtigen)<span class="badge green">benachrichtigen</span>@endif
+                    <button type="button" class="btn btn-ghost btn-sm" style="margin-left:auto" wire:click="removeContact({{ $c->id }})" wire:confirm="Eintrag entfernen?" title="Entfernen">✕</button>
+                </div>
+            @empty <p class="empty">Keine Kontaktpersonen erfasst.</p> @endforelse
+            @can('update', $resident)
+                <form wire:submit="addContact" style="margin-top:14px">
+                    <div class="form-row-3">
+                        <div class="field"><label>Name *</label><input type="text" wire:model="con_name" placeholder="z. B. Anna Schneider" />@error('con_name')<span class="err">{{ $message }}</span>@enderror</div>
+                        <div class="field"><label>Beziehung</label><input type="text" wire:model="con_beziehung" placeholder="z. B. Tochter" />@error('con_beziehung')<span class="err">{{ $message }}</span>@enderror</div>
+                        <div class="field"><label>Telefon</label><input type="text" wire:model="con_telefon" placeholder="optional" />@error('con_telefon')<span class="err">{{ $message }}</span>@enderror</div>
+                    </div>
+                    <label style="font-weight:400"><input type="checkbox" wire:model="con_benachrichtigen" /> im Notfall benachrichtigen</label>
+                    <div><button class="btn btn-ghost btn-sm" style="margin-top:8px">+ Kontaktperson</button></div>
+                </form>
+            @endcan
+        </div>
+
+        <div class="card">
             <div class="card-head"><h3>Krankenkassen</h3></div>
             @forelse ($resident->insurances as $i)
                 <div class="chip"><b>{{ $i->healthInsurance->name }}</b> {{ $i->versichertennr }} @if ($i->ist_primaer)<span class="badge green" style="margin-left:auto">primär</span>@endif</div>
