@@ -66,9 +66,14 @@ Kontinenz/Ernährung, soziale Felder).
 
 - **Phase 1 — erledigt.** Sturz strukturiert (Vorsession) · **Allergien** (`resident_allergies` + AllergyIntolerance) ·
   **Körpergröße**-Vitaltyp (LOINC 8302-2, ermöglicht BMI/Ernährung). *Alles UI + FHIR + Tests.*
-- **Phase 2 — Assessment-Hebel (keine neuen Tabellen):** Barthel-Index als geseedetes Instrument
-  (11 Items + Summe) → ÜLB `funktionsbeurteilungen`. Orientierung/Kognition als Assessment.
-  Nutzt die vorhandene Engine + UI; FHIR-Observation-Mapping mit LOINC/ÜLB-Codes.
+- **Phase 2 — erledigt (Assessment-Hebel, keine neuen Tabellen):** **Barthel-Index** als geseedetes
+  Instrument (10 Items + Summe) → ÜLB `funktionsbeurteilungen`. `loinc`-Spalte auf `instruments` +
+  `instrument_items` macht das generische Modell FHIR-adressierbar (LOINC je Item + Total 96761-2,
+  authoritative aus dem ÜLB-Package). Neuer `RiskType::Mobilitaet` (eskaliert bewusst nicht).
+  FHIR `AssessmentObservationMapper` (Item-Observations `category=survey` + Summe mit `hasMember`) +
+  Composition-Sektion „Funktionsbeurteilungen". **Rendert ohne UI-Code-Änderung** über die vorhandene
+  Assessment-Engine (siehe `docs/screenshots/barthel-assessment.png`). HL7-Validator 0 errors.
+  *Offen Phase 2b:* Orientierung/Kognition als weitere Instrumente.
 - **Phase 3 — Kontinenz + Ernährung:** schlanke strukturierte Erfassung (Harn-/Stuhlkontinenz-Grad,
   Ableitung, Kostform/Applikationsform). Entweder Assessment-Items oder kleine dedizierte Tabellen.
 - **Phase 4 — Medizinprodukte/Atmung:** `Device`/Hilfsmittel-Store + Atemwegszugang/-unterstützung.

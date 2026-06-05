@@ -15,7 +15,7 @@ class Instrument extends BaseModel
     use HasFactory, Versionable;
 
     protected $fillable = [
-        'tenant_id', 'name', 'risk_type', 'direction', 'risk_bands', 'beschreibung',
+        'tenant_id', 'name', 'loinc', 'risk_type', 'direction', 'risk_bands', 'beschreibung',
         'intervall_tage', 'version', 'superseded_by', 'status',
     ];
 

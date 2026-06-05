@@ -15,6 +15,7 @@ class InstrumentSeeder extends Seeder
             $instrument = Instrument::firstOrCreate(
                 ['name' => $def['name']],
                 [
+                    'loinc' => $def['loinc'] ?? null,
                     'risk_type' => $def['risk_type'],
                     'direction' => $def['direction'],
                     'risk_bands' => $def['risk_bands'],
@@ -27,7 +28,7 @@ class InstrumentSeeder extends Seeder
             }
 
             foreach ($def['items'] as $i => $itemDef) {
-                $item = $instrument->items()->create(['label' => $itemDef['label'], 'reihenfolge' => $i]);
+                $item = $instrument->items()->create(['label' => $itemDef['label'], 'loinc' => $itemDef['loinc'] ?? null, 'reihenfolge' => $i]);
                 foreach ($itemDef['options'] as $o => $optDef) {
                     $item->options()->create([
                         'label' => $optDef['label'], 'punkte' => $optDef['punkte'], 'reihenfolge' => $o,

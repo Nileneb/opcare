@@ -10,4 +10,7 @@ enum RiskType: string
     case Ernaehrung = 'ernaehrung';
     case Inkontinenz = 'inkontinenz';
     case Kontraktur = 'kontraktur';
+    // WHY(ÜLB funktionsbeurteilungen): Mobilität/Funktion (z. B. Barthel-Index) — kein QualityIndicator,
+    // eskaliert daher bewusst nicht (EscalateToQuality::tryFrom('mobilitaet') = null).
+    case Mobilitaet = 'mobilitaet';
 }

@@ -2,7 +2,10 @@
 
 namespace App\Domains\Identity\Database\Seeders;
 
+use App\Domains\Assessment\Actions\ConductAssessment;
+use App\Domains\Assessment\Data\AssessmentInputData;
 use App\Domains\Assessment\Database\Seeders\InstrumentSeeder;
+use App\Domains\Assessment\Models\Instrument;
 use App\Domains\CarePlanning\Models\CareMeasure;
 use App\Domains\CarePlanning\Models\SisAssessment;
 use App\Domains\Identity\Models\Tenant;
@@ -205,6 +208,21 @@ class DemoSeeder extends Seeder
                 'gemessen_am' => now()->subDays(2),
                 'gemessen_von' => $admin->id,
             ]);
+        }
+
+        // Barthel-Index für Maria (mittlere Hilfsbedürftigkeit) — füllt ÜLB-Sektion funktionsbeurteilungen
+        $barthel = Instrument::with('items.options')->where('name', 'Barthel-Index')->first();
+        if ($barthel) {
+            $answers = $barthel->items->mapWithKeys(function ($item) {
+                $opts = $item->options;
+                $pick = $opts->get((int) floor(($opts->count() - 1) / 2)) ?? $opts->first();
+
+                return [$item->id => $pick->id];
+            })->all();
+            app(ConductAssessment::class)->handle(new AssessmentInputData(
+                resident_id: $maria->id, instrument_id: $barthel->id, created_by: $admin->id,
+                answers: $answers, durchgefuehrt_am: now()->subDays(3)->toDateString(),
+            ));
         }
 
         $wilhelm = Resident::query()->where('name', 'Wilhelm Müller')->firstOrFail();
