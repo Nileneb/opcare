@@ -102,7 +102,7 @@ class FhirDocumentExporter
         $vitals = VitalReading::query()->where('resident_id', $resident->id)
             ->latest('gemessen_am')->get()->unique('typ');
         foreach ($vitals as $vital) {
-            $resource = $this->observationMapper->map($vital, $patientRef);
+            $resource = $this->observationMapper->map($vital, $patientRef, $recorderRef);
             $ref = $base.'Observation/'.$resource['id'];
             $observationRefs[] = $ref;
             $entry[] = ['fullUrl' => $ref, 'resource' => $resource];
