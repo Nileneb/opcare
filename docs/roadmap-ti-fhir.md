@@ -54,5 +54,9 @@ Architektur-Vorsorge: Auth-Schicht abstrahiert halten, damit TI-IDP später ando
   echte TI-Konnektivität (KIM/ePA/eVerordnung), Test-Infrastruktur (Karten/Referenzumgebung).
 
 ## Offene DAS-Detailarbeit (siehe Memory)
-STURZ 0/1/2 + Sturzfolgen, akute klinische Ereignisse (Apoplex/Fraktur/…),
-volle Dekubitus-Codesemantik (1-vs-2, LOK) — Letzteres sobald amtliche DAS-Ausfüllanleitung vorliegt.
+- ✅ STURZ (Feld 71: 0/1/2) + STURZFOLGEN (Feld 72) strukturiert erfasst → 5 Plausi-Regeln scharf
+  (10055/20056/30075/20057/60039), applicable 52 → 57. Folge-Codes **0=keine/1=Fraktur** verifiziert
+  gemappt; Codes 2–4 (SHT etc.) offen → Regeln 30076/60040/70003 bleiben ehrlich ungewertet.
+- offen: akute klinische Ereignisse (Apoplex/Fraktur als eigenes Feld 10/…),
+  volle Dekubitus-Codesemantik (1-vs-2, LOK), volle Sturzfolgen-Codeliste (2–4) — je sobald amtliche
+  DAS-Ausfüllanleitung / Erhebungsinstrument vorliegt.
