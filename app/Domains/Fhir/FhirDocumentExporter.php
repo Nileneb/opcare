@@ -6,9 +6,11 @@ use App\Domains\CarePlanning\Models\CareReport;
 use App\Domains\Fhir\Mappers\CarePlanMapper;
 use App\Domains\Fhir\Mappers\CompositionMapper;
 use App\Domains\Fhir\Mappers\ConditionMapper;
+use App\Domains\Fhir\Mappers\MedicationStatementMapper;
 use App\Domains\Fhir\Mappers\ObservationMapper;
 use App\Domains\Fhir\Mappers\PatientMapper;
 use App\Domains\Masterdata\Models\Resident;
+use App\Domains\Medication\Models\Prescription;
 use App\Domains\Medication\Models\VitalReading;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
@@ -26,6 +28,7 @@ class FhirDocumentExporter
         private readonly CompositionMapper $compositionMapper,
         private readonly CarePlanMapper $carePlanMapper,
         private readonly ObservationMapper $observationMapper,
+        private readonly MedicationStatementMapper $medicationMapper,
     ) {}
 
     /** @return array<string, mixed> */
@@ -51,6 +54,16 @@ class FhirDocumentExporter
             $entry[] = ['fullUrl' => $ref, 'resource' => $resource];
         }
 
+        $medicationRefs = [];
+        $prescriptions = Prescription::query()->where('resident_id', $resident->id)
+            ->aktiv()->with(['medProduct', 'schedules'])->get();
+        foreach ($prescriptions as $prescription) {
+            $resource = $this->medicationMapper->map($prescription, $patientRef);
+            $ref = $base.'MedicationStatement/'.$resource['id'];
+            $medicationRefs[] = $ref;
+            $entry[] = ['fullUrl' => $ref, 'resource' => $resource];
+        }
+
         $measures = $resident->careMeasures()->current()->latest('id')->get();
         if ($measures->isNotEmpty()) {
             $resource = $this->carePlanMapper->map($resident, $measures, $patientRef);
@@ -70,7 +83,7 @@ class FhirDocumentExporter
 
         $reports = CareReport::query()->where('resident_id', $resident->id)->current()->latest('datum')->get();
         $composition = $this->compositionMapper->map(
-            $resident, $patientRef, $date, $reports, $conditionRefs, $carePlanRef, $observationRefs,
+            $resident, $patientRef, $date, $reports, $conditionRefs, $carePlanRef, $observationRefs, $medicationRefs,
         );
 
         array_unshift(

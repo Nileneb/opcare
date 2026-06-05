@@ -8,7 +8,11 @@ use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Support\CurrentTenant;
 use App\Domains\Masterdata\Models\IcdCode;
 use App\Domains\Masterdata\Models\Resident;
+use App\Domains\Medication\Enums\ScheduleFrequency;
 use App\Domains\Medication\Enums\VitalType;
+use App\Domains\Medication\Models\MedProduct;
+use App\Domains\Medication\Models\Prescription;
+use App\Domains\Medication\Models\PrescriptionSchedule;
 use App\Domains\Medication\Models\VitalReading;
 use Spatie\Permission\Models\Role;
 
@@ -22,6 +26,9 @@ beforeEach(function () {
     CareReport::create(['resident_id' => $this->resident->id, 'created_by' => $user->id, 'datum' => '2026-06-01 08:00:00', 'schicht' => 'frueh', 'text' => 'Bewohnerin wohlauf.']);
     CareMeasure::create(['resident_id' => $this->resident->id, 'themenfeld' => 'mobilitaet', 'beschreibung' => 'Gehübungen täglich', 'ziel' => 'Mobilität erhalten']);
     VitalReading::create(['resident_id' => $this->resident->id, 'typ' => VitalType::Gewicht, 'wert' => 68.5, 'einheit' => 'kg', 'gemessen_am' => '2026-06-01 07:00:00', 'gemessen_von' => $user->id]);
+    $product = MedProduct::factory()->create(['name' => 'Ramipril 5 mg', 'staerke' => '5 mg']);
+    $presc = Prescription::create(['resident_id' => $this->resident->id, 'med_product_id' => $product->id, 'created_by' => $user->id, 'bei_bedarf' => false, 'gueltig_von' => '2026-06-01']);
+    PrescriptionSchedule::create(['prescription_id' => $presc->id, 'frequenz' => ScheduleFrequency::Taeglich, 'dosis' => ['morgens' => 1]]);
 });
 
 it('liefert ein FHIR-R4-Document-Bundle mit der Composition zuerst', function () {
@@ -94,11 +101,20 @@ it('mappt Vitalwerte auf Observation mit LOINC + Maßnahmen auf CarePlan', funct
         ->and($carePlan['activity'][0]['detail']['description'])->toContain('Gehübungen');
 });
 
+it('mappt aktive Verordnungen auf MedicationStatement', function () {
+    $med = collect(app(FhirDocumentExporter::class)->export($this->resident)['entry'])
+        ->pluck('resource')->firstWhere('resourceType', 'MedicationStatement');
+
+    expect($med['status'])->toBe('active')
+        ->and($med['medicationCodeableConcept']['text'])->toBe('Ramipril 5 mg')
+        ->and($med['dosage'][0]['text'])->toBe('morgens 1');
+});
+
 it('erzeugt eine Composition mit referenzierten Sektionen + Verlauf-Narrativ', function () {
     $composition = app(FhirDocumentExporter::class)->export($this->resident)['entry'][0]['resource'];
     $titles = collect($composition['section'])->pluck('title')->all();
 
     expect($composition['status'])->toBe('final')
-        ->and($titles)->toContain('Diagnosen')->toContain('Pflegeplan')->toContain('Beobachtungen / Vitalwerte')->toContain('Verlauf')
+        ->and($titles)->toContain('Diagnosen')->toContain('Medikation')->toContain('Pflegeplan')->toContain('Beobachtungen / Vitalwerte')->toContain('Verlauf')
         ->and(collect($composition['section'])->firstWhere('title', 'Verlauf')['text']['div'])->toContain('Bewohnerin wohlauf.');
 });
