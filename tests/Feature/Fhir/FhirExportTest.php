@@ -29,6 +29,7 @@ beforeEach(function () {
     $product = MedProduct::factory()->create(['name' => 'Ramipril 5 mg', 'staerke' => '5 mg']);
     $presc = Prescription::create(['resident_id' => $this->resident->id, 'med_product_id' => $product->id, 'created_by' => $user->id, 'bei_bedarf' => false, 'gueltig_von' => '2026-06-01']);
     PrescriptionSchedule::create(['prescription_id' => $presc->id, 'frequenz' => ScheduleFrequency::Taeglich, 'dosis' => ['morgens' => 1]]);
+    $this->resident->allergies()->create(['substanz' => 'Penicillin', 'typ' => 'allergie', 'kategorie' => 'medikament', 'kritikalitaet' => 'hoch', 'reaktion' => 'Hautausschlag', 'erfasst_am' => '2025-05-01']);
 });
 
 it('liefert ein FHIR-R4-Document-Bundle mit der Composition zuerst', function () {
@@ -110,11 +111,23 @@ it('mappt aktive Verordnungen auf MedicationStatement', function () {
         ->and($med['dosage'][0]['text'])->toBe('morgens 1');
 });
 
+it('mappt Allergien auf FHIR AllergyIntolerance', function () {
+    $allergy = collect(app(FhirDocumentExporter::class)->export($this->resident)['entry'])
+        ->pluck('resource')->firstWhere('resourceType', 'AllergyIntolerance');
+
+    expect($allergy['type'])->toBe('allergy')
+        ->and($allergy['category'])->toBe(['medication'])
+        ->and($allergy['criticality'])->toBe('high')
+        ->and($allergy['code']['text'])->toBe('Penicillin')
+        ->and($allergy['reaction'][0]['manifestation'][0]['text'])->toBe('Hautausschlag')
+        ->and($allergy['patient']['reference'])->toContain('Patient/');
+});
+
 it('erzeugt eine Composition mit referenzierten Sektionen + Verlauf-Narrativ', function () {
     $composition = app(FhirDocumentExporter::class)->export($this->resident)['entry'][0]['resource'];
     $titles = collect($composition['section'])->pluck('title')->all();
 
     expect($composition['status'])->toBe('final')
-        ->and($titles)->toContain('Diagnosen')->toContain('Medikation')->toContain('Pflegeplan')->toContain('Beobachtungen / Vitalwerte')->toContain('Verlauf')
+        ->and($titles)->toContain('Diagnosen')->toContain('Allergien')->toContain('Medikation')->toContain('Pflegeplan')->toContain('Beobachtungen / Vitalwerte')->toContain('Verlauf')
         ->and(collect($composition['section'])->firstWhere('title', 'Verlauf')['text']['div'])->toContain('Bewohnerin wohlauf.');
 });

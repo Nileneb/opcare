@@ -49,6 +49,17 @@ class ResidentShow extends Component
 
     public string $diag_art = 'sekundär';
 
+    // Allergie / Unverträglichkeit (ÜLB-Sektion allergienUndUnvertraeglichkeiten)
+    public string $alg_substanz = '';
+
+    public string $alg_typ = 'allergie';
+
+    public string $alg_kategorie = 'medikament';
+
+    public string $alg_kritikalitaet = '';
+
+    public string $alg_reaktion = '';
+
     // Versicherung
     public ?int $ins_id = null;
 
@@ -241,6 +252,37 @@ class ResidentShow extends Component
             ->get();
     }
 
+    public function addAllergy(): void
+    {
+        Gate::authorize('update', $this->resident);
+        $this->validate([
+            'alg_substanz' => ['required', 'string', 'max:255'],
+            'alg_typ' => ['required', 'in:allergie,unvertraeglichkeit'],
+            'alg_kategorie' => ['required', 'in:medikament,nahrung,umwelt,biologisch'],
+            'alg_kritikalitaet' => ['nullable', 'in:niedrig,hoch,unbekannt'],
+            'alg_reaktion' => ['nullable', 'string', 'max:255'],
+        ]);
+        $this->resident->allergies()->create([
+            'substanz' => $this->alg_substanz,
+            'typ' => $this->alg_typ,
+            'kategorie' => $this->alg_kategorie,
+            'kritikalitaet' => $this->alg_kritikalitaet ?: null,
+            'reaktion' => $this->alg_reaktion ?: null,
+            'erfasst_am' => now()->toDateString(),
+        ]);
+        $this->reset('alg_substanz', 'alg_kritikalitaet', 'alg_reaktion');
+        $this->alg_typ = 'allergie';
+        $this->alg_kategorie = 'medikament';
+        session()->flash('status', 'Allergie/Unverträglichkeit hinzugefügt.');
+    }
+
+    public function removeAllergy(int $id): void
+    {
+        Gate::authorize('update', $this->resident);
+        $this->resident->allergies()->whereKey($id)->delete();
+        session()->flash('status', 'Eintrag entfernt.');
+    }
+
     public function addInsurance(): void
     {
         $this->validate(['ins_id' => ['required', $this->tenantExists('health_insurances')], 'ins_nr' => ['nullable', 'string', 'max:60']]);
@@ -374,7 +416,7 @@ class ResidentShow extends Component
     {
         $this->resident->load([
             'room.station', 'diagnoses.icdCode', 'insurances.healthInsurance',
-            'custodians', 'physicians',
+            'custodians', 'physicians', 'allergies',
             'sisAssessments' => fn ($q) => $q->current()->latest('id')->with(['topicFields', 'riskItems']),
             'careMeasures' => fn ($q) => $q->current()->latest('id'),
             'careEvents',

@@ -3,6 +3,7 @@
 namespace App\Domains\Fhir;
 
 use App\Domains\CarePlanning\Models\CareReport;
+use App\Domains\Fhir\Mappers\AllergyIntoleranceMapper;
 use App\Domains\Fhir\Mappers\CarePlanMapper;
 use App\Domains\Fhir\Mappers\CompositionMapper;
 use App\Domains\Fhir\Mappers\ConditionMapper;
@@ -29,12 +30,13 @@ class FhirDocumentExporter
         private readonly CarePlanMapper $carePlanMapper,
         private readonly ObservationMapper $observationMapper,
         private readonly MedicationStatementMapper $medicationMapper,
+        private readonly AllergyIntoleranceMapper $allergyMapper,
     ) {}
 
     /** @return array<string, mixed> */
     public function export(Resident $resident): array
     {
-        $resident->loadMissing('diagnoses.icdCode');
+        $resident->loadMissing('diagnoses.icdCode', 'allergies');
         $base = rtrim(config('app.url'), '/').'/fhir/';
         $patientRef = $base.'Patient/'.PatientMapper::id($resident);
         $date = Carbon::now()->toIso8601String();
@@ -51,6 +53,14 @@ class FhirDocumentExporter
             $resource = $this->conditionMapper->map($diagnosis, $patientRef);
             $ref = $base.'Condition/'.$resource['id'];
             $conditionRefs[] = $ref;
+            $entry[] = ['fullUrl' => $ref, 'resource' => $resource];
+        }
+
+        $allergyRefs = [];
+        foreach ($resident->allergies as $allergy) {
+            $resource = $this->allergyMapper->map($allergy, $patientRef);
+            $ref = $base.'AllergyIntolerance/'.$resource['id'];
+            $allergyRefs[] = $ref;
             $entry[] = ['fullUrl' => $ref, 'resource' => $resource];
         }
 
@@ -83,7 +93,7 @@ class FhirDocumentExporter
 
         $reports = CareReport::query()->where('resident_id', $resident->id)->current()->latest('datum')->get();
         $composition = $this->compositionMapper->map(
-            $resident, $patientRef, $date, $reports, $conditionRefs, $carePlanRef, $observationRefs, $medicationRefs,
+            $resident, $patientRef, $date, $reports, $conditionRefs, $carePlanRef, $observationRefs, $medicationRefs, $allergyRefs,
         );
 
         array_unshift(

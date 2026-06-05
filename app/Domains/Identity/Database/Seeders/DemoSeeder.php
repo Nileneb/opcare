@@ -191,7 +191,11 @@ class DemoSeeder extends Seeder
                 ]);
             }
         }
-        foreach ([[VitalType::Gewicht, 68.5, null, 'kg'], [VitalType::Blutdruck, 135, 85, 'mmHg'], [VitalType::Puls, 72, null, '/min']] as [$typ, $wert, $wert2, $einheit]) {
+        $maria->allergies()->create([
+            'substanz' => 'Penicillin', 'typ' => 'allergie', 'kategorie' => 'medikament',
+            'kritikalitaet' => 'hoch', 'reaktion' => 'Hautausschlag', 'erfasst_am' => now()->subMonths(8)->toDateString(),
+        ]);
+        foreach ([[VitalType::Gewicht, 68.5, null, 'kg'], [VitalType::Koerpergroesse, 165, null, 'cm'], [VitalType::Blutdruck, 135, 85, 'mmHg'], [VitalType::Puls, 72, null, '/min']] as [$typ, $wert, $wert2, $einheit]) {
             VitalReading::create([
                 'resident_id' => $maria->id,
                 'typ' => $typ,
