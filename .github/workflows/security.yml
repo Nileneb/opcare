@@ -1,0 +1,33 @@
+name: security
+
+# Track B (Security-Hygiene), messbar: Supply-Chain-CVE-Gate. Schlägt fehl, sobald eine
+# Abhängigkeit mit bekannter Sicherheitslücke im composer.lock landet. Erweiterbar um SAST.
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [master, 'feat/**', 'fix/**', 'chore/**']
+  pull_request:
+    branches: [master]
+  schedule:
+    # WHY: neue CVEs erscheinen auch ohne Code-Änderung — wöchentlicher Re-Check
+    - cron: '0 6 * * 1'
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+          coverage: none
+
+      - name: Composer audit (Dependency-CVEs)
+        run: composer audit --no-interaction --locked
