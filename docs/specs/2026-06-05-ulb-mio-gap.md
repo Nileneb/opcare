@@ -95,7 +95,10 @@ Kontinenz/Ernährung, soziale Felder).
     family/given statt Freitext, Custom-Identifier entfernt). Das Base-Gate lädt jetzt das ÜLB-Paket mit,
     sodass das geclaimte Profil im **blockierenden** Gate erzwungen wird — Gesamt-Bundle weiter 0 errors.
     *Offen:* GKV-KVNR-Identifier-Slice (opcare speichert KVNR nicht am Resident → spätere Iteration).
-  - ⬜ Schritt 3+: nächste Ressourcen (Composition, Condition, …) sektionsweise `meta.profile`.
+  - ✅ Schritt 3: **Condition (Diagnose)** ÜLB-konform (`KBV_PR_MIO_ULB_Condition_Medical_Problem_Diagnosis`):
+    meta.profile, `clinicalStatus`/`verificationStatus` mit CodeSystem-Versionen (3.0.0 / 2.0.1), ICD-10-GM
+    mit Version (2017), `recordedDate` entfernt (Profil verbietet) → `onsetDateTime`. Bundle 0 errors.
+  - ⬜ Schritt 4+: nächste Ressourcen (Composition als Rückgrat, dann Observations/Medikation/…).
   - **Tooling-Hinweis:** `kbv.basis 1.3.0` erzeugt im aktuellen Validator einen Snapshot-Fehler
     (`Same id 'Observation.dataAbsentReason'`) — bekannte KBV/Validator-Inkompatibilität, nicht unsere Daten.
 
