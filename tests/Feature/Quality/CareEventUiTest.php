@@ -44,12 +44,12 @@ it('dokumentiert ein Vorkommnis über die UI', function () {
 
 it('erlaubt ein Vorkommnis ohne Schweregrad', function () {
     Livewire::actingAs(($this->makeUser)('pflegehilfskraft'))->test(ResidentShow::class, ['resident' => $this->resident])
-        ->set('ce_indicator', 'dekubitus')
+        ->set('ce_indicator', 'schmerz')
         ->set('ce_datum', '2026-06-02')
         ->call('recordCareEvent')
         ->assertHasNoErrors();
 
-    expect(CareEvent::where('indicator', 'dekubitus')->exists())->toBeTrue();
+    expect(CareEvent::where('indicator', 'schmerz')->exists())->toBeTrue();
 });
 
 it('verwehrt Leserecht das Dokumentieren (Policy-Guard, nicht nur Nav)', function () {

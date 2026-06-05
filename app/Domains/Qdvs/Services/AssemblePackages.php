@@ -33,13 +33,17 @@ class AssemblePackages
             ->groupBy('resident_id');
 
         return $residents->map(function (Resident $r) use ($aktive, $gewichte, $cohort) {
-            $vorhanden = ($aktive[$r->id] ?? collect())->pluck('indicator')
+            $events = $aktive[$r->id] ?? collect();
+            $vorhanden = $events->pluck('indicator')
                 ->map(fn ($i) => $i instanceof QualityIndicator ? $i->value : $i)->all();
 
             $indikatoren = [];
             foreach (QualityIndicator::cases() as $i) {
                 $indikatoren[$i->value] = in_array($i->value, $vorhanden, true);
             }
+
+            $dekubitus = $events->first(fn ($e) => ($e->indicator instanceof QualityIndicator ? $e->indicator->value : $e->indicator) === QualityIndicator::Dekubitus->value);
+            $dekDetails = is_array($dekubitus?->details) ? $dekubitus->details : [];
 
             $gewicht = ($gewichte[$r->id] ?? collect())->first();
 
@@ -56,6 +60,9 @@ class AssemblePackages
                 gewicht_datum: $gewicht?->gemessen_am?->toDateString(),
                 auszug_am: $r->entlassung_am?->toDateString(),
                 erhebungsdatum: $cohort->stichtag,
+                dekubitus_stadium: isset($dekDetails['stadium']) ? (int) $dekDetails['stadium'] : null,
+                dekubitus_beginn: $dekDetails['beginn'] ?? null,
+                dekubitus_ende: $dekDetails['ende'] ?? null,
             );
         })->all();
     }

@@ -98,6 +98,15 @@ class ResidentShow extends Component
 
     public string $ce_notiz = '';
 
+    // Dekubitus-Detail (nur bei indicator=dekubitus)
+    public ?int $ce_dek_stadium = null;
+
+    public string $ce_dek_stelle = '';
+
+    public string $ce_dek_beginn = '';
+
+    public string $ce_dek_ende = '';
+
     // Evaluation
     public ?int $e_measure = null;
 
@@ -118,23 +127,53 @@ class ResidentShow extends Component
     public function recordCareEvent(RecordCareEvent $action): void
     {
         Gate::authorize('create', CareEvent::class);
-        $this->validate([
+        $rules = [
             'ce_indicator' => ['required', Rule::enum(QualityIndicator::class)],
             'ce_datum' => ['required', 'date'],
             'ce_severity' => ['nullable', fn ($a, $v, $fail) => $v !== '' && EventSeverity::tryFrom($v) === null ? $fail('Ungültiger Schweregrad.') : null],
             'ce_notiz' => ['nullable', 'string', 'max:1000'],
-        ]);
+        ];
+        // WHY(DAS_REGELN): Ein Dekubitus ohne Stadium ist eine DAS-Datenlücke (Regel 60019) →
+        // Stadium + Beginndatum bei der Erfassung verpflichtend, damit das QDVS-Mapping konsistent ist.
+        if ($this->ce_indicator === QualityIndicator::Dekubitus->value) {
+            $rules['ce_dek_stadium'] = ['required', 'integer', 'between:1,4'];
+            $rules['ce_dek_beginn'] = ['required', 'date'];
+            $rules['ce_dek_ende'] = ['nullable', 'date', 'after_or_equal:ce_dek_beginn'];
+            $rules['ce_dek_stelle'] = ['nullable', 'string', 'max:120'];
+        }
+        $this->validate($rules);
 
         $action->handle(new CareEventData(
             resident_id: $this->resident->id,
             indicator: $this->ce_indicator,
             datum: $this->ce_datum,
             severity: $this->ce_severity ?: null,
-            details: trim($this->ce_notiz) !== '' ? ['notiz' => $this->ce_notiz] : null,
+            details: $this->buildDetails(),
         ));
 
-        $this->reset('ce_severity', 'ce_notiz');
+        $this->reset('ce_severity', 'ce_notiz', 'ce_dek_stadium', 'ce_dek_stelle', 'ce_dek_beginn', 'ce_dek_ende');
         session()->flash('status', 'Vorkommnis dokumentiert.');
+    }
+
+    /** @return array<string, mixed>|null */
+    private function buildDetails(): ?array
+    {
+        $details = [];
+        if (trim($this->ce_notiz) !== '') {
+            $details['notiz'] = $this->ce_notiz;
+        }
+        if ($this->ce_indicator === QualityIndicator::Dekubitus->value) {
+            $details['stadium'] = $this->ce_dek_stadium;
+            $details['beginn'] = $this->ce_dek_beginn;
+            if ($this->ce_dek_ende !== '') {
+                $details['ende'] = $this->ce_dek_ende;
+            }
+            if (trim($this->ce_dek_stelle) !== '') {
+                $details['stelle'] = $this->ce_dek_stelle;
+            }
+        }
+
+        return $details === [] ? null : $details;
     }
 
     public function resolveCareEvent(int $id): void

@@ -215,6 +215,8 @@
                 <b>{{ $ev->indicator->label() }}</b>
                 <span style="color:var(--c-muted)">{{ $ev->datum->format('d.m.Y') }}</span>
                 @if ($ev->severity)<span class="badge badge-warn">{{ $ev->severity->label() }}</span>@endif
+                @if (!empty($ev->details['stadium']))<span class="badge">Stadium {{ $ev->details['stadium'] }}</span>@endif
+                @if (!empty($ev->details['stelle']))<span style="color:var(--c-muted)">{{ $ev->details['stelle'] }}</span>@endif
                 @if (!empty($ev->details['notiz']))<span style="color:var(--c-muted)">· {{ $ev->details['notiz'] }}</span>@endif
                 <span style="margin-left:auto">
                     @if ($ev->behoben_am)
@@ -232,7 +234,7 @@
             <form wire:submit="recordCareEvent" style="margin-top:14px">
                 <div class="form-row-3">
                     <div class="field"><label>Indikator</label>
-                        <select wire:model="ce_indicator">@foreach ($indicators as $i)<option value="{{ $i->value }}">{{ $i->label() }}</option>@endforeach</select>
+                        <select wire:model.live="ce_indicator">@foreach ($indicators as $i)<option value="{{ $i->value }}">{{ $i->label() }}</option>@endforeach</select>
                         @error('ce_indicator')<span class="err">{{ $message }}</span>@enderror
                     </div>
                     <div class="field"><label>Datum</label><input type="date" wire:model="ce_datum" />@error('ce_datum')<span class="err">{{ $message }}</span>@enderror</div>
@@ -240,8 +242,24 @@
                         <select wire:model="ce_severity"><option value="">—</option>@foreach ($severities as $s)<option value="{{ $s->value }}">{{ $s->label() }}</option>@endforeach</select>
                     </div>
                 </div>
+                @if ($ce_indicator === 'dekubitus')
+                    <div class="form-row-3" style="background:var(--c-surface-2);padding:8px;border-radius:var(--radius)">
+                        <div class="field"><label>Dekubitus-Stadium *</label>
+                            <select wire:model="ce_dek_stadium">
+                                <option value="">—</option>
+                                <option value="1">Kategorie 1 (Rötung)</option>
+                                <option value="2">Kategorie 2 (Teilverlust Haut)</option>
+                                <option value="3">Kategorie 3 (Vollständiger Hautverlust)</option>
+                                <option value="4">Kategorie 4 (Gewebsnekrose)</option>
+                            </select>@error('ce_dek_stadium')<span class="err">{{ $message }}</span>@enderror
+                        </div>
+                        <div class="field"><label>Beginn *</label><input type="date" wire:model="ce_dek_beginn" />@error('ce_dek_beginn')<span class="err">{{ $message }}</span>@enderror</div>
+                        <div class="field"><label>Abgeheilt am</label><input type="date" wire:model="ce_dek_ende" />@error('ce_dek_ende')<span class="err">{{ $message }}</span>@enderror</div>
+                    </div>
+                    <div class="field"><label>Körperstelle</label><input type="text" wire:model="ce_dek_stelle" placeholder="z. B. Steißbein, Ferse links" />@error('ce_dek_stelle')<span class="err">{{ $message }}</span>@enderror</div>
+                @endif
                 <div class="field"><label>Notiz <span style="color:var(--c-muted);font-weight:400">(optional)</span></label>
-                    <input type="text" wire:model="ce_notiz" placeholder="z. B. Sturz im Bad, Lokalisation, Folgen…" />
+                    <input type="text" wire:model="ce_notiz" placeholder="z. B. Sturz im Bad, Folgen…" />
                     @error('ce_notiz')<span class="err">{{ $message }}</span>@enderror
                 </div>
                 <button class="btn btn-ghost btn-sm">+ Vorkommnis</button>
