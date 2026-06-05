@@ -65,7 +65,10 @@ it('mappt den Bewohner auf eine FHIR-Patient-Ressource', function () {
 
     expect($patient['gender'])->toBe('female')
         ->and($patient['birthDate'])->toBe('1940-05-10')
-        ->and($patient['name'][0]['text'])->toBe('Erika Muster');
+        ->and($patient['name'][0]['family'])->toBe('Muster')
+        ->and($patient['name'][0]['given'])->toBe(['Erika'])
+        // WHY(Track A Phase 6): ÜLB-Patient-Profil wird geclaimt
+        ->and($patient['meta']['profile'][0])->toContain('KBV_PR_MIO_ULB_Patient');
 });
 
 it('mappt Diagnosen auf Condition mit ICD-10-GM-Codesystem', function () {
