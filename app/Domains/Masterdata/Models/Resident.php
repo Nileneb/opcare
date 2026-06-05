@@ -5,6 +5,7 @@ namespace App\Domains\Masterdata\Models;
 use App\Domains\CarePlanning\Models\CareMeasure;
 use App\Domains\CarePlanning\Models\SisAssessment;
 use App\Domains\Masterdata\Database\Factories\ResidentFactory;
+use App\Domains\Quality\Models\CareEvent;
 use App\Support\Models\BaseModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -57,6 +58,11 @@ class Resident extends BaseModel implements HasMedia
     public function careMeasures(): HasMany
     {
         return $this->hasMany(CareMeasure::class);
+    }
+
+    public function careEvents(): HasMany
+    {
+        return $this->hasMany(CareEvent::class)->latest('datum');
     }
 
     public function physicians(): BelongsToMany
