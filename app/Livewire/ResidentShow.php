@@ -19,6 +19,7 @@ use App\Domains\Masterdata\Models\IcdCode;
 use App\Domains\Masterdata\Models\Physician;
 use App\Domains\Masterdata\Models\Resident;
 use App\Support\Concerns\ScopesTenantValidation;
+use Illuminate\Support\Collection;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -33,6 +34,10 @@ class ResidentShow extends Component
 
     // Diagnose
     public ?int $diag_icd = null;
+
+    public ?string $diag_label = null;
+
+    public string $diag_search = '';
 
     public string $diag_art = 'sekundär';
 
@@ -90,13 +95,43 @@ class ResidentShow extends Component
         }
     }
 
+    public function selectDiagnosis(int $id): void
+    {
+        $icd = IcdCode::find($id);
+        if (! $icd) {
+            return;
+        }
+        $this->diag_icd = $icd->id;
+        $this->diag_label = "{$icd->code} — {$icd->bezeichnung}";
+        $this->diag_search = '';
+    }
+
     public function addDiagnosis(): void
     {
         $this->validate(['diag_icd' => ['required', 'exists:icd_codes,id'], 'diag_art' => ['required', 'in:primär,sekundär']]);
         $this->resident->diagnoses()->create(['icd_code_id' => $this->diag_icd, 'art' => $this->diag_art]);
-        $this->reset('diag_icd', 'diag_art');
+        $this->reset('diag_icd', 'diag_label', 'diag_search', 'diag_art');
         $this->diag_art = 'sekundär';
         session()->flash('status', 'Diagnose hinzugefügt.');
+    }
+
+    /** @return Collection<int, IcdCode> */
+    private function diagnosisResults(): Collection
+    {
+        $term = trim($this->diag_search);
+        if (mb_strlen($term) < 2) {
+            return collect();
+        }
+
+        $like = mb_strtolower($term);
+
+        // WHY: LOWER(...) statt LIKE/ILIKE direkt — portabel über SQLite (Tests) und Postgres (Prod)
+        return IcdCode::query()
+            ->whereRaw('LOWER(code) LIKE ?', [$like.'%'])
+            ->orWhereRaw('LOWER(bezeichnung) LIKE ?', ['%'.$like.'%'])
+            ->orderBy('code')
+            ->limit(25)
+            ->get();
     }
 
     public function addInsurance(): void
@@ -216,7 +251,7 @@ class ResidentShow extends Component
             'areas' => SisAreaCatalog::all(),
             'topicFields' => SisTopicField::cases(),
             'riskTypes' => RiskType::cases(),
-            'icdCodes' => IcdCode::orderBy('code')->get(),
+            'diagnosisResults' => $this->diagnosisResults(),
             'insurances' => HealthInsurance::orderBy('name')->get(),
             'physicians' => Physician::orderBy('name')->get(),
             'measures' => $this->resident->careMeasures,

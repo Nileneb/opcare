@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Domains\Identity\Database\Seeders\DemoSeeder;
 use App\Domains\Identity\Database\Seeders\RolesSeeder;
 use App\Domains\Identity\Database\Seeders\SuperAdminRoleSeeder;
+use App\Domains\Masterdata\Database\Seeders\IcdCodeSeeder;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -14,6 +15,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RolesSeeder::class,
             SuperAdminRoleSeeder::class,
+            IcdCodeSeeder::class,
             DemoSeeder::class,
         ]);
     }

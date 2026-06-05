@@ -31,10 +31,26 @@
             @empty <p class="empty">Keine Diagnosen erfasst.</p> @endforelse
             <form wire:submit="addDiagnosis" style="margin-top:14px">
                 <div class="form-row">
-                    <div class="field"><label>ICD-Code</label>
-                        <select wire:model="diag_icd"><option value="">— wählen —</option>
-                            @foreach ($icdCodes as $c)<option value="{{ $c->id }}">{{ $c->code }} — {{ $c->bezeichnung }}</option>@endforeach
-                        </select>@error('diag_icd')<span class="err">{{ $message }}</span>@enderror
+                    <div class="field" style="position:relative"><label>ICD-Code suchen</label>
+                        @if ($diag_icd)
+                            <div class="chip" style="background:var(--c-surface-2)">
+                                <b>{{ $diag_label }}</b>
+                                <button type="button" class="btn btn-ghost btn-sm" style="margin-left:auto" wire:click="$set('diag_icd', null)" title="Auswahl löschen">✕</button>
+                            </div>
+                        @else
+                            <input type="text" wire:model.live.debounce.300ms="diag_search" placeholder="Code (z. B. I10) oder Text (z. B. Demenz)…" autocomplete="off" />
+                            @if (mb_strlen(trim($diag_search)) >= 2)
+                                <ul class="typeahead" style="list-style:none;margin:4px 0 0;padding:0;max-height:240px;overflow:auto;border:1px solid var(--c-border);border-radius:var(--radius)">
+                                    @forelse ($diagnosisResults as $c)
+                                        <li><button type="button" class="typeahead-item" style="display:block;width:100%;text-align:left;padding:6px 10px;background:none;border:0;cursor:pointer"
+                                            wire:click="selectDiagnosis({{ $c->id }})"><b>{{ $c->code }}</b> — {{ $c->bezeichnung }}</button></li>
+                                    @empty
+                                        <li style="padding:6px 10px;color:var(--c-muted)">Kein Treffer.</li>
+                                    @endforelse
+                                </ul>
+                            @endif
+                        @endif
+                        @error('diag_icd')<span class="err">{{ $message }}</span>@enderror
                     </div>
                     <div class="field"><label>Art</label>
                         <select wire:model="diag_art"><option value="primär">primär</option><option value="sekundär">sekundär</option></select>
