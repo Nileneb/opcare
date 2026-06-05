@@ -72,7 +72,7 @@ Kontinenz/Ernährung, soziale Felder).
   authoritative aus dem ÜLB-Package). Neuer `RiskType::Mobilitaet` (eskaliert bewusst nicht).
   FHIR `AssessmentObservationMapper` (Item-Observations `category=survey` + Summe mit `hasMember`) +
   Composition-Sektion „Funktionsbeurteilungen". **Rendert ohne UI-Code-Änderung** über die vorhandene
-  Assessment-Engine (siehe `docs/screenshots/barthel-assessment.png`). HL7-Validator 0 errors.
+  Assessment-Engine (Screenshots im [Projekt-Wiki](https://github.com/Nileneb/opcare/wiki)). HL7-Validator 0 errors.
   *Offen Phase 2b:* Orientierung/Kognition als weitere Instrumente.
 - **Phase 2b/3 — erledigt:** generischer **Status-Observation-Mechanismus** (`resident_status_observations`
   + `StatusObservationCatalog`, SNOMED-codiert/Freitext): Bewusstsein, Harn-/Stuhlkontinenz, Kostform,
@@ -82,8 +82,18 @@ Kontinenz/Ernährung, soziale Felder).
   patient), Sektion „Medizinprodukte". *Offen:* Atemwegszugang/-unterstützung als eigene Observations.
 - **Phase 5 — erledigt:** Angehörige/Kontaktpersonen (`resident_contacts`) → FHIR `RelatedPerson`,
   Sektion „Angehörige / Kontaktpersonen". *Offen:* Patientenwunsch, Dokumentenmitgabe, gesetzl. Betreuung strukturiert.
-- **Phase 6 — Konformität (offen):** `kbv.mio.ueberleitungsbogen` + `kbv.basis` ins `fhir-validate`-Gate,
-  sektionsweise `meta.profile` claimen, Validator-Fehlerliste als Backlog abarbeiten.
+- **Phase 6 — Konformität (läuft, iterativ):**
+  - ✅ Schritt 1: **nicht-blockierender** ÜLB-Konformitäts-Job im `fhir-validate`-Workflow
+    (`-ig kbv.mio.ueberleitungsbogen#1.0.0 -profile KBV_PR_MIO_ULB_Bundle`, `continue-on-error`) — macht
+    den Backlog im CI-Log sichtbar, ohne das grüne Basis-Gate (R4 + de.basisprofil) zu brechen.
+  - **Gemessenes Gap (Bundle-Ebene):** 2 Fehler — (a) `Bundle.meta` (ÜLB verlangt `meta.profile`),
+    (b) Constraint `TypeComposition` „genau eine ÜLB-konforme Composition". Jeder Fehler ist ein Tor zu
+    tieferen Profil-Anforderungen (meta.profile je Ressource → KBV-Basisprofile → Slices/Identifier).
+    *Bewusst noch nicht geclaimt:* `meta.profile` jetzt zu setzen würde Konformität behaupten UND das grüne
+    Gate brechen. Reihenfolge: Inhalte konform machen → dann Profil claimen.
+  - ⬜ Schritt 2+: sektionsweise `meta.profile` (Patient → Composition → …), Fehlerliste abarbeiten.
+  - **Tooling-Hinweis:** `kbv.basis 1.3.0` erzeugt im aktuellen Validator einen Snapshot-Fehler
+    (`Same id 'Observation.dataAbsentReason'`) — bekannte KBV/Validator-Inkompatibilität, nicht unsere Daten.
 
 **Dokument-Stand:** 13 Composition-Sektionen (Diagnosen, Allergien, Medikation, Pflegeplan, Vitalwerte,
 Funktionsbeurteilungen, Atmung, Bewusstsein/Orientierung, Kontinenz, Ernährung, Medizinprodukte,
