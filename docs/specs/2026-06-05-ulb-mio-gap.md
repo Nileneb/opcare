@@ -98,7 +98,18 @@ Kontinenz/Ernährung, soziale Felder).
   - ✅ Schritt 3: **Condition (Diagnose)** ÜLB-konform (`KBV_PR_MIO_ULB_Condition_Medical_Problem_Diagnosis`):
     meta.profile, `clinicalStatus`/`verificationStatus` mit CodeSystem-Versionen (3.0.0 / 2.0.1), ICD-10-GM
     mit Version (2017), `recordedDate` entfernt (Profil verbietet) → `onsetDateTime`. Bundle 0 errors.
-  - ⬜ Schritt 4+: nächste Ressourcen (Composition als Rückgrat, dann Observations/Medikation/…).
+  - ✅ Schritt 4: **Device (Medizinprodukt)** ÜLB-konform (`KBV_PR_MIO_ULB_Device_Other_Item`): meta.profile +
+    Pflicht-Extension `KBV_EX_MIO_ULB_Terminologie_Assoziation` (SNOMED 260787004 mit Edition-Version + FSN);
+    `status` + `note` entfernt (Profil verbietet). Bundle 0 errors.
+  - **Erkannte Hürde (Provenienz):** Viele KBV-MIO-Profile fordern eine Pflicht-Referenz auf einen
+    Dokumentierenden — `AllergyIntolerance.recorder`, `Observation.performer`, `Composition.author` (je min=1,
+    auf Practitioner/Organization). opcare modelliert das (noch) nicht je Datensatz. **Nächster Hebel:**
+    EINE Practitioner-/Organization-Ressource (die dokumentierende Einrichtung) im Bundle, als recorder/
+    performer/author wiederverwendet — entsperrt Allergy + Observations + Composition gemeinsam.
+  - **Reihenfolge-Korrektur:** Die **Composition kommt zuletzt** — geschlossenes Sektions-Slicing + Pflicht-
+    `author` + Pflicht-Sektion `pflegegrad` + `section.entry`-Profile setzen voraus, dass alle Blatt-Ressourcen
+    konform sind.
+  - ⬜ Schritt 5+: dokumentierende Organisation/Practitioner → dann Allergy/Observations/Medikation → Composition/Bundle.
   - **Tooling-Hinweis:** `kbv.basis 1.3.0` erzeugt im aktuellen Validator einen Snapshot-Fehler
     (`Same id 'Observation.dataAbsentReason'`) — bekannte KBV/Validator-Inkompatibilität, nicht unsere Daten.
 
