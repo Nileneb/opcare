@@ -75,6 +75,15 @@ class ResidentShow extends Component
 
     public string $dev_hinweis = '';
 
+    // Angehörige / Kontaktperson (ÜLB: benachrichtigung / pflegeDurchAngehoerige)
+    public string $con_name = '';
+
+    public string $con_beziehung = '';
+
+    public string $con_telefon = '';
+
+    public bool $con_benachrichtigen = false;
+
     // Versicherung
     public ?int $ins_id = null;
 
@@ -354,6 +363,31 @@ class ResidentShow extends Component
         session()->flash('status', 'Eintrag entfernt.');
     }
 
+    public function addContact(): void
+    {
+        Gate::authorize('update', $this->resident);
+        $this->validate([
+            'con_name' => ['required', 'string', 'max:255'],
+            'con_beziehung' => ['nullable', 'string', 'max:80'],
+            'con_telefon' => ['nullable', 'string', 'max:60'],
+        ]);
+        $this->resident->contacts()->create([
+            'name' => $this->con_name,
+            'beziehung' => $this->con_beziehung ?: null,
+            'telefon' => $this->con_telefon ?: null,
+            'benachrichtigen' => $this->con_benachrichtigen,
+        ]);
+        $this->reset('con_name', 'con_beziehung', 'con_telefon', 'con_benachrichtigen');
+        session()->flash('status', 'Kontaktperson hinzugefügt.');
+    }
+
+    public function removeContact(int $id): void
+    {
+        Gate::authorize('update', $this->resident);
+        $this->resident->contacts()->whereKey($id)->delete();
+        session()->flash('status', 'Eintrag entfernt.');
+    }
+
     public function addInsurance(): void
     {
         $this->validate(['ins_id' => ['required', $this->tenantExists('health_insurances')], 'ins_nr' => ['nullable', 'string', 'max:60']]);
@@ -487,7 +521,7 @@ class ResidentShow extends Component
     {
         $this->resident->load([
             'room.station', 'diagnoses.icdCode', 'insurances.healthInsurance',
-            'custodians', 'physicians', 'allergies', 'statusObservations', 'devices',
+            'custodians', 'physicians', 'allergies', 'statusObservations', 'devices', 'contacts',
             'sisAssessments' => fn ($q) => $q->current()->latest('id')->with(['topicFields', 'riskItems']),
             'careMeasures' => fn ($q) => $q->current()->latest('id'),
             'careEvents',

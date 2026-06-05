@@ -55,6 +55,11 @@ class Resident extends BaseModel implements HasMedia
         return $this->hasMany(ResidentDevice::class);
     }
 
+    public function contacts(): HasMany
+    {
+        return $this->hasMany(ResidentContact::class);
+    }
+
     public function insurances(): HasMany
     {
         return $this->hasMany(ResidentInsurance::class);

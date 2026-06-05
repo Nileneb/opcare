@@ -74,13 +74,20 @@ Kontinenz/Ernährung, soziale Felder).
   Composition-Sektion „Funktionsbeurteilungen". **Rendert ohne UI-Code-Änderung** über die vorhandene
   Assessment-Engine (siehe `docs/screenshots/barthel-assessment.png`). HL7-Validator 0 errors.
   *Offen Phase 2b:* Orientierung/Kognition als weitere Instrumente.
-- **Phase 3 — Kontinenz + Ernährung:** schlanke strukturierte Erfassung (Harn-/Stuhlkontinenz-Grad,
-  Ableitung, Kostform/Applikationsform). Entweder Assessment-Items oder kleine dedizierte Tabellen.
-- **Phase 4 — Medizinprodukte/Atmung:** `Device`/Hilfsmittel-Store + Atemwegszugang/-unterstützung.
-- **Phase 5 — Soziales/Administratives:** RelatedPerson (Angehörige/Benachrichtigung), Patientenwunsch,
-  gesetzliche Betreuung strukturiert, Dokumentenmitgabe.
-- **Phase 6 — Konformität:** `kbv.mio.ueberleitungsbogen` + `kbv.basis` ins `fhir-validate`-Gate,
+- **Phase 2b/3 — erledigt:** generischer **Status-Observation-Mechanismus** (`resident_status_observations`
+  + `StatusObservationCatalog`, SNOMED-codiert/Freitext): Bewusstsein, Harn-/Stuhlkontinenz, Kostform,
+  Ernährungsform, Atmung. UI-Card „Pflegerische Einschätzungen", FHIR `valueCodeableConcept`/`valueString`,
+  dynamische Composition-Sektionen. *Offen:* Drainage + post-koordinierte SNOMED-Ausdrücke (Isolation).
+- **Phase 4 — erledigt:** Medizinprodukte/Hilfsmittel (`resident_devices`) → FHIR `Device` (type.text +
+  patient), Sektion „Medizinprodukte". *Offen:* Atemwegszugang/-unterstützung als eigene Observations.
+- **Phase 5 — erledigt:** Angehörige/Kontaktpersonen (`resident_contacts`) → FHIR `RelatedPerson`,
+  Sektion „Angehörige / Kontaktpersonen". *Offen:* Patientenwunsch, Dokumentenmitgabe, gesetzl. Betreuung strukturiert.
+- **Phase 6 — Konformität (offen):** `kbv.mio.ueberleitungsbogen` + `kbv.basis` ins `fhir-validate`-Gate,
   sektionsweise `meta.profile` claimen, Validator-Fehlerliste als Backlog abarbeiten.
+
+**Dokument-Stand:** 13 Composition-Sektionen (Diagnosen, Allergien, Medikation, Pflegeplan, Vitalwerte,
+Funktionsbeurteilungen, Atmung, Bewusstsein/Orientierung, Kontinenz, Ernährung, Medizinprodukte,
+Angehörige/Kontaktpersonen, Verlauf). HL7-Validator 0 errors gegen R4 + de.basisprofil.r4#1.5.0.
 
 ## Nächster mechanischer Schritt zur vollen Konformität
 

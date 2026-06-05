@@ -45,6 +45,7 @@ beforeEach(function () {
     $this->resident->statusObservations()->create(['typ' => 'harnkontinenz', 'wert_code' => '45850009', 'erfasst_am' => '2026-06-01']);
     $this->resident->statusObservations()->create(['typ' => 'atmung', 'wert_text' => 'unauffällig', 'erfasst_am' => '2026-06-01']);
     $this->resident->devices()->create(['bezeichnung' => 'Rollator', 'kategorie' => 'hilfsmittel', 'hinweis' => 'für lange Strecken']);
+    $this->resident->contacts()->create(['name' => 'Anna Muster', 'beziehung' => 'Tochter', 'telefon' => '0201 1', 'benachrichtigen' => true]);
 });
 
 it('liefert ein FHIR-R4-Document-Bundle mit der Composition zuerst', function () {
@@ -171,6 +172,18 @@ it('mappt Medizinprodukte auf FHIR Device + Sektion Medizinprodukte', function (
     expect($device['type']['text'])->toBe('Rollator')
         ->and($device['patient']['reference'])->toContain('Patient/')
         ->and($titles)->toContain('Medizinprodukte');
+});
+
+it('mappt Kontaktpersonen auf FHIR RelatedPerson + Sektion', function () {
+    $bundle = app(FhirDocumentExporter::class)->export($this->resident);
+    $resources = collect($bundle['entry'])->pluck('resource');
+    $rp = $resources->firstWhere('resourceType', 'RelatedPerson');
+    $titles = collect($resources->firstWhere('resourceType', 'Composition')['section'])->pluck('title');
+
+    expect($rp['name'][0]['text'])->toBe('Anna Muster')
+        ->and($rp['relationship'][0]['text'])->toBe('Tochter')
+        ->and($rp['patient']['reference'])->toContain('Patient/')
+        ->and($titles)->toContain('Angehörige / Kontaktpersonen');
 });
 
 it('erzeugt eine Composition mit referenzierten Sektionen + Verlauf-Narrativ', function () {

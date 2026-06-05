@@ -13,6 +13,7 @@ use App\Domains\Fhir\Mappers\DeviceMapper;
 use App\Domains\Fhir\Mappers\MedicationStatementMapper;
 use App\Domains\Fhir\Mappers\ObservationMapper;
 use App\Domains\Fhir\Mappers\PatientMapper;
+use App\Domains\Fhir\Mappers\RelatedPersonMapper;
 use App\Domains\Fhir\Mappers\StatusObservationMapper;
 use App\Domains\Masterdata\Models\Resident;
 use App\Domains\Medication\Models\Prescription;
@@ -38,12 +39,13 @@ class FhirDocumentExporter
         private readonly AssessmentObservationMapper $assessmentMapper,
         private readonly StatusObservationMapper $statusMapper,
         private readonly DeviceMapper $deviceMapper,
+        private readonly RelatedPersonMapper $relatedPersonMapper,
     ) {}
 
     /** @return array<string, mixed> */
     public function export(Resident $resident): array
     {
-        $resident->loadMissing('diagnoses.icdCode', 'allergies', 'statusObservations', 'devices');
+        $resident->loadMissing('diagnoses.icdCode', 'allergies', 'statusObservations', 'devices', 'contacts');
         $base = rtrim(config('app.url'), '/').'/fhir/';
         $patientRef = $base.'Patient/'.PatientMapper::id($resident);
         $date = Carbon::now()->toIso8601String();
@@ -141,6 +143,13 @@ class FhirDocumentExporter
             $ref = $base.'Device/'.$resource['id'];
             $entry[] = ['fullUrl' => $ref, 'resource' => $resource];
             $extraSections['Medizinprodukte'][] = $ref;
+        }
+
+        foreach ($resident->contacts as $contact) {
+            $resource = $this->relatedPersonMapper->map($contact, $patientRef);
+            $ref = $base.'RelatedPerson/'.$resource['id'];
+            $entry[] = ['fullUrl' => $ref, 'resource' => $resource];
+            $extraSections['Angehörige / Kontaktpersonen'][] = $ref;
         }
 
         $reports = CareReport::query()->where('resident_id', $resident->id)->current()->latest('datum')->get();

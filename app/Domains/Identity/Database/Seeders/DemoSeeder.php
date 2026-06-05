@@ -231,6 +231,7 @@ class DemoSeeder extends Seeder
         foreach ([['Rollator', 'hilfsmittel', 'für Strecken > 10 m'], ['Hörgerät rechts', 'hilfsmittel', null]] as [$bez, $kat, $hinweis]) {
             $maria->devices()->create(['bezeichnung' => $bez, 'kategorie' => $kat, 'hinweis' => $hinweis, 'seit' => now()->subMonths(6)->toDateString()]);
         }
+        $maria->contacts()->create(['name' => 'Anna Schneider', 'beziehung' => 'Tochter', 'telefon' => '0201 1234567', 'benachrichtigen' => true]);
 
         $wilhelm = Resident::query()->where('name', 'Wilhelm Müller')->firstOrFail();
         CareEvent::create([
