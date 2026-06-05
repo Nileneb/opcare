@@ -6,27 +6,33 @@ use App\Domains\Medication\Models\Prescription;
 
 class MedicationStatementMapper
 {
+    // WHY(Track A Phase 6): ÜLB verlangt medicationReference (separate Medication-Ressource), nicht inline.
+    public const ULB_PROFILE = 'https://fhir.kbv.de/StructureDefinition/KBV_PR_MIO_ULB_MedicationStatement_Administration_Instruction|1.0.0';
+
     public static function id(Prescription $p): string
     {
         return 'medicationstatement-'.$p->id;
     }
 
     /** @return array<string, mixed> */
-    public function map(Prescription $p, string $patientReference): array
+    public function map(Prescription $p, string $patientReference, string $medicationReference): array
     {
-        $product = $p->medProduct;
-
         $statement = [
             'resourceType' => 'MedicationStatement',
             'id' => self::id($p),
+            'meta' => ['profile' => [self::ULB_PROFILE]],
             'status' => $p->ist_aktiv ? 'active' : 'stopped',
-            'medicationCodeableConcept' => $this->medication($product),
+            'medicationReference' => ['reference' => $medicationReference],
             'subject' => ['reference' => $patientReference],
-            'effectivePeriod' => array_filter([
-                'start' => $p->gueltig_von?->toDateString(),
-                'end' => $p->gueltig_bis?->toDateString(),
-            ]),
         ];
+
+        $period = array_filter([
+            'start' => $p->gueltig_von?->toDateString(),
+            'end' => $p->gueltig_bis?->toDateString(),
+        ]);
+        if ($period !== []) {
+            $statement['effectivePeriod'] = $period;
+        }
 
         $dosage = $this->dosage($p);
         if ($dosage !== null) {
@@ -34,34 +40,6 @@ class MedicationStatementMapper
         }
 
         return $statement;
-    }
-
-    /** @return array<string, mixed> */
-    private function medication(?object $product): array
-    {
-        if (! $product) {
-            return ['text' => 'Unbekanntes Präparat'];
-        }
-
-        $coding = [];
-        if ($product->pzn) {
-            $coding[] = ['system' => 'http://fhir.de/CodeSystem/ifa/pzn', 'code' => (string) $product->pzn];
-        }
-        if ($product->atc_code) {
-            $coding[] = ['system' => 'http://fhir.de/CodeSystem/bfarm/atc', 'code' => (string) $product->atc_code];
-        }
-
-        $text = (string) $product->name;
-        if ($product->staerke && ! str_contains($text, (string) $product->staerke)) {
-            $text .= ' '.$product->staerke;
-        }
-
-        $concept = ['text' => trim($text)];
-        if ($coding !== []) {
-            $concept['coding'] = $coding;
-        }
-
-        return $concept;
     }
 
     /** @return array<string, mixed>|null */

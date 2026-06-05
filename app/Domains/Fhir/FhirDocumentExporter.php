@@ -11,6 +11,7 @@ use App\Domains\Fhir\Mappers\CompositionMapper;
 use App\Domains\Fhir\Mappers\ConditionMapper;
 use App\Domains\Fhir\Mappers\DeviceMapper;
 use App\Domains\Fhir\Mappers\DocumentingEntityMapper;
+use App\Domains\Fhir\Mappers\MedicationMapper;
 use App\Domains\Fhir\Mappers\MedicationStatementMapper;
 use App\Domains\Fhir\Mappers\ObservationMapper;
 use App\Domains\Fhir\Mappers\PatientMapper;
@@ -36,6 +37,7 @@ class FhirDocumentExporter
         private readonly CarePlanMapper $carePlanMapper,
         private readonly ObservationMapper $observationMapper,
         private readonly MedicationStatementMapper $medicationMapper,
+        private readonly MedicationMapper $medicationResourceMapper,
         private readonly AllergyIntoleranceMapper $allergyMapper,
         private readonly AssessmentObservationMapper $assessmentMapper,
         private readonly StatusObservationMapper $statusMapper,
@@ -85,7 +87,12 @@ class FhirDocumentExporter
         $prescriptions = Prescription::query()->where('resident_id', $resident->id)
             ->aktiv()->with(['medProduct', 'schedules'])->get();
         foreach ($prescriptions as $prescription) {
-            $resource = $this->medicationMapper->map($prescription, $patientRef);
+            // ÜLB: separate Medication-Ressource, vom MedicationStatement referenziert
+            $medication = $this->medicationResourceMapper->map($prescription);
+            $medRef = $base.'Medication/'.$medication['id'];
+            $entry[] = ['fullUrl' => $medRef, 'resource' => $medication];
+
+            $resource = $this->medicationMapper->map($prescription, $patientRef, $medRef);
             $ref = $base.'MedicationStatement/'.$resource['id'];
             $medicationRefs[] = $ref;
             $entry[] = ['fullUrl' => $ref, 'resource' => $resource];

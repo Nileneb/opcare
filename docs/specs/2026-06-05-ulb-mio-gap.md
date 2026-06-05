@@ -118,7 +118,12 @@ Kontinenz/Ernährung, soziale Felder).
     Vitalzeichen-Category-Slice (SNOMED 1184593002), Pflicht-`performer` (dokumentierende Einheit), `code.text`
     entfernt, fixe Einheiten (z. B. „mm Hg" für RR-Komponenten). Codes aus den kbv.basis-Beispielen verifiziert.
     Temperatur (kein Beispiel) + Schmerz (numerisch statt CodeableConcept) bleiben generisch. Bundle 0 errors.
-  - ⬜ Schritt 7+: MedicationStatement, dann zuletzt Composition + Bundle.
+  - ✅ Schritt 7: **MedicationStatement + Medication** ÜLB-konform: ÜLB verlangt `medicationReference`
+    (separate `KBV_PR_MIO_ULB_Medication`-Ressource statt inline) → neuer MedicationMapper (Code als Freitext;
+    PZN/ATC + status sind Profil-verboten/-versioniert, spätere Verfeinerung). MedicationStatement: meta.profile,
+    medicationReference, effectivePeriod, dosage. Bundle 0 errors.
+  - ⬜ Schritt 8 (final): **Composition + Bundle** — Dokument-Rückgrat (Pflicht-`author`=dokumentierende Einheit,
+    Pflicht-Sektion `pflegegrad`, geschlossenes Sektions-Slicing mit fixen Codes, `section.entry`→konforme Profile).
   - **Tooling-Hinweis:** `kbv.basis 1.3.0` erzeugt im aktuellen Validator einen Snapshot-Fehler
     (`Same id 'Observation.dataAbsentReason'`) — bekannte KBV/Validator-Inkompatibilität, nicht unsere Daten.
 
