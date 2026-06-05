@@ -206,4 +206,46 @@
             <button class="btn btn-primary btn-sm">Bericht speichern</button>
         </form>
     </div>
+
+    {{-- ===================== VORKOMMNISSE / QS-INDIKATOREN ===================== --}}
+    <div class="card">
+        <div class="card-head"><h3>Vorkommnisse &amp; QS-Indikatoren</h3></div>
+        @forelse ($resident->careEvents as $ev)
+            <div class="chip">
+                <b>{{ $ev->indicator->label() }}</b>
+                <span style="color:var(--c-muted)">{{ $ev->datum->format('d.m.Y') }}</span>
+                @if ($ev->severity)<span class="badge badge-warn">{{ $ev->severity->label() }}</span>@endif
+                @if (!empty($ev->details['notiz']))<span style="color:var(--c-muted)">· {{ $ev->details['notiz'] }}</span>@endif
+                <span style="margin-left:auto">
+                    @if ($ev->behoben_am)
+                        <span class="badge badge-ok">behoben {{ $ev->behoben_am->format('d.m.Y') }}</span>
+                    @else
+                        <button type="button" class="btn btn-ghost btn-sm" wire:click="resolveCareEvent({{ $ev->id }})">Als behoben markieren</button>
+                    @endif
+                </span>
+            </div>
+        @empty
+            <p class="empty">Keine Vorkommnisse dokumentiert.</p>
+        @endforelse
+
+        @can('create', \App\Domains\Quality\Models\CareEvent::class)
+            <form wire:submit="recordCareEvent" style="margin-top:14px">
+                <div class="form-row-3">
+                    <div class="field"><label>Indikator</label>
+                        <select wire:model="ce_indicator">@foreach ($indicators as $i)<option value="{{ $i->value }}">{{ $i->label() }}</option>@endforeach</select>
+                        @error('ce_indicator')<span class="err">{{ $message }}</span>@enderror
+                    </div>
+                    <div class="field"><label>Datum</label><input type="date" wire:model="ce_datum" />@error('ce_datum')<span class="err">{{ $message }}</span>@enderror</div>
+                    <div class="field"><label>Schweregrad <span style="color:var(--c-muted);font-weight:400">(optional)</span></label>
+                        <select wire:model="ce_severity"><option value="">—</option>@foreach ($severities as $s)<option value="{{ $s->value }}">{{ $s->label() }}</option>@endforeach</select>
+                    </div>
+                </div>
+                <div class="field"><label>Notiz <span style="color:var(--c-muted);font-weight:400">(optional)</span></label>
+                    <input type="text" wire:model="ce_notiz" placeholder="z. B. Sturz im Bad, Lokalisation, Folgen…" />
+                    @error('ce_notiz')<span class="err">{{ $message }}</span>@enderror
+                </div>
+                <button class="btn btn-ghost btn-sm">+ Vorkommnis</button>
+            </form>
+        @endcan
+    </div>
 </div>

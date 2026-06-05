@@ -19,8 +19,15 @@ use App\Domains\Masterdata\Models\HealthInsurance;
 use App\Domains\Masterdata\Models\IcdCode;
 use App\Domains\Masterdata\Models\Physician;
 use App\Domains\Masterdata\Models\Resident;
+use App\Domains\Quality\Actions\RecordCareEvent;
+use App\Domains\Quality\Data\CareEventData;
+use App\Domains\Quality\Enums\EventSeverity;
+use App\Domains\Quality\Enums\QualityIndicator;
+use App\Domains\Quality\Models\CareEvent;
 use App\Support\Concerns\ScopesTenantValidation;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -82,6 +89,15 @@ class ResidentShow extends Component
 
     public string $r_text = '';
 
+    // Vorkommnis / CareEvent
+    public string $ce_indicator = 'sturz';
+
+    public string $ce_datum = '';
+
+    public string $ce_severity = '';
+
+    public string $ce_notiz = '';
+
     // Evaluation
     public ?int $e_measure = null;
 
@@ -93,8 +109,43 @@ class ResidentShow extends Component
     {
         $this->resident = $resident;
         $this->r_datum = now()->format('Y-m-d\TH:i');
+        $this->ce_datum = now()->format('Y-m-d');
         foreach (SisTopicField::cases() as $f) {
             $this->sis_felder[$f->value] = '';
+        }
+    }
+
+    public function recordCareEvent(RecordCareEvent $action): void
+    {
+        Gate::authorize('create', CareEvent::class);
+        $this->validate([
+            'ce_indicator' => ['required', Rule::enum(QualityIndicator::class)],
+            'ce_datum' => ['required', 'date'],
+            'ce_severity' => ['nullable', fn ($a, $v, $fail) => $v !== '' && EventSeverity::tryFrom($v) === null ? $fail('Ungültiger Schweregrad.') : null],
+            'ce_notiz' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $action->handle(new CareEventData(
+            resident_id: $this->resident->id,
+            indicator: $this->ce_indicator,
+            datum: $this->ce_datum,
+            severity: $this->ce_severity ?: null,
+            details: trim($this->ce_notiz) !== '' ? ['notiz' => $this->ce_notiz] : null,
+        ));
+
+        $this->reset('ce_severity', 'ce_notiz');
+        session()->flash('status', 'Vorkommnis dokumentiert.');
+    }
+
+    public function resolveCareEvent(int $id): void
+    {
+        $event = $this->resident->careEvents()->whereKey($id)->first();
+        if (! $event) {
+            return;
+        }
+        Gate::authorize('update', $event);
+        if (! $event->behoben_am) {
+            $event->update(['behoben_am' => now()->toDateString()]);
         }
     }
 
@@ -273,6 +324,7 @@ class ResidentShow extends Component
             'custodians', 'physicians',
             'sisAssessments' => fn ($q) => $q->current()->latest('id')->with(['topicFields', 'riskItems']),
             'careMeasures' => fn ($q) => $q->current()->latest('id'),
+            'careEvents',
         ]);
 
         return view('livewire.resident-show', [
@@ -281,6 +333,8 @@ class ResidentShow extends Component
             'riskTypes' => RiskType::cases(),
             'diagnosisResults' => $this->diagnosisResults(),
             'measureSuggestions' => $this->measureSuggestions(),
+            'indicators' => QualityIndicator::cases(),
+            'severities' => EventSeverity::cases(),
             'insurances' => HealthInsurance::orderBy('name')->get(),
             'physicians' => Physician::orderBy('name')->get(),
             'measures' => $this->resident->careMeasures,
