@@ -3,6 +3,21 @@
 **Stand:** 2026-06-06 · **Zweck:** Langfrist-Architektur, die es erlaubt, **Abteilung für Abteilung** und
 **Norm für Norm** anzudocken, ohne das Fundament umzubauen. Kein Big-Bang — ein tragfähiges Gerüst.
 
+## Zielstatus: „Alle DIN-Normen & Abteilungen abbildbar"
+
+**Strukturell erreicht.** Jede Abteilung und jede Norm lässt sich in opcare abbilden — über zwei Wege, die
+beide stehen:
+
+1. **Universeller Mechanismus — die [QM-Norm-Checkliste](#).** Sie deckt **alle** Bereiche ab (12 `QmBereich`:
+   QPR QB1–6 + Hygiene/IfSG, Datenschutz/DSGVO, Arbeits-/Brandschutz, Hauswirtschaft/LMIV, Haustechnik/DIN 31051,
+   Verwaltung/Heimrecht). **Jede weitere Norm = ein Katalog-Eintrag** (`QmKatalogDefaults`) mit Gesetzeslink,
+   Nachweis-Status und Zuständigkeit. Damit ist *jede* DIN/Vorschrift sofort als nachweisbare Anforderung darstellbar.
+2. **Operative Tiefe — eigene Module**, wo es klares Outcome gibt: Pflege/SIS, FHIR/ÜLB, QDVS/DAS,
+   Dienstplan + ArbZG, Arbeitszeiterfassung (BAG/EuGH), Personalakte, **Haustechnik (DIN 31051)**, **Küche (LMIV)**.
+
+Neue Normen/Abteilungen kosten dadurch **einen Katalog-Eintrag** (Nachweis) bzw. **eine Domäne + Kataloge +
+Rollen-Sichtbarkeit** (operativ) — nie ein Re-Design. Der Ausbau läuft inkrementell weiter (s. Roadmap unten).
+
 ## Leitprinzip: Bürokratie ist die Spezifikation
 
 Deutschland hat jede Abteilung, jede Pflicht und jedes Formular bis ins Detail reguliert. **Wir erfinden
