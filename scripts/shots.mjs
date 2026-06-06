@@ -44,6 +44,7 @@ const pages = [
     ['fem', '/qualitaet/fem', true],
     ['beschwerden', '/qualitaet/beschwerden', true],
     ['gremien', '/qualitaet/gremien', true],
+    ['vertretungen', '/vertretungen', true],
     ['arbeitsschutz-nachweise', '/arbeitsschutz/nachweise', true],
     ['mitarbeitende', '/admin/benutzer', true],
     ['qdvs', '/qdvs', true],
@@ -103,6 +104,35 @@ try {
     console.log(`OK   personalakte  ->  ${page.url()}`);
 } catch (e) {
     console.log(`FAIL personalakte: ${e.message}`);
+}
+
+// Vertreter-Portal: eigener Login als Betreuer-Demo-Konto (read-only Sicht). Braucht MFA_BETREUER (Recovery-Code).
+try {
+    const repCtx = await browser.newContext({ viewport: { width: 1440, height: 960 } });
+    const rep = await repCtx.newPage();
+    await rep.goto(base + '/login', { waitUntil: 'networkidle' });
+    await rep.fill('#email', process.env.PORTAL_EMAIL || 'betreuer@aprath.local');
+    await rep.fill('#password', process.env.PORTAL_PASSWORD || 'password');
+    await Promise.all([
+        rep.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 15000 }).catch(() => {}),
+        rep.click('button[type=submit]'),
+    ]);
+    await rep.waitForTimeout(800);
+    if (rep.url().includes('/two-factor/challenge') && process.env.MFA_BETREUER) {
+        await rep.fill('#code', process.env.MFA_BETREUER);
+        await Promise.all([
+            rep.waitForURL((u) => !u.pathname.includes('/two-factor'), { timeout: 15000 }).catch(() => {}),
+            rep.click('button[type=submit]'),
+        ]);
+        await rep.waitForTimeout(800);
+    }
+    await rep.goto(base + '/mein-bereich', { waitUntil: 'networkidle', timeout: 20000 });
+    await rep.waitForTimeout(600);
+    await rep.screenshot({ path: `${outDir}/portal.png`, fullPage: true }).catch(() =>
+        rep.screenshot({ path: `${outDir}/portal.png`, fullPage: false }));
+    console.log(`OK   portal  ->  ${rep.url()}`);
+} catch (e) {
+    console.log(`FAIL portal: ${e.message}`);
 }
 
 await browser.close();

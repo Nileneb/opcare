@@ -1,6 +1,6 @@
 # Offene & ungeklärte Punkte (Stand 2026-06-06, Session-Handoff)
 
-Stand: 451 Tests grün, PHPStan 0, Pint clean. Diese Liste sammelt, was vor/nach einem Neustart offen ist.
+Stand: 464 Tests grün, PHPStan 0, Pint clean. Diese Liste sammelt, was vor/nach einem Neustart offen ist.
 Querbezug: [Ideen-Backlog](ideen-backlog-2026-06.md), [Norm-Recherche](recherche-normen-erweiterung-2026-06.md),
 **[Gesetzes-Recherche zu den offenen Punkten](recherche-offene-punkte-2026-06.md)** (Rechtsgrundlage + Datenmodell je Punkt).
 
@@ -48,14 +48,19 @@ Querbezug: [Ideen-Backlog](ideen-backlog-2026-06.md), [Norm-Recherche](recherche
   Bereichs-Benachrichtigung, Gewaltschutz-Sofortmaßnahme, Gremien/Heimbeirat (HeimmwV/§ 10 WBVG/§ 11 ASiG) und
   Betriebsarzt/Sifa-Stammdaten (ASiG/DGUV V2). Siehe [beschwerden-gremien.md](beschwerden-gremien.md).
 
+- ✅ **Bewohner/Angehörige/Betreuer als Nutzer** — **umgesetzt 2026-06-06**: rechtliche Vertretung mit
+  **Aufgabenkreisen** (§§ 1814/1815 BGB), read-only **Vertreter-Portal** (Sicht je Aufgabenkreis gegated +
+  serverseitige Portal-Schranke), **Pflicht-mit-Frist** (§ 1863 Bericht) und **Ereignis-Workflow** (§ 1821:
+  MD-Begutachtung/Heilbehandlung/Krankenhaus/Heimvertrag/Posteingang → aufgabenkreis-gefilterte Benachrichtigung,
+  Pflichterfüllung dokumentiert). Briefwahl = Ereignis-Kategorie *Posteingang*. Siehe
+  [betreuungsrecht-vertretung.md](betreuungsrecht-vertretung.md).
+
 Noch offen:
-1. **Bewohner/Angehörige/Betreuer als Nutzer** — Vertretung mit Aufgabenkreisen (Betreuungsrecht §§ 1814 ff. BGB),
-   Posteingang/**Briefwahl-Benachrichtigung** (Recherche §1, User-Wunsch 2026-06-06).
-2. **Datenschutz-VVT/AVV** (Art. 30/28 DSGVO, Recherche §3) · **Hygiene/MRE** (§ 23 IfSG, Recherche §6) ·
+1. **Datenschutz-VVT/AVV** (Art. 30/28 DSGVO, Recherche §3) · **Hygiene/MRE** (§ 23 IfSG, Recherche §6) ·
    **Fortbildungsplan** (Recherche §7).
-3. **Bundesland-Overrides** (föderales Heimrecht, Recherche §8) · **freie Buchung im Hauptbuch** (Recherche §10) ·
+2. **Bundesland-Overrides** (föderales Heimrecht, Recherche §8) · **freie Buchung im Hauptbuch** (Recherche §10) ·
    **Energielevel-Ampel** (Recherche §9) · **Übergangs-/Spitzendienste** (Idee #4).
-4. **AI-Services** (eigene Session): Ollama + whisperX-mcp als Container mit Build-Pre-Flight-Healthcheck,
+3. **AI-Services** (eigene Session): Ollama + whisperX-mcp als Container mit Build-Pre-Flight-Healthcheck,
    **VLM-Beleg-Capture** und **Budget-Setzungen**. Voll spezifiziert in [ai-services-plan.md](ai-services-plan.md).
 
 ## E. Technische/Infra-Notizen

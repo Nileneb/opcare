@@ -10,7 +10,10 @@ qualifizierte Person bleibt erforderlich; Landesrecht ist mandantenabhängig.
 
 ---
 
-## 1. Bewohner/Angehörige als Nutzer + Betreuungsrecht (gesetzliche Vertretung)
+## 1. Bewohner/Angehörige als Nutzer + Betreuungsrecht (gesetzliche Vertretung) — ✅ umgesetzt 2026-06-06
+
+> Umgesetzt: rechtliche Vertretung mit Aufgabenkreisen, Vertreter-Portal (read-only, gegated), Pflicht-mit-Frist
+> (§ 1863) und Ereignis-Workflow (§ 1821). Details + Datenmodell: [betreuungsrecht-vertretung.md](betreuungsrecht-vertretung.md).
 
 **Rechtsgrundlage:** Reformiertes Betreuungsrecht (seit 1.1.2023), **§§ 1814 ff. BGB**
 ([gesetze-im-internet.de/bgb](https://www.gesetze-im-internet.de/bgb/)) + **Betreuungsorganisationsgesetz (BtOG)**

@@ -6,7 +6,7 @@ Qualitätssicherung (QDVS/DAS-Pflege)** und **FHIR / ÜLB-MIO** (Pflegeüberleit
 des eingestellten Java-Projekts **[Offene-Pflege.de (OPDE)](#herkunft)** — dessen Domänenwissen dient als
 Vorlage, der Code ist von Grund auf neu.
 
-> **Status:** Funktionsfähig und aktiv in Entwicklung. **451 Tests grün**, CI durchgehend grün
+> **Status:** Funktionsfähig und aktiv in Entwicklung. **464 Tests grün**, CI durchgehend grün
 > (Tests · Linter · Security-Audit · FHIR-Validierung). Open Source (AGPL-3.0), **kein Rechtsgate**,
 > solange keine Echt-Patientendaten verarbeitet werden.
 >
@@ -50,6 +50,11 @@ Vorlage, der Code ist von Grund auf neu.
   benachrichtigt); Gewaltvorfälle bleiben bis zur Sofortmaßnahme rot. Plus **Gremien/Heimbeirat** (HeimmwV, § 10
   WBVG, ASA § 11 ASiG) und **Betriebsarzt/Sifa-Stammdaten** (ASiG/DGUV V2).
   Siehe [docs/beschwerden-gremien.md](docs/beschwerden-gremien.md).
+- **Betreuung/Vertretung als App-Logik (§§ 1814 ff. BGB)** — rechtliche Vertretungen mit **Aufgabenkreisen**
+  (§ 1815), eigenem **read-only Portal-Login** (Sicht nur auf die Daten ihrer Aufgabenkreise), **Pflicht-mit-Frist**
+  (§ 1863 Jahresbericht), und ein **Ereignis-Workflow** (§ 1821): bei MD-Begutachtung, Heilbehandlung, Krankenhaus,
+  Heimvertrag oder Posteingang werden genau die nach Aufgabenkreis **berechtigten** Vertretungen benachrichtigt und
+  die Pflichterfüllung dokumentiert. Siehe [docs/betreuungsrecht-vertretung.md](docs/betreuungsrecht-vertretung.md).
 - **Küche & Verpflegung (LMIV)** — die Küche sieht die **Lebensmittelallergien + Kostformen** der Bewohner
   (aus den vorhandenen Pflegedaten) und pflegt den **Speiseplan mit Allergenkennzeichnung** (14 EU-Allergene);
   je Gericht werden **betroffene Bewohner gewarnt**. **Essenswünsche** (Vorliebe/Abneigung) sind jederzeit
@@ -78,7 +83,7 @@ Vorlage, der Code ist von Grund auf neu.
 | Backend | **Laravel 13**, **PHP 8.3+** |
 | Frontend | Blade + **Livewire 4** + Alpine.js |
 | Datenbank | **SQLite** (Dev/CI) · **PostgreSQL** (Prod) |
-| Tests | **Pest 4** (451 Tests) |
+| Tests | **Pest 4** (464 Tests) |
 | Lint/Style | **Laravel Pint** |
 | DTOs / RBAC / Audit | `spatie/laravel-data` · `spatie/laravel-permission` · `spatie/laravel-activitylog` |
 | Deployment | **Docker Compose** (self-contained: eine `.env`, `docker compose up --build`) |
@@ -92,7 +97,7 @@ Domänen-orientierte Struktur unter `app/Domains/`. Layering als Einbahnstraße:
 | Domäne | Inhalt |
 |---|---|
 | **Identity** | Auth, Benutzer, Rollen/Rechte, Mandanten, Tenant-Scoping |
-| **Masterdata** | Bewohner, Diagnosen/ICD, Versicherungen, Betreuer, Ärzte, Gebäude/Zimmer, Allergien, Medizinprodukte, Kontakte, Status-Observationen |
+| **Masterdata** | Bewohner, Diagnosen/ICD, Versicherungen, **rechtliche Vertretung mit Aufgabenkreisen (§§ 1814 ff. BGB) + Vertreter-Portal + Bewohner-Ereignisse**, Ärzte, Gebäude/Zimmer, Allergien, Medizinprodukte, Kontakte, Status-Observationen |
 | **CarePlanning** | SIS®-Strukturmodell: Informationssammlung → Maßnahmenplan → Bericht → Evaluation |
 | **Assessment** | Instrument-Engine (Braden/Sturz/BESD/Barthel), Scoring, Risiko-Bänder, Eskalation |
 | **Medication** | Verordnungen, Stellplan, Bestände, Gaben, Vitalwerte |
@@ -156,7 +161,7 @@ php artisan serve
 ## Entwicklung
 
 ```bash
-php artisan test                 # bzw. vendor/bin/pest   (451 Tests)
+php artisan test                 # bzw. vendor/bin/pest   (464 Tests)
 vendor/bin/pint                  # Code-Style
 php artisan fhir:export --output=bundle.json   # FHIR-Document-Bundle erzeugen
 ```

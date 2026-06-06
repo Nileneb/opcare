@@ -36,7 +36,12 @@ use App\Domains\Facility\Models\MedizinproduktVorkommnis;
 use App\Domains\Identity\Models\Tenant;
 use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Support\CurrentTenant;
+use App\Domains\Masterdata\Enums\Aufgabenkreis;
+use App\Domains\Masterdata\Enums\EreignisKategorie;
+use App\Domains\Masterdata\Enums\VertretungTyp;
+use App\Domains\Masterdata\Models\BewohnerEreignis;
 use App\Domains\Masterdata\Models\Building;
+use App\Domains\Masterdata\Models\Custodian;
 use App\Domains\Masterdata\Models\Floor;
 use App\Domains\Masterdata\Models\HealthInsurance;
 use App\Domains\Masterdata\Models\IcdCode;
@@ -610,6 +615,31 @@ class DemoSeeder extends Seeder
         Beschwerde::create(['tenant_id' => $tenant->id, 'titel' => 'Lob für die Betreuung', 'beschreibung' => 'Großes Lob an das Betreuungsteam für den Sommerausflug.',
             'kategorie' => 'lob', 'bereich' => 'betreuung', 'quelle' => 'angehoerige', 'melder_sichtbarkeit' => 'namentlich', 'melder_name' => 'Familie Müller',
             'eingang_am' => now()->subDays(10)->toDateString(), 'status' => 'erledigt', 'erledigt_am' => now()->subDays(9)->toDateString(), 'ergebnis' => 'Im Team weitergegeben.']);
+
+        // Rechtliche Vertretung mit Aufgabenkreisen (§§ 1814/1815 BGB) + Portal-Konto + Ereignisse (§ 1821).
+        $betreuerUser = User::create(['name' => 'RA Petra Vormund', 'email' => 'betreuer@aprath.local',
+            'password' => Hash::make('password'), 'tenant_id' => $tenant->id]);
+        $betreuerUser->assignRole('betreuer');
+
+        Custodian::create(['tenant_id' => $tenant->id, 'resident_id' => $wilhelm->id, 'user_id' => $betreuerUser->id,
+            'typ' => VertretungTyp::GesetzlicherBetreuer->value, 'name' => 'RA Petra Vormund', 'email' => 'betreuer@aprath.local',
+            'beruflich' => true, 'gericht' => 'AG Wuppertal', 'aktenzeichen' => 'XVII 123/25',
+            'aufgabenkreise' => [Aufgabenkreis::Gesundheitssorge->value, Aufgabenkreis::Aufenthaltsbestimmung->value, Aufgabenkreis::Vermoegenssorge->value],
+            'gueltig_bis' => now()->addYear()->toDateString(), 'bericht_intervall_monate' => 12,
+            'letzter_bericht_am' => now()->subMonths(13)->toDateString()]); // Bericht überfällig → rot
+
+        Custodian::create(['tenant_id' => $tenant->id, 'resident_id' => $kurt->id,
+            'typ' => VertretungTyp::Vorsorgebevollmaechtigter->value, 'name' => 'Sohn Klaus Petersen', 'kontakt' => '0202 555-12',
+            'aufgabenkreise' => [Aufgabenkreis::Gesundheitssorge->value, Aufgabenkreis::Postangelegenheiten->value]]);
+
+        BewohnerEreignis::create(['tenant_id' => $tenant->id, 'resident_id' => $wilhelm->id, 'kategorie' => EreignisKategorie::MdBegutachtung->value,
+            'titel' => 'MD-Begutachtung Pflegegrad', 'beschreibung' => 'Höherstufung beantragt; Termin in der Einrichtung.',
+            'datum' => now()->subDays(2)->toDateString(), 'status' => 'offen', 'erstellt_von_user_id' => $admin->id]); // offen + vergangen → rot
+        BewohnerEreignis::create(['tenant_id' => $tenant->id, 'resident_id' => $kurt->id, 'kategorie' => EreignisKategorie::Posteingang->value,
+            'titel' => 'Briefwahlunterlagen Kommunalwahl', 'datum' => now()->subDay()->toDateString(),
+            'status' => 'informiert', 'informiert_am' => now()->toDateString(), 'erstellt_von_user_id' => $admin->id]);
+        BewohnerEreignis::create(['tenant_id' => $tenant->id, 'resident_id' => $wilhelm->id, 'kategorie' => EreignisKategorie::HeilbehandlungEinwilligung->value,
+            'titel' => 'Einwilligung Kataraktoperation', 'datum' => now()->addDays(5)->toDateString(), 'status' => 'offen', 'erstellt_von_user_id' => $admin->id]);
 
         // Zweites Heim — Haus Birkenhof (2 Bewohner, kein SIS für Minimal-Demo)
         $birkenhof = Tenant::create(['name' => 'Haus Birkenhof', 'slug' => 'birkenhof']);

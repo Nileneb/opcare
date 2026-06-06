@@ -151,6 +151,12 @@ class Resident extends BaseModel implements HasMedia
         return $this->hasMany(Custodian::class);
     }
 
+    /** @return HasMany<BewohnerEreignis, $this> */
+    public function ereignisse(): HasMany
+    {
+        return $this->hasMany(BewohnerEreignis::class)->orderByDesc('datum');
+    }
+
     public function sisAssessments(): HasMany
     {
         return $this->hasMany(SisAssessment::class);

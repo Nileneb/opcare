@@ -14,13 +14,17 @@
 <body>
     @php
         $u = auth()->user();
-        $nav = [
+        // WHY(Portal-Schranke): Vertretungs-Konten (nur betreuer/angehoeriger) sehen ausschließlich „Mein Bereich".
+        $istPortal = $u !== null && $u->hasAnyRole(['betreuer', 'angehoeriger'])
+            && ! $u->hasAnyRole(['admin', 'pflegefachkraft', 'pflegehilfskraft', 'haustechnik', 'kueche',
+                'betreuungskraft', 'buchhaltung', 'leserecht', 'super-admin']);
+        $nav = $istPortal ? [['route' => 'portal', 'label' => 'Mein Bereich']] : [
             ['route' => 'overview', 'label' => 'Übersicht'],
             ['route' => 'bewohner', 'label' => 'Bewohner'],
             ['route' => 'einrichtung', 'label' => 'Stammdaten'],
             ['route' => 'pflegeplanung', 'label' => 'SIS-Board'],
         ];
-        if ($u?->isSuperAdmin() || $u?->hasAnyRole(['admin', 'pflegefachkraft', 'pflegehilfskraft', 'betreuungskraft'])) {
+        if (! $istPortal && ($u?->isSuperAdmin() || $u?->hasAnyRole(['admin', 'pflegefachkraft', 'pflegehilfskraft', 'betreuungskraft']))) {
             $nav[] = ['route' => 'betreuung', 'label' => 'Betreuung'];
             $nav[] = ['route' => 'praevention', 'label' => 'Prävention'];
         }
@@ -46,6 +50,7 @@
                 <a href="{{ route('personnel.beauftragte') }}" @class(['is-active' => request()->routeIs('personnel.beauftragte')])>Beauftragte</a>
                 <a href="{{ route('quality.fem') }}" @class(['is-active' => request()->routeIs('quality.fem')])>FEM</a>
                 <a href="{{ route('quality.gremien') }}" @class(['is-active' => request()->routeIs('quality.gremien')])>Gremien</a>
+                <a href="{{ route('vertretungen') }}" @class(['is-active' => request()->routeIs('vertretungen')])>Vertretungen</a>
             </nav>
         @endif
         @can('manage', \App\Domains\Scheduling\Models\Shift::class)
@@ -54,6 +59,7 @@
                 <a href="{{ route('arbeitsrecht') }}" @class(['is-active' => request()->routeIs('arbeitsrecht')])>Arbeitsrecht</a>
             </nav>
         @endcan
+        @unless ($istPortal)
         <nav class="app-nav app-nav-kalender">
             <a href="{{ route('kalender') }}" @class(['is-active' => request()->routeIs('kalender')])>Kalender</a>
             <a href="{{ route('zeiterfassung') }}" @class(['is-active' => request()->routeIs('zeiterfassung')])>Zeiterfassung</a>
@@ -68,6 +74,7 @@
                 <a href="{{ route('kueche') }}" @class(['is-active' => request()->routeIs('kueche')])>Küche</a>
             @endif
         </nav>
+        @endunless
         @if (auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'pflegefachkraft']))
             <nav class="app-nav app-nav-medikation-stamm">
                 <a href="{{ route('medikation.stammdaten') }}" @class(['is-active' => request()->routeIs('medikation.stammdaten')])>Medikationsstamm</a>

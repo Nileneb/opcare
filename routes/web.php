@@ -5,6 +5,7 @@ use App\Domains\Masterdata\Models\Resident;
 use App\Http\Controllers\MediaDownloadController;
 use App\Http\Controllers\SpeechController;
 use App\Http\Middleware\RequireTwoFactorEnrollment;
+use App\Http\Middleware\RestrictPortalUsers;
 use App\Livewire\Accounting\Buchhaltung;
 use App\Livewire\Accounting\Taschengeldkasse;
 use App\Livewire\Admin\Tenants;
@@ -21,6 +22,8 @@ use App\Livewire\Catering\Kueche;
 use App\Livewire\Facility;
 use App\Livewire\Facility\Haustechnik;
 use App\Livewire\Facility\Medizinprodukte;
+use App\Livewire\Masterdata\Portal;
+use App\Livewire\Masterdata\Vertretungen;
 use App\Livewire\Medication\BtmNachweis;
 use App\Livewire\Medication\Stammdaten;
 use App\Livewire\Medication\Stellplan;
@@ -67,7 +70,7 @@ Route::middleware('guest')->group(function () {
     Route::get('/two-factor/challenge', ChallengeTwoFactor::class)->name('two-factor.challenge');
 });
 
-Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class])->group(function () {
+Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class, RestrictPortalUsers::class])->group(function () {
     // Pflicht-Enrollment: eingeloggt, aber bis zum Abschluss von der Middleware hierher gehalten.
     Route::get('/two-factor/enroll', EnrollTwoFactor::class)->name('two-factor.enroll');
     Route::get('/', Overview::class)->name('overview');
@@ -78,6 +81,8 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class])->group(
     Route::get('/pflegeplanung', Pflegeplanung::class)->name('pflegeplanung');
     Route::get('/betreuung', Betreuung::class)->name('betreuung');
     Route::get('/praevention', Praevention::class)->name('praevention');
+    Route::get('/vertretungen', Vertretungen::class)->name('vertretungen');
+    Route::get('/mein-bereich', Portal::class)->name('portal');
     Route::get('/profil', Profile::class)->name('profile');
     Route::get('/admin/einrichtungen', Tenants::class)->name('admin.tenants');
     Route::get('/admin/benutzer', Users::class)->name('admin.users');
