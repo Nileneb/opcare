@@ -20,6 +20,7 @@ use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Catering\Kueche;
 use App\Livewire\Facility;
 use App\Livewire\Facility\Haustechnik;
+use App\Livewire\Facility\Medizinprodukte;
 use App\Livewire\Medication\BtmNachweis;
 use App\Livewire\Medication\Stammdaten;
 use App\Livewire\Medication\Stellplan;
@@ -102,6 +103,7 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class])->group(
     Route::get('/arbeitsrecht', Arbeitsrecht::class)->name('arbeitsrecht');
     Route::get('/kalender', Kalender::class)->name('kalender');
     Route::get('/haustechnik', Haustechnik::class)->name('haustechnik');
+    Route::get('/medizinprodukte', Medizinprodukte::class)->name('medizinprodukte');
     Route::get('/kueche', Kueche::class)->name('kueche');
     Route::get('/zeiterfassung', Zeiterfassung::class)->name('zeiterfassung');
     Route::get('/wunschdienstplan', Wunschdienstplan::class)->name('wunschdienstplan');

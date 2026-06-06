@@ -59,6 +59,7 @@
             <a href="{{ route('wunschdienstplan') }}" @class(['is-active' => request()->routeIs('wunschdienstplan')])>Wunschdienst</a>
             <a href="{{ route('tauschboerse') }}" @class(['is-active' => request()->routeIs('tauschboerse')])>Tauschbörse</a>
             <a href="{{ route('haustechnik') }}" @class(['is-active' => request()->routeIs('haustechnik')])>Haustechnik</a>
+            <a href="{{ route('medizinprodukte') }}" @class(['is-active' => request()->routeIs('medizinprodukte')])>Medizinprodukte</a>
             @if (auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'pflegefachkraft', 'kueche']))
                 <a href="{{ route('kueche') }}" @class(['is-active' => request()->routeIs('kueche')])>Küche</a>
             @endif

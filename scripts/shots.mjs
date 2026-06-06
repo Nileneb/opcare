@@ -33,6 +33,7 @@ const pages = [
     ['arbeitsrecht', '/arbeitsrecht', true],
     ['zeiterfassung', '/zeiterfassung', true],
     ['haustechnik', '/haustechnik', true],
+    ['medizinprodukte', '/medizinprodukte', true],
     ['kueche', '/kueche', true],
     ['buchhaltung', '/buchhaltung', true],
     ['taschengeld', '/taschengeld', true],

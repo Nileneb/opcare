@@ -26,8 +26,13 @@ use App\Domains\Catering\Models\Gericht;
 use App\Domains\Facility\Enums\AssetKategorie;
 use App\Domains\Facility\Enums\MeldungPrioritaet;
 use App\Domains\Facility\Enums\MeldungStatus;
+use App\Domains\Facility\Enums\MpAnlage;
+use App\Domains\Facility\Enums\MpVorkommnisArt;
 use App\Domains\Facility\Models\FacilityAsset;
 use App\Domains\Facility\Models\FacilityMeldung;
+use App\Domains\Facility\Models\Medizinprodukt;
+use App\Domains\Facility\Models\MedizinproduktEinweisung;
+use App\Domains\Facility\Models\MedizinproduktVorkommnis;
 use App\Domains\Identity\Models\Tenant;
 use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Support\CurrentTenant;
@@ -406,6 +411,14 @@ class DemoSeeder extends Seeder
         FacilityMeldung::create(['titel' => 'Heizung Zimmer 7 wird nicht warm', 'beschreibung' => 'Thermostat reagiert nicht.', 'standort' => 'Zimmer 7', 'prioritaet' => MeldungPrioritaet::Hoch, 'gemeldet_von' => $admin->id]);
         FacilityMeldung::create(['titel' => 'Türschließer Haupteingang quietscht', 'standort' => 'Eingang EG', 'prioritaet' => MeldungPrioritaet::Niedrig, 'status' => MeldungStatus::InArbeit, 'gemeldet_von' => $sandra->id]);
         FacilityMeldung::create(['titel' => 'Wasserhahn Küche tropft', 'asset_id' => null, 'standort' => 'Küche', 'prioritaet' => MeldungPrioritaet::Mittel, 'status' => MeldungStatus::Erledigt, 'erledigt_am' => now()->subDays(2)->toDateString(), 'erledigt_notiz' => 'Dichtung getauscht.', 'gemeldet_von' => $admin->id]);
+
+        // Medizinprodukte (MPBetreibV § 13/§ 14): Bestandsverzeichnis + Medizinproduktebuch mit STK/MTK-Ampel.
+        $defi = Medizinprodukt::create(['bezeichnung' => 'Defibrillator (AED)', 'typ' => 'HeartStart FRx', 'hersteller' => 'Philips', 'seriennummer' => 'A21J-00847', 'inventarnummer' => 'MP-001', 'anschaffungsjahr' => 2021, 'standort' => 'Foyer EG', 'zuordnung' => 'gesamt', 'anlage' => MpAnlage::Anlage1, 'inbetriebnahme_am' => '2021-03-01', 'stk_intervall_monate' => 24, 'letzte_stk' => now()->subMonths(26)->toDateString()]); // STK überfällig → rot
+        $bz = Medizinprodukt::create(['bezeichnung' => 'Blutzuckermessgerät', 'typ' => 'Accu-Chek Guide', 'hersteller' => 'Roche', 'seriennummer' => 'ROC-55120', 'inventarnummer' => 'MP-002', 'anschaffungsjahr' => 2023, 'standort' => 'Pflegestützpunkt WB 1', 'zuordnung' => 'Wohnbereich 1', 'anlage' => MpAnlage::Anlage2, 'inbetriebnahme_am' => '2023-06-15', 'mtk_intervall_monate' => 24, 'letzte_mtk' => now()->subMonths(10)->toDateString()]);
+        Medizinprodukt::create(['bezeichnung' => 'Pflegebett (elektrisch)', 'typ' => 'Burmeier Dali', 'hersteller' => 'Burmeier', 'seriennummer' => 'BM-2024-3312', 'inventarnummer' => 'MP-003', 'anschaffungsjahr' => 2024, 'standort' => 'Zimmer 12', 'zuordnung' => 'Wohnbereich 1', 'anlage' => MpAnlage::Keine, 'inbetriebnahme_am' => '2024-01-20']);
+        MedizinproduktEinweisung::create(['medizinprodukt_id' => $defi->id, 'user_id' => $sandra->id, 'eingewiesen_am' => '2021-03-02', 'eingewiesen_durch' => 'Philips-Medizintechnik', 'art' => 'ersteinweisung']);
+        MedizinproduktEinweisung::create(['medizinprodukt_id' => $bz->id, 'user_id' => $sandra->id, 'eingewiesen_am' => '2023-06-16', 'eingewiesen_durch' => 'QMB', 'art' => 'ersteinweisung']);
+        MedizinproduktVorkommnis::create(['medizinprodukt_id' => $bz->id, 'datum' => now()->subDays(20)->toDateString(), 'art' => MpVorkommnisArt::Funktionsstoerung, 'beschreibung' => 'Display zeitweise nicht ablesbar.', 'massnahme' => 'Akku getauscht, Funktionsprüfung ok.', 'gemeldet_von' => $sandra->id, 'behoben_am' => now()->subDays(19)->toDateString()]);
 
         // Küche/Verpflegung (LMIV): Köchin + Lebensmittelallergie + Speiseplan mit Allergen-Warnung.
         $koechin = User::create(['name' => 'Rita Hoffmann', 'email' => 'kueche@opcare.local', 'password' => Hash::make('password'), 'tenant_id' => $tenant->id]);

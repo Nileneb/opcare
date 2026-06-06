@@ -159,7 +159,7 @@ Kriterien: Rechtspflicht (Bußgeld/Straf) × MD-Prüfrelevanz × Machbarkeit aus
 | 1 | **BtM-Nachweisführung** | BtMVV §13 | Medikation | BtM-Konto je Bewohner, Monatsprüfung + Ausdruck, 3-J.-Archiv (Strafrecht!) |
 | 2 | **FEM-Genehmigungsworkflow** | §1831 BGB | CareEvent | Antrag→Gericht→Genehmigung-Upload, Review-Reminder, Beendigung, Alternativen-Doku |
 | 3 ✅ | **Qualitätsindikatoren-Export** | §113b SGB XI | QDVS/DAS | 15 Indikatoren autom. aus Pflegedaten berechnen, halbjährl. DAS-Export + Plausibilitätscheck — **umgesetzt** (QDVS-Regel-Engine) |
-| 4 | **Medizinprodukte** | MPBetreibV 2025/MDR | Facility | Bestandsverzeichnis, Medizinproduktebuch, STK/MTK-Fristen, Einweisungsnachweis |
+| 4 ✅ | **Medizinprodukte** | MPBetreibV 2025/MDR | Facility | Bestandsverzeichnis, Medizinproduktebuch, STK/MTK-Fristen, Einweisungsnachweis — **umgesetzt 2026-06-06** (medizinprodukte.md) |
 | 5 | **Datenschutz operativ** | DSGVO 30/28/33 | Security | VVT, AVV-Inventar, Datenpannen-Register (72-h-Timer), Betroffenenrechte-Workflow |
 | 6 ✅ | **Barbetragsverwaltung** | §27b SGB XII | Buchhaltung | Treuhand-Bewohnerkonto, Einzelbelege, Monats-/Jahresbericht fürs Betreuungsgericht, Pfändungsschutz — **umgesetzt 2026-06-06** (taschengeldkasse.md) |
 | 7 | **Beschwerde + Gewaltschutz** | §114 SGB XI, QPR 2024, QA 2026 | (neu) | Beschwerde-Ticket; Gewaltschutzkonzept + Vorfall-Meldung (vertraulich); Auswertungs-Dashboard |
