@@ -1,0 +1,51 @@
+name: ti2.0-conformance
+
+# Track C — TI 2.0 / ZETA-Konformität gegen den gematik Testhub 2.0 (Tag 3.1.0).
+# Schwergewichtiges Gate (Java + Docker-Compose-Mocks) → nur manuell + wöchentlich, NICHT pro Push.
+# Ohne SMC-B-Testzertifikat (Secret TI20_SMCB_P12_BASE64) überspringt das Skript bewusst + sichtbar.
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      tags:
+        description: 'Cucumber-Tags (z. B. @smoke, @client_registrierung)'
+        default: '@smoke'
+      suite:
+        description: 'Testsuite-Modul'
+        default: 'test/zeta-testsuite'
+  schedule:
+    # WHY: gematik aktualisiert Testhub/Profile laufend — wöchentlicher Re-Check (nur scharf mit Cert).
+    - cron: '0 7 * * 1'
+
+jobs:
+  conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      # SMC-B-Testzertifikat (organisationsgebunden) aus Secret entpacken — fehlt es, bleibt die Datei aus
+      # und das Gate-Skript überspringt sichtbar.
+      - name: SMC-B-Testzertifikat bereitstellen (falls Secret gesetzt)
+        env:
+          SMCB_B64: ${{ secrets.TI20_SMCB_P12_BASE64 }}
+        run: |
+          if [ -n "$SMCB_B64" ]; then
+            echo "$SMCB_B64" | base64 -d > "$RUNNER_TEMP/smcb_private.p12"
+            echo "TI20_SMCB_P12_PATH=$RUNNER_TEMP/smcb_private.p12" >> "$GITHUB_ENV"
+          fi
+
+      - name: TI 2.0 Konformitäts-Gate (skippt ohne SMC-B)
+        env:
+          TESTHUB_TAGS: ${{ github.event.inputs.tags || '@smoke' }}
+          TESTHUB_SUITE: ${{ github.event.inputs.suite || 'test/zeta-testsuite' }}
+        run: bash scripts/ti2.0/run-gate.sh

@@ -30,6 +30,9 @@ use App\Domains\Scheduling\Models\CalendarEvent;
 use App\Domains\Scheduling\Models\Shift;
 use App\Domains\Scheduling\Policies\CalendarEventPolicy;
 use App\Domains\Scheduling\Policies\ShiftPolicy;
+use App\Domains\Ti20\Contracts\ZetaClient;
+use App\Domains\Ti20\HttpZetaClient;
+use Illuminate\Http\Client\Factory;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -39,6 +42,13 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(CurrentTenant::class);
         $this->app->singleton(QdvsRuleRepository::class, fn () => new QdvsRuleRepository(config('qdvs.rules_csv')));
+
+        // Track C (TI 2.0): ZETA-Zugriff über den lokalen Sidecar/PEP — opcare hängt nur am Interface.
+        $this->app->bind(ZetaClient::class, fn ($app) => new HttpZetaClient(
+            $app->make(Factory::class),
+            (string) config('ti20.pep_base_url'),
+            (int) config('ti20.timeout'),
+        ));
     }
 
     public function boot(): void
