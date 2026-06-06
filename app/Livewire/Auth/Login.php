@@ -2,8 +2,10 @@
 
 namespace App\Livewire\Auth;
 
+use App\Domains\Identity\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -27,7 +29,9 @@ class Login extends Component
         $this->validate();
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
+        $user = User::where('email', $this->email)->first();
+
+        if (! $user || ! Hash::check($this->password, $user->password)) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -36,9 +40,22 @@ class Login extends Component
         }
 
         RateLimiter::clear($this->throttleKey());
+
+        // WHY(Track B, MFA-Pflicht): Passwort allein authentifiziert NICHT. Konfigurierte Nutzer müssen
+        // erst die TOTP-Challenge bestehen (Auth::login dort); noch nicht eingerichtete werden eingeloggt
+        // und von der Enrollment-Middleware sofort zum Einrichten geführt.
+        if ($user->hasTwoFactorEnabled()) {
+            session(['mfa.pending_id' => $user->id, 'mfa.remember' => $this->remember]);
+
+            $this->redirect(route('two-factor.challenge'), navigate: true);
+
+            return;
+        }
+
+        Auth::login($user, $this->remember);
         session()->regenerate();
 
-        $this->redirectIntended(route('overview'), navigate: true);
+        $this->redirect(route('two-factor.enroll'), navigate: true);
     }
 
     protected function ensureIsNotRateLimited(): void

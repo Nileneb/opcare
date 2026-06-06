@@ -44,7 +44,12 @@ idempotenter Migration (`...encrypt_sensitive_freetext_at_rest`) nachverschlüss
 
 - **Passwörter:** bcrypt (Laravel `hashed`-Cast).
 - **Login-Härtung:** Rate-Limiting (5 Versuche / IP+E-Mail), Session-Regeneration nach Login, `Lockout`-Event.
-- **MFA:** _(folgt in diesem Track — TOTP, Pflicht für alle Rollen)._
+- **MFA (TOTP, Pflicht für alle Rollen):** Zwei-Faktor-Authentifizierung über zeitbasierte Einmal-Codes
+  (RFC 6238, `pragmarx/google2fa`). Erzwungenes Enrollment via `RequireTwoFactorEnrollment`-Middleware —
+  ein eingeloggtes Konto ohne abgeschlossenes Enrollment kommt nicht in die App. Die Login-Challenge läuft
+  **vor** der Authentifizierung (Passwort prüft, dann TOTP-Code; `Auth::login` erst nach gültigem Code).
+  Secret + 8 Recovery-Codes (Einmal-Nutzung) liegen **verschlüsselt** in der DB (`encrypted`-Cast).
+  Challenge-Versuche sind rate-limitiert (5 / Pending-Konto+IP).
 - **RBAC:** `spatie/laravel-permission` mit Team-Scope je Mandant (Rollen: admin, pflegefachkraft,
   pflegehilfskraft, leserecht, super-admin).
 - **Mandantentrennung:** row-level `tenant_id` + globaler `TenantScope`; IDOR-Härtung über
