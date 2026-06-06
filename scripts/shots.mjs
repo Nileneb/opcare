@@ -28,6 +28,7 @@ const pages = [
     ['qm-checkliste', '/qualitaet/qm-checkliste', true],
     ['dienstplan', '/dienstplan', true],
     ['arbeitsrecht', '/arbeitsrecht', true],
+    ['zeiterfassung', '/zeiterfassung', true],
     ['haustechnik', '/haustechnik', true],
     ['kueche', '/kueche', true],
     ['mitarbeitende', '/admin/benutzer', true],

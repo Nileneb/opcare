@@ -6,7 +6,7 @@ Qualitätssicherung (QDVS/DAS-Pflege)** und **FHIR / ÜLB-MIO** (Pflegeüberleit
 des eingestellten Java-Projekts **[Offene-Pflege.de (OPDE)](#herkunft)** — dessen Domänenwissen dient als
 Vorlage, der Code ist von Grund auf neu.
 
-> **Status:** Funktionsfähig und aktiv in Entwicklung. **322 Tests grün**, CI durchgehend grün
+> **Status:** Funktionsfähig und aktiv in Entwicklung. **330 Tests grün**, CI durchgehend grün
 > (Tests · Linter · Security-Audit · FHIR-Validierung). Open Source (AGPL-3.0), **kein Rechtsgate**,
 > solange keine Echt-Patientendaten verarbeitet werden.
 >
@@ -28,6 +28,8 @@ Vorlage, der Code ist von Grund auf neu.
   (ArbZG)**: editierbares, einrichtungseigenes Regelwerk (§ 3/4/5/9–11/14, je mit Link zum amtlichen
   Gesetzestext) + dokumentierte **§ 14-Begründungen** für zwingende Abweichungen (z. B. ausbleibende
   Nachfolgekraft). Soll-Ist-Stunden gegen das Vertrags-Pensum.
+- **Arbeitszeiterfassung (BAG/EuGH)** — Mitarbeitende **stempeln Kommen/Gehen** (oder erfassen manuell);
+  Wochen-**Ist gegen das geplante Dienstplan-Soll**, die Leitung sieht das gesamte Team.
 - **Mitarbeiterverwaltung** — vollständige **Personalakte** (Personalfragebogen: Person, Steuer/ELStAM,
   Sozialversicherung, Bank, Vertrag/Pensum, Pflege-Compliance inkl. Masernschutz § 20 IfSG) 1:1 am
   App-Benutzer, **an die Rollenverwaltung gekoppelt**; sensible Felder (Steuer-ID/SV-Nr/IBAN)
@@ -59,7 +61,7 @@ Vorlage, der Code ist von Grund auf neu.
 | Backend | **Laravel 13**, **PHP 8.3+** |
 | Frontend | Blade + **Livewire 4** + Alpine.js |
 | Datenbank | **SQLite** (Dev/CI) · **PostgreSQL** (Prod) |
-| Tests | **Pest 4** (322 Tests) |
+| Tests | **Pest 4** (330 Tests) |
 | Lint/Style | **Laravel Pint** |
 | DTOs / RBAC / Audit | `spatie/laravel-data` · `spatie/laravel-permission` · `spatie/laravel-activitylog` |
 | Deployment | **Docker Compose** (self-contained: eine `.env`, `docker compose up --build`) |
@@ -80,7 +82,7 @@ Domänen-orientierte Struktur unter `app/Domains/`. Layering als Einbahnstraße:
 | **Quality** | Vorkommnisse/CareEvents, QS-Indikatoren, KPIs, **QM-Norm-Checkliste** (datengetrieben, Erfüllungsgrad) |
 | **Qdvs** | DAS-Plausibilitäts-Regel-Engine + QDVS-Export |
 | **Fhir** | FHIR-R4-Mapper + Document-Bundle-Export (ÜLB-MIO-Richtung) |
-| **Scheduling** | Dienstplan, Schichten, Kalender, **ArbZG-Compliance-Engine** (editierbares Regelwerk + § 14-Begründungen) |
+| **Scheduling** | Dienstplan, Schichten, Kalender, **ArbZG-Compliance-Engine** (Regelwerk + § 14) + **Arbeitszeiterfassung** (BAG/EuGH) |
 | **Personnel** | Personalakte (Personalfragebogen, verschlüsselt) 1:1 am Benutzer, gekoppelt an die Rollenverwaltung |
 | **Facility** | Haustechnik/Instandhaltung (DIN 31051): Mängelmeldungen + Wartungsplan mit Prüffristen |
 | **Catering** | Küche/Verpflegung (LMIV): Diät-/Allergen-Sicht der Bewohner + Speiseplan mit Allergenwarnung |
@@ -135,7 +137,7 @@ php artisan serve
 ## Entwicklung
 
 ```bash
-php artisan test                 # bzw. vendor/bin/pest   (322 Tests)
+php artisan test                 # bzw. vendor/bin/pest   (330 Tests)
 vendor/bin/pint                  # Code-Style
 php artisan fhir:export --output=bundle.json   # FHIR-Document-Bundle erzeugen
 ```

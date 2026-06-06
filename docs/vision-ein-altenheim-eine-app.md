@@ -47,7 +47,7 @@ sichtbar machen. Immer gleich. „Abschreiben" ist hier Best Practice.
 
 | Fähigkeit | Norm/Treiber | Andockpunkt |
 |---|---|---|
-| **Arbeitszeit-Ist-Erfassung** | EuGH C-55/18 + BAG (Erfassungspflicht) | Scheduling: Ist neben dem Plan-Soll erfassen |
+| **Arbeitszeit-Ist-Erfassung** ✅ | EuGH C-55/18 + BAG (Erfassungspflicht) | Scheduling: Kommen/Gehen + Ist-vs-Soll |
 | **Interne Nachrichten / E-Mail** | DSGVO-konforme interne Kommunikation | (neu) Messaging-Querschnitt |
 | **Videochat Kollegen** | — | Messaging (WebRTC) |
 | **Steuer-/Lohnexport** | ELSTER / DATEV / DEÜV-Meldungen | Personnel → Export-Adapter (wie FHIR-Export) |
@@ -68,7 +68,8 @@ sichtbar machen. Immer gleich. „Abschreiben" ist hier Best Practice.
 3. ✅ **Catering** *(erledigt 2026-06-06)* — Küche sieht Lebensmittelallergien + Kostformen (aus vorhandenen
    Daten) + Speiseplan mit LMIV-Allergenkennzeichnung; je Gericht Warnung betroffener Bewohner. Macht den
    QM-Punkt `hw_allergene` operativ.
-4. **Arbeitszeit-Ist-Erfassung** — Stempeln gegen den Plan (EuGH/BAG), füttert den ArbZG-§3-Schnitt.
+4. ✅ **Arbeitszeit-Ist-Erfassung** *(erledigt 2026-06-06)* — Kommen/Gehen stempeln + manuelle Erfassung;
+   Wochen-Ist gegen das geplante Dienstplan-Soll, Team-Übersicht für die Leitung (EuGH/BAG-Erfassungspflicht).
 5. **Messaging-Querschnitt** — interne Nachrichten/Video.
 6. **Lohn-/Steuerexport** — DEÜV/ELSTER-Adapter auf der Personalakte.
 
