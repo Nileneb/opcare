@@ -1,7 +1,8 @@
 name: security
 
-# Track B (Security-Hygiene), messbar: Supply-Chain-CVE-Gate. Schlägt fehl, sobald eine
-# Abhängigkeit mit bekannter Sicherheitslücke im composer.lock landet. Erweiterbar um SAST.
+# Track B (Security-Hygiene), messbar: Supply-Chain-CVE-Gate (composer audit) + SAST (Semgrep).
+# Beide blockierend: bekannte Dependency-CVE im Lock ODER ein ERROR-Finding der statischen
+# Security-Analyse lässt den Build fehlschlagen.
 
 permissions:
   contents: read
@@ -31,3 +32,19 @@ jobs:
 
       - name: Composer audit (Dependency-CVEs)
         run: composer audit --no-interaction --locked
+
+  sast:
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Statische Security-Analyse (Taint/Pattern) über kuratierte Rulesets. --error → blockierend
+      # bei ERROR-Findings. Baseline beim Einführen: 0 Findings über app/config/routes/bootstrap/database.
+      - name: Semgrep SAST (fails on ERROR findings)
+        run: |
+          semgrep --config p/php --config p/security-audit --config p/secrets \
+            --severity ERROR --error \
+            app/ config/ routes/ bootstrap/ database/
