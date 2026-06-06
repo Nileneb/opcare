@@ -33,7 +33,8 @@ class Register extends Component
         Auth::login($user);
         session()->regenerate();
 
-        $this->redirect(route('overview'), navigate: true);
+        // WHY(Track B, MFA-Pflicht): Neue Konten richten zuerst 2FA ein (Enrollment-Middleware erzwingt es).
+        $this->redirect(route('two-factor.enroll'), navigate: true);
     }
 
     public function render()

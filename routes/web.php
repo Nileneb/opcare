@@ -3,10 +3,13 @@
 use App\Domains\Fhir\FhirDocumentExporter;
 use App\Domains\Masterdata\Models\Resident;
 use App\Http\Controllers\SpeechController;
+use App\Http\Middleware\RequireTwoFactorEnrollment;
 use App\Livewire\Admin\Tenants;
 use App\Livewire\Admin\Users;
 use App\Livewire\Assessment\AssessmentDurchfuehren;
 use App\Livewire\Assessment\AssessmentVerlauf;
+use App\Livewire\Auth\ChallengeTwoFactor;
+use App\Livewire\Auth\EnrollTwoFactor;
 use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
@@ -38,9 +41,13 @@ Route::middleware('guest')->group(function () {
     Route::get('/register', Register::class)->name('register');
     Route::get('/forgot-password', ForgotPassword::class)->name('password.request');
     Route::get('/reset-password/{token}', ResetPassword::class)->name('password.reset');
+    // TOTP-Challenge: Benutzer ist nach der Passwortprüfung noch nicht authentifiziert (Session-Hand-off).
+    Route::get('/two-factor/challenge', ChallengeTwoFactor::class)->name('two-factor.challenge');
 });
 
-Route::middleware(['auth', 'tenant'])->group(function () {
+Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class])->group(function () {
+    // Pflicht-Enrollment: eingeloggt, aber bis zum Abschluss von der Middleware hierher gehalten.
+    Route::get('/two-factor/enroll', EnrollTwoFactor::class)->name('two-factor.enroll');
     Route::get('/', Overview::class)->name('overview');
     Route::get('/bewohner', Residents::class)->name('bewohner');
     Route::get('/bewohner/{resident}', ResidentShow::class)->name('bewohner.show');

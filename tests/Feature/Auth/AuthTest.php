@@ -26,7 +26,8 @@ it('registriert einen neuen Benutzer und meldet ihn an', function () {
         ->set('password', 'passwort-123')
         ->set('password_confirmation', 'passwort-123')
         ->call('register')
-        ->assertRedirect(route('overview'));
+        // WHY(Track B, MFA-Pflicht): neue Konten gehen direkt ins Enrollment
+        ->assertRedirect(route('two-factor.enroll'));
 
     $this->assertAuthenticated();
     $user = User::where('email', 'neu@opcare.local')->first();
@@ -35,19 +36,32 @@ it('registriert einen neuen Benutzer und meldet ihn an', function () {
         ->and($user->tenant_id)->toBe($this->tenant->id);
 });
 
-it('meldet einen bestehenden Benutzer mit korrektem Passwort an', function () {
-    $user = User::create([
-        'name' => 'Bestand', 'email' => 'b@opcare.local',
-        'password' => 'geheim-123', 'tenant_id' => $this->tenant->id,
+it('loggt einen Benutzer ohne 2FA ein und erzwingt das Enrollment', function () {
+    $user = User::factory()->withoutTwoFactor()->create([
+        'email' => 'b@opcare.local', 'password' => 'geheim-123', 'tenant_id' => $this->tenant->id,
     ]);
 
     Livewire::test(Login::class)
         ->set('email', 'b@opcare.local')
         ->set('password', 'geheim-123')
         ->call('login')
-        ->assertRedirect(route('overview'));
+        ->assertRedirect(route('two-factor.enroll'));
 
     $this->assertAuthenticatedAs($user);
+});
+
+it('verlangt bei aktivem 2FA die Challenge und authentifiziert noch nicht', function () {
+    User::factory()->create([
+        'email' => 'mfa@opcare.local', 'password' => 'geheim-123', 'tenant_id' => $this->tenant->id,
+    ]);
+
+    Livewire::test(Login::class)
+        ->set('email', 'mfa@opcare.local')
+        ->set('password', 'geheim-123')
+        ->call('login')
+        ->assertRedirect(route('two-factor.challenge'));
+
+    $this->assertGuest();
 });
 
 it('weist falsche Zugangsdaten ab', function () {

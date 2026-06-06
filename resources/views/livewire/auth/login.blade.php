@@ -31,6 +31,7 @@
     <p class="auth-alt">Noch kein Konto? <a href="{{ route('register') }}" wire:navigate>Registrieren</a></p>
 
     <div class="auth-demo">
-        <b>Demo-Zugang:</b> admin@opcare.local · Passwort <b>password</b>
+        <b>Demo-Zugang:</b> admin@opcare.local · Passwort <b>password</b><br>
+        <small>Beim ersten Login wird die Zwei-Faktor-Authentifizierung eingerichtet (Authenticator-App nötig).</small>
     </div>
 </div>

@@ -19,6 +19,8 @@ beforeEach(function () {
     $this->seed(RolesSeeder::class);
     $this->seed(DemoSeeder::class);
     $this->admin = User::query()->where('email', 'admin@opcare.local')->first();
+    // WHY(Track B, MFA): Seiten-Zugriff setzt abgeschlossenes 2FA-Enrollment voraus (Enrollment-Middleware).
+    $this->admin->forceFill(['two_factor_confirmed_at' => now()])->save();
     $this->actingAs($this->admin);
     app(CurrentTenant::class)->set($this->admin->tenant);
 });
