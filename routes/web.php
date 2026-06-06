@@ -26,6 +26,7 @@ use App\Livewire\Pflegeplanung;
 use App\Livewire\Profile;
 use App\Livewire\Qdvs\Export as QdvsExport;
 use App\Livewire\Quality\Controlling;
+use App\Livewire\Quality\QmCheckliste;
 use App\Livewire\Quality\QualityReport;
 use App\Livewire\Residents;
 use App\Livewire\ResidentShow;
@@ -67,6 +68,7 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class])->group(
     Route::get('/bewohner/{resident}/vitalwerte', Vitalwerte::class)->name('medikation.vitalwerte');
     Route::get('/controlling', Controlling::class)->name('controlling');
     Route::get('/qualitaet/report', QualityReport::class)->name('quality.report');
+    Route::get('/qualitaet/qm-checkliste', QmCheckliste::class)->name('quality.qm');
 
     // Querschnitts-Sprachfunktionen für jedes Textfeld (inline, synchron).
     Route::post('/speech/transcribe', [SpeechController::class, 'transcribe'])->name('speech.transcribe');

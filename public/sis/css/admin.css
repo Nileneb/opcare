@@ -173,3 +173,11 @@ table.plan th { font-size: 0.78em; color: var(--color-fg-muted); font-weight: va
 @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
 .plan-soll { display: block; font-size: 0.74em; font-weight: 400; color: var(--color-fg-muted); margin-top: 2px; }
 .plan-soll-over { color: #8C2A18; font-weight: var(--fw-semibold); }
+
+/* ===== QM-Norm-Checkliste ===== */
+.qm-bar { height: 8px; background: var(--paper-2); border-radius: var(--radius-pill); overflow: hidden; margin-bottom: 8px; }
+.qm-bar span { display: block; height: 100%; background: var(--green-700); border-radius: var(--radius-pill); transition: width var(--dur) var(--ease); }
+.qm-item { padding: 12px 0; border-top: 1px solid var(--line-cool); }
+.qm-item:first-of-type { border-top: none; }
+.qm-anf { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; font-size: 0.94em; }
+.qm-item textarea { width: 100%; }

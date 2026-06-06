@@ -39,8 +39,10 @@ use App\Domains\Personnel\Enums\Masernschutz;
 use App\Domains\Personnel\Enums\Qualifikation;
 use App\Domains\Personnel\Enums\Steuerklasse;
 use App\Domains\Quality\Enums\EventSeverity;
+use App\Domains\Quality\Enums\QmStatus;
 use App\Domains\Quality\Enums\QualityIndicator;
 use App\Domains\Quality\Models\CareEvent;
+use App\Domains\Quality\Support\QmKatalogDefaults;
 use App\Domains\Scheduling\Compliance\ArbeitszeitgesetzDefaults;
 use App\Domains\Scheduling\Database\Seeders\ShiftSeeder;
 use App\Domains\Scheduling\Models\ComplianceJustification;
@@ -308,6 +310,25 @@ class DemoSeeder extends Seeder
             'grund' => 'Nachfolgekraft kurzfristig erkrankt — Bewohner durften nicht unbeaufsichtigt bleiben (§ 14 ArbZG).',
             'begruendet_von' => $admin->id,
         ]);
+
+        // QM-Norm-Checkliste: Startkatalog + ein paar gepflegte Status für die Demo.
+        $qm = QmKatalogDefaults::ensureFor($tenant->id);
+        $qmStatus = [
+            'hyg_plan' => [QmStatus::Erfuellt, 'Hygienebeauftragte'],
+            'hyg_beauftragte' => [QmStatus::Erfuellt, 'PDL'],
+            'hyg_masern' => [QmStatus::InArbeit, 'Personalbüro'],
+            'qb6_qmsystem' => [QmStatus::Erfuellt, 'QMB'],
+            'qb6_beschwerde' => [QmStatus::Erfuellt, 'Heimleitung'],
+            'ds_dsb' => [QmStatus::Erfuellt, 'externer DSB'],
+            'as_gefaehrdung' => [QmStatus::InArbeit, 'Fachkraft Arbeitssicherheit'],
+            'hw_allergene' => [QmStatus::Erfuellt, 'Küchenleitung'],
+        ];
+        foreach ($qmStatus as $schluessel => [$status, $zustaendig]) {
+            $qm->firstWhere('schluessel', $schluessel)?->update([
+                'status' => $status, 'zustaendig' => $zustaendig,
+                'geprueft_am' => $status === QmStatus::Erfuellt ? now()->subDays(20)->toDateString() : null,
+            ]);
+        }
 
         // Zweites Heim — Haus Birkenhof (2 Bewohner, kein SIS für Minimal-Demo)
         $birkenhof = Tenant::create(['name' => 'Haus Birkenhof', 'slug' => 'birkenhof']);

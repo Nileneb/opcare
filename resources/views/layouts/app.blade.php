@@ -34,6 +34,7 @@
         @if (auth()->user()?->hasAnyRole(['admin', 'pflegefachkraft', 'super-admin']))
             <nav class="app-nav app-nav-controlling">
                 <a href="{{ route('controlling') }}" @class(['is-active' => request()->routeIs('controlling') || request()->routeIs('quality.report')])>Controlling</a>
+                <a href="{{ route('quality.qm') }}" @class(['is-active' => request()->routeIs('quality.qm')])>QM-Checkliste</a>
                 <a href="{{ route('qdvs.export') }}" @class(['is-active' => request()->routeIs('qdvs.export')])>QDVS-Export</a>
             </nav>
         @endif
