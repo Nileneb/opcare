@@ -24,6 +24,7 @@ use Spatie\Activitylog\Models\Activity;
  * @property-read Collection<int, Activity> $activitiesAsSubject
  * @property-read int|null $activities_as_subject_count
  * @property-read Tenant $tenant
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|QdvsExport newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|QdvsExport newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|QdvsExport query()
@@ -39,6 +40,7 @@ use Spatie\Activitylog\Models\Activity;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|QdvsExport whereStichtag($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|QdvsExport whereTenantId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|QdvsExport whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class QdvsExport extends BaseModel
