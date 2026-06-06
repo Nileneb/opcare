@@ -27,6 +27,7 @@ const pages = [
     ['controlling', '/controlling', true],
     ['dienstplan', '/dienstplan', true],
     ['arbeitsrecht', '/arbeitsrecht', true],
+    ['mitarbeitende', '/admin/benutzer', true],
     ['qdvs', '/qdvs', true],
     ['einrichtung', '/einrichtung', true],
     ['sis-board', '/pflegeplanung', true],
@@ -72,6 +73,18 @@ for (const [name, path, auth] of pages) {
     } catch (e) {
         console.log(`FAIL ${name}  (${path}): ${e.message}`);
     }
+}
+
+// Personalakte: von der Mitarbeiterliste auf die erste Akte durchklicken (braucht eine User-ID).
+try {
+    await page.goto(base + '/admin/benutzer', { waitUntil: 'networkidle', timeout: 20000 });
+    await page.click('a[href*="/admin/mitarbeitende/"]');
+    await page.waitForTimeout(800);
+    await page.screenshot({ path: `${outDir}/personalakte.png`, fullPage: true }).catch(() =>
+        page.screenshot({ path: `${outDir}/personalakte.png`, fullPage: false }));
+    console.log(`OK   personalakte  ->  ${page.url()}`);
+} catch (e) {
+    console.log(`FAIL personalakte: ${e.message}`);
 }
 
 await browser.close();

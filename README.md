@@ -6,7 +6,7 @@ Qualitätssicherung (QDVS/DAS-Pflege)** und **FHIR / ÜLB-MIO** (Pflegeüberleit
 des eingestellten Java-Projekts **[Offene-Pflege.de (OPDE)](#herkunft)** — dessen Domänenwissen dient als
 Vorlage, der Code ist von Grund auf neu.
 
-> **Status:** Funktionsfähig und aktiv in Entwicklung. **294 Tests grün**, CI durchgehend grün
+> **Status:** Funktionsfähig und aktiv in Entwicklung. **301 Tests grün**, CI durchgehend grün
 > (Tests · Linter · Security-Audit · FHIR-Validierung). Open Source (AGPL-3.0), **kein Rechtsgate**,
 > solange keine Echt-Patientendaten verarbeitet werden.
 >
@@ -27,7 +27,11 @@ Vorlage, der Code ist von Grund auf neu.
 - **Dienstplan & Arbeitszeit-Compliance** — Wochen-Dienstplan mit arbeitsrechtlicher **Live-Prüfung
   (ArbZG)**: editierbares, einrichtungseigenes Regelwerk (§ 3/4/5/9–11/14, je mit Link zum amtlichen
   Gesetzestext) + dokumentierte **§ 14-Begründungen** für zwingende Abweichungen (z. B. ausbleibende
-  Nachfolgekraft).
+  Nachfolgekraft). Soll-Ist-Stunden gegen das Vertrags-Pensum.
+- **Mitarbeiterverwaltung** — vollständige **Personalakte** (Personalfragebogen: Person, Steuer/ELStAM,
+  Sozialversicherung, Bank, Vertrag/Pensum, Pflege-Compliance inkl. Masernschutz § 20 IfSG) 1:1 am
+  App-Benutzer, **an die Rollenverwaltung gekoppelt**; sensible Felder (Steuer-ID/SV-Nr/IBAN)
+  At-Rest-verschlüsselt.
 - **Qualität & Controlling** — Vorkommnis-Erfassung (Sturz strukturiert mit Folgen, Dekubitus mit Stadium,
   FEM …), QS-Indikatoren, KPI-Dashboard.
 - **QDVS / DAS-Pflege** — datengetriebene **Plausibilitäts-Regel-Engine** (440 DAS-Regeln, Pattern-Matcher
@@ -47,7 +51,7 @@ Vorlage, der Code ist von Grund auf neu.
 | Backend | **Laravel 13**, **PHP 8.3+** |
 | Frontend | Blade + **Livewire 4** + Alpine.js |
 | Datenbank | **SQLite** (Dev/CI) · **PostgreSQL** (Prod) |
-| Tests | **Pest 4** (294 Tests) |
+| Tests | **Pest 4** (301 Tests) |
 | Lint/Style | **Laravel Pint** |
 | DTOs / RBAC / Audit | `spatie/laravel-data` · `spatie/laravel-permission` · `spatie/laravel-activitylog` |
 | Deployment | **Docker Compose** (self-contained: eine `.env`, `docker compose up --build`) |
@@ -69,6 +73,7 @@ Domänen-orientierte Struktur unter `app/Domains/`. Layering als Einbahnstraße:
 | **Qdvs** | DAS-Plausibilitäts-Regel-Engine + QDVS-Export |
 | **Fhir** | FHIR-R4-Mapper + Document-Bundle-Export (ÜLB-MIO-Richtung) |
 | **Scheduling** | Dienstplan, Schichten, Kalender, **ArbZG-Compliance-Engine** (editierbares Regelwerk + § 14-Begründungen) |
+| **Personnel** | Personalakte (Personalfragebogen, verschlüsselt) 1:1 am Benutzer, gekoppelt an die Rollenverwaltung |
 | **Speech** | Audio-Handling, Transkription, LLM→SIS®-Strukturierung (Human-in-the-Loop) |
 
 ## FHIR / ÜLB-MIO-Konformität
@@ -120,7 +125,7 @@ php artisan serve
 ## Entwicklung
 
 ```bash
-php artisan test                 # bzw. vendor/bin/pest   (294 Tests)
+php artisan test                 # bzw. vendor/bin/pest   (301 Tests)
 vendor/bin/pint                  # Code-Style
 php artisan fhir:export --output=bundle.json   # FHIR-Document-Bundle erzeugen
 ```
