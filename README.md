@@ -6,7 +6,7 @@ Qualitätssicherung (QDVS/DAS-Pflege)** und **FHIR / ÜLB-MIO** (Pflegeüberleit
 des eingestellten Java-Projekts **[Offene-Pflege.de (OPDE)](#herkunft)** — dessen Domänenwissen dient als
 Vorlage, der Code ist von Grund auf neu.
 
-> **Status:** Funktionsfähig und aktiv in Entwicklung. **239 Tests grün**, CI durchgehend grün
+> **Status:** Funktionsfähig und aktiv in Entwicklung. **294 Tests grün**, CI durchgehend grün
 > (Tests · Linter · Security-Audit · FHIR-Validierung). Open Source (AGPL-3.0), **kein Rechtsgate**,
 > solange keine Echt-Patientendaten verarbeitet werden.
 >
@@ -24,6 +24,10 @@ Vorlage, der Code ist von Grund auf neu.
 - **Assessments** — generische Instrument-Engine mit Scoring + Risiko-Bändern: **Braden** (Dekubitus),
   **Sturzrisiko**, **BESD** (Schmerz), **Barthel-Index** (Funktion/ADL, mit LOINC-Codes).
 - **Medikation** — Verordnungen, Stellplan, Bestände, Gabe-Dokumentation.
+- **Dienstplan & Arbeitszeit-Compliance** — Wochen-Dienstplan mit arbeitsrechtlicher **Live-Prüfung
+  (ArbZG)**: editierbares, einrichtungseigenes Regelwerk (§ 3/4/5/9–11/14, je mit Link zum amtlichen
+  Gesetzestext) + dokumentierte **§ 14-Begründungen** für zwingende Abweichungen (z. B. ausbleibende
+  Nachfolgekraft).
 - **Qualität & Controlling** — Vorkommnis-Erfassung (Sturz strukturiert mit Folgen, Dekubitus mit Stadium,
   FEM …), QS-Indikatoren, KPI-Dashboard.
 - **QDVS / DAS-Pflege** — datengetriebene **Plausibilitäts-Regel-Engine** (440 DAS-Regeln, Pattern-Matcher
@@ -43,7 +47,7 @@ Vorlage, der Code ist von Grund auf neu.
 | Backend | **Laravel 13**, **PHP 8.3+** |
 | Frontend | Blade + **Livewire 4** + Alpine.js |
 | Datenbank | **SQLite** (Dev/CI) · **PostgreSQL** (Prod) |
-| Tests | **Pest 4** (239 Tests) |
+| Tests | **Pest 4** (294 Tests) |
 | Lint/Style | **Laravel Pint** |
 | DTOs / RBAC / Audit | `spatie/laravel-data` · `spatie/laravel-permission` · `spatie/laravel-activitylog` |
 | Deployment | **Docker Compose** (self-contained: eine `.env`, `docker compose up --build`) |
@@ -64,7 +68,7 @@ Domänen-orientierte Struktur unter `app/Domains/`. Layering als Einbahnstraße:
 | **Quality** | Vorkommnisse/CareEvents, QS-Indikatoren, KPIs |
 | **Qdvs** | DAS-Plausibilitäts-Regel-Engine + QDVS-Export |
 | **Fhir** | FHIR-R4-Mapper + Document-Bundle-Export (ÜLB-MIO-Richtung) |
-| **Scheduling** | Dienstplan, Schichten, Kalender |
+| **Scheduling** | Dienstplan, Schichten, Kalender, **ArbZG-Compliance-Engine** (editierbares Regelwerk + § 14-Begründungen) |
 | **Speech** | Audio-Handling, Transkription, LLM→SIS®-Strukturierung (Human-in-the-Loop) |
 
 ## FHIR / ÜLB-MIO-Konformität
@@ -74,7 +78,7 @@ PIO Überleitungsbogen `kbv.mio.ueberleitungsbogen` 1.0.0 — der veröffentlich
 Pflegeüberleitung). Im CI **blockierend** gegen FHIR R4 + `de.basisprofil.r4` + das ÜLB-Paket validiert,
 zusätzlich explizit gegen das ÜLB-Bundle-Profil (**0 errors**).
 
-**Konforme Composition mit 7 slice-konformen Sektionen** (`meta.profile` durchgängig, closed slicing):
+**Konforme Composition mit bis zu 12 slice-konformen Sektionen** (`meta.profile` durchgängig, closed slicing):
 
 | ÜLB-Sektion | FHIR-Ressource |
 |---|---|
@@ -85,12 +89,14 @@ zusätzlich explizit gegen das ÜLB-Bundle-Profil (**0 errors**).
 | `medikationsplan` | Information-Observation → `MedicationStatement` + `Medication` |
 | `funktionsbeurteilungen` | Presence-Observation → `Assessment_Free` (Barthel) |
 | `pflegerischeMassnahme` | `Procedure` (je Maßnahme) |
+| `orientierungPsyche` / `qualitativeBeschreibungAtmung` | Status-Observations `Cognitive_Awareness` / `Qualitative_Description_Breathing` |
+| `harn-/stuhlkontinenzDifferenzierteEinschaetzung` / `ernaehrung` | `Continence_Differentiated_Assessment` / `Presence_Information_Nutrition` |
+| `medizinprodukte` | `Relevant_Information_Medical_Devices` → `DeviceUseStatement` → `Device` |
+| `patientenAdressbuch` | `RelatedPerson_Contact_Person` (An-/Zugehörige) |
 
-Dazu die dokumentierende Einheit (Organization/Practitioner/PractitionerRole) und der ÜLB-Patient.
-
-**Optionaler Backlog** (dokumentiert, nicht konformitätskritisch — alle Sektionen sind optional):
-Status-Beobachtungen (Orientierung/Ernährung/Atmung/Kontinenz, je eigenes Profil), Medizinprodukte
-(Basis-`Device`-Variante), Angehörige. Details: [Wiki → Track A](https://github.com/Nileneb/opcare/wiki).
+Dazu die dokumentierende Einheit (Organization/Practitioner/PractitionerRole) und der ÜLB-Patient. Die
+Status-/Medizinprodukte-/Angehörige-Sektionen erscheinen, sobald die Daten erfasst sind. Genuin offener,
+optionaler Rest (Drainage, gradDerBehinderung, Patientenwunsch …): [Wiki → Track A](https://github.com/Nileneb/opcare/wiki).
 
 ## Schnellstart (Docker)
 
@@ -114,7 +120,7 @@ php artisan serve
 ## Entwicklung
 
 ```bash
-php artisan test                 # bzw. vendor/bin/pest   (239 Tests)
+php artisan test                 # bzw. vendor/bin/pest   (294 Tests)
 vendor/bin/pint                  # Code-Style
 php artisan fhir:export --output=bundle.json   # FHIR-Document-Bundle erzeugen
 ```
