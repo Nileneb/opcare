@@ -176,7 +176,7 @@ class Resident extends BaseModel implements HasMedia
 
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('documents')->useDisk('media');
+        $this->addMediaCollection('documents')->useDisk(config('opcare.media_disk', 'media'));
     }
 
     protected static function newFactory(): ResidentFactory

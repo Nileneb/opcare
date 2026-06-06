@@ -69,6 +69,21 @@ return [
             'report' => false,
         ],
 
+        // Self-hosted S3 (MinIO) für Bewohner-Dokumente/Fotos — private, verschlüsselt. In Prod als
+        // OPCARE_MEDIA_DISK=minio aktivierbar; lokal/Tests bleibt die 'media'-Disk (Dateisystem).
+        'minio' => [
+            'driver' => 's3',
+            'key' => env('MINIO_ACCESS_KEY'),
+            'secret' => env('MINIO_SECRET_KEY'),
+            'region' => env('MINIO_REGION', 'us-east-1'),
+            'bucket' => env('MINIO_BUCKET', 'opcare-media'),
+            'endpoint' => env('MINIO_ENDPOINT', 'http://minio:9000'),
+            'use_path_style_endpoint' => true,
+            'visibility' => 'private',
+            'throw' => false,
+            'report' => false,
+        ],
+
     ],
 
     /*

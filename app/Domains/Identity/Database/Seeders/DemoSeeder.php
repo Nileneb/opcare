@@ -411,6 +411,14 @@ class DemoSeeder extends Seeder
         app(Warenverbrauch::class)->handle($mehl->fresh(), 12, now()->subDay()->toDateString(), 'Backtag Wohnbereich 1');
         app(Warenverbrauch::class)->handle($handschuhe->fresh(), 35, now()->toDateString(), 'Tagesbedarf Pflege');
 
+        // Dokumente & Fotos: Demo-Befund am Bewohner (medizinisch → 10-Jahres-Aufbewahrung § 630f BGB).
+        $maria->addMediaFromString("Demo-Arztbrief\nBefund: stabil.\n")
+            ->usingFileName('arztbrief-demo.txt')->usingName('Arztbrief (Demo)')
+            ->withCustomProperties([
+                'kategorie' => 'befund', 'medizinisch' => true,
+                'retention_until' => now()->addYears(10)->toDateString(), 'einwilligung_von' => null,
+            ])->toMediaCollection('documents');
+
         // Zweites Heim — Haus Birkenhof (2 Bewohner, kein SIS für Minimal-Demo)
         $birkenhof = Tenant::create(['name' => 'Haus Birkenhof', 'slug' => 'birkenhof']);
         app(CurrentTenant::class)->set($birkenhof);

@@ -35,6 +35,7 @@
         <a href="#massnahmen" wire:ignore>Maßnahmen</a>
         <a href="#berichte" wire:ignore>Berichte</a>
         <a href="#vorkommnisse" wire:ignore>Vorkommnisse</a>
+        <a href="#dokumente" wire:ignore>Dokumente</a>
     </nav>
 
     {{-- ===================== STAMMDATEN ===================== --}}
@@ -416,4 +417,6 @@
             </form>
         @endcan
     </div>
+
+    @livewire('masterdata.resident-media', ['resident' => $resident], key('media-'.$resident->id))
 </div>

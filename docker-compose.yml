@@ -103,6 +103,41 @@ services:
       timeout: 5s
       retries: 5
 
+  # Self-hosted S3 für Bewohner-Dokumente/Fotos. Aktiv mit OPCARE_MEDIA_DISK=minio (sonst nutzt die App
+  # die lokale 'media'-Disk). Ports nur im Compose-Netz; Console bei Bedarf via Port-Forward.
+  minio:
+    image: quay.io/minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-opcare}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-opcare-secret}
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Init: Bucket einmalig anlegen (privat, kein anonymer Zugriff).
+  minio-init:
+    image: quay.io/minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+        mc alias set local http://minio:9000 $${MINIO_ACCESS_KEY:-opcare} $${MINIO_SECRET_KEY:-opcare-secret};
+        mc mb --ignore-existing local/$${MINIO_BUCKET:-opcare-media};
+        mc anonymous set none local/$${MINIO_BUCKET:-opcare-media};
+        exit 0;
+      "
+    environment:
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-opcare}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-opcare-secret}
+      MINIO_BUCKET: ${MINIO_BUCKET:-opcare-media}
+
   # Pest-Suite (läuft NICHT bei `up`):  docker compose run --rm test
   test:
     profiles: [test]
@@ -116,3 +151,4 @@ volumes:
   postgres-data:
   redis-data:
   storage-data:
+  minio-data:
