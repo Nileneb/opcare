@@ -35,6 +35,10 @@ class CompositionMapper
             ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '1184586001', 'display' => 'Medical device document section (record artifact)'],
             'Medizinprodukte',
         ],
+        'patientenAdressbuch' => [
+            ['system' => 'https://fhir.kbv.de/CodeSystem/KBV_CS_MIO_ULB_Address_Book', 'version' => '1.0.0', 'code' => 'Kontakt_und_behandelnde_Personen', 'display' => 'Kontakt- und behandelnde Personen'],
+            'Patienten-Adressbuch',
+        ],
         'orientierungPsyche' => [
             ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '43173001+312012004', 'display' => 'Orientation , function (observable entity) + Cognitive function : awareness (observable entity)'],
             'Orientierung / Psyche',

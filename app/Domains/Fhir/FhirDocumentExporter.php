@@ -17,6 +17,7 @@ use App\Domains\Fhir\Mappers\ObservationMapper;
 use App\Domains\Fhir\Mappers\PatientMapper;
 use App\Domains\Fhir\Mappers\PresenceObservationMapper;
 use App\Domains\Fhir\Mappers\ProcedureMapper;
+use App\Domains\Fhir\Mappers\RelatedPersonMapper;
 use App\Domains\Fhir\Mappers\StatusObservationMapper;
 use App\Domains\Fhir\Mappers\VitalSignsReportMapper;
 use App\Domains\Masterdata\Models\Resident;
@@ -50,6 +51,7 @@ class FhirDocumentExporter
         private readonly ProcedureMapper $procedureMapper,
         private readonly StatusObservationMapper $statusObservationMapper,
         private readonly MedicalDeviceMapper $medicalDeviceMapper,
+        private readonly RelatedPersonMapper $relatedPersonMapper,
     ) {}
 
     /** @return array<string, mixed> */
@@ -190,6 +192,16 @@ class FhirDocumentExporter
             $nutRef = $base.'Observation/'.$nutrition['id'];
             $entry[] = ['fullUrl' => $nutRef, 'resource' => $nutrition['resource']];
             $sections[] = ['slice' => $nutrition['slice'], 'entries' => [$nutRef]];
+        }
+
+        // patientenAdressbuch: An-/Zugehörige → je eine RelatedPerson_Contact_Person.
+        $contactRefs = [];
+        foreach ($resident->contacts as $contact) {
+            $entry[] = ['fullUrl' => RelatedPersonMapper::ref($contact, $base), 'resource' => $this->relatedPersonMapper->build($contact, $patientRef, $base)];
+            $contactRefs[] = RelatedPersonMapper::ref($contact, $base);
+        }
+        if ($contactRefs !== []) {
+            $sections[] = ['slice' => 'patientenAdressbuch', 'entries' => $contactRefs];
         }
 
         // medizinprodukte: erfasste Hilfsmittel → Presence-Observation, je Gerät DeviceUseStatement→Device.

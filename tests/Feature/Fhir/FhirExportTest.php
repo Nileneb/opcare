@@ -301,6 +301,24 @@ it('lässt die Medizinprodukte-Sektion weg, wenn keine Hilfsmittel erfasst sind'
         ->and($resources->where('resourceType', 'DeviceUseStatement'))->toHaveCount(0);
 });
 
+it('mappt An-/Zugehörige auf RelatedPerson_Contact_Person (Patienten-Adressbuch)', function () {
+    $this->resident->contacts()->create(['name' => 'Anna Schneider', 'beziehung' => 'Tochter', 'telefon' => '0201 1234567', 'benachrichtigen' => true]);
+    $bundle = app(FhirDocumentExporter::class)->export($this->resident);
+    $resources = collect($bundle['entry'])->pluck('resource');
+    $related = $resources->firstWhere('resourceType', 'RelatedPerson');
+
+    expect($related)->not->toBeNull()
+        ->and($related['meta']['profile'][0])->toContain('RelatedPerson_Contact_Person')
+        ->and($related['patient']['reference'])->toContain('Patient/')
+        ->and($related['name'][0]['family'])->toBe('Schneider')
+        ->and($related['name'][0]['given'])->toBe(['Anna'])
+        ->and($related['relationship'][0]['text'])->toBe('Tochter')
+        ->and($related['telecom'][0]['value'])->toBe('0201 1234567');
+
+    $titles = collect($bundle['entry'][0]['resource']['section'])->pluck('title')->all();
+    expect($titles)->toContain('Patienten-Adressbuch');
+});
+
 it('erzeugt eine ÜLB-konforme Composition mit slice-konformen Sektionen + Verlauf-Narrativ', function () {
     $composition = app(FhirDocumentExporter::class)->export($this->resident)['entry'][0]['resource'];
     $titles = collect($composition['section'])->pluck('title')->all();
