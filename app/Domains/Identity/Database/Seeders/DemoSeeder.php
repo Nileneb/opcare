@@ -8,6 +8,11 @@ use App\Domains\Assessment\Database\Seeders\InstrumentSeeder;
 use App\Domains\Assessment\Models\Instrument;
 use App\Domains\CarePlanning\Models\CareMeasure;
 use App\Domains\CarePlanning\Models\SisAssessment;
+use App\Domains\Facility\Enums\AssetKategorie;
+use App\Domains\Facility\Enums\MeldungPrioritaet;
+use App\Domains\Facility\Enums\MeldungStatus;
+use App\Domains\Facility\Models\FacilityAsset;
+use App\Domains\Facility\Models\FacilityMeldung;
 use App\Domains\Identity\Models\Tenant;
 use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Support\CurrentTenant;
@@ -329,6 +334,16 @@ class DemoSeeder extends Seeder
                 'geprueft_am' => $status === QmStatus::Erfuellt ? now()->subDays(20)->toDateString() : null,
             ]);
         }
+
+        // Haustechnik (DIN 31051): Betriebsmittel mit Prüffristen + Mängelmeldungen für die Demo.
+        $hausmeister = User::create(['name' => 'Frank Kessler', 'email' => 'haustechnik@opcare.local', 'password' => Hash::make('password'), 'tenant_id' => $tenant->id]);
+        $hausmeister->assignRole('haustechnik');
+        $aufzug = FacilityAsset::create(['bezeichnung' => 'Aufzug Haus Aprath', 'kategorie' => AssetKategorie::Aufzug, 'standort' => 'Treppenhaus', 'norm' => 'BetrSichV', 'pruefintervall_monate' => 12, 'letzte_pruefung' => now()->subMonths(14)->toDateString()]);
+        FacilityAsset::create(['bezeichnung' => 'Brandmeldeanlage', 'kategorie' => AssetKategorie::Brandschutz, 'standort' => 'gesamt', 'norm' => 'DIN 14675', 'pruefintervall_monate' => 12, 'letzte_pruefung' => now()->subMonths(5)->toDateString()]);
+        FacilityAsset::create(['bezeichnung' => 'Pflegebetten WB 1 (8 Stk.)', 'kategorie' => AssetKategorie::Medizinprodukt, 'standort' => 'Wohnbereich 1', 'norm' => 'MPBetreibV', 'pruefintervall_monate' => 24, 'letzte_pruefung' => now()->subMonths(3)->toDateString()]);
+        FacilityMeldung::create(['titel' => 'Heizung Zimmer 7 wird nicht warm', 'beschreibung' => 'Thermostat reagiert nicht.', 'standort' => 'Zimmer 7', 'prioritaet' => MeldungPrioritaet::Hoch, 'gemeldet_von' => $admin->id]);
+        FacilityMeldung::create(['titel' => 'Türschließer Haupteingang quietscht', 'standort' => 'Eingang EG', 'prioritaet' => MeldungPrioritaet::Niedrig, 'status' => MeldungStatus::InArbeit, 'gemeldet_von' => $sandra->id]);
+        FacilityMeldung::create(['titel' => 'Wasserhahn Küche tropft', 'asset_id' => null, 'standort' => 'Küche', 'prioritaet' => MeldungPrioritaet::Mittel, 'status' => MeldungStatus::Erledigt, 'erledigt_am' => now()->subDays(2)->toDateString(), 'erledigt_notiz' => 'Dichtung getauscht.', 'gemeldet_von' => $admin->id]);
 
         // Zweites Heim — Haus Birkenhof (2 Bewohner, kein SIS für Minimal-Demo)
         $birkenhof = Tenant::create(['name' => 'Haus Birkenhof', 'slug' => 'birkenhof']);

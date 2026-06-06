@@ -15,6 +15,7 @@ use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Facility;
+use App\Livewire\Facility\Haustechnik;
 use App\Livewire\Medication\Stammdaten;
 use App\Livewire\Medication\Stellplan;
 use App\Livewire\Medication\VerordnungAnlegen;
@@ -77,6 +78,7 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class])->group(
     Route::get('/dienstplan', Dienstplan::class)->name('dienstplan');
     Route::get('/arbeitsrecht', Arbeitsrecht::class)->name('arbeitsrecht');
     Route::get('/kalender', Kalender::class)->name('kalender');
+    Route::get('/haustechnik', Haustechnik::class)->name('haustechnik');
     Route::get('/bewohner/{resident}/assessment/{instrument}', AssessmentDurchfuehren::class)->name('assessment.durchfuehren');
     Route::get('/bewohner/{resident}/assessments', AssessmentVerlauf::class)->name('assessment.verlauf');
     Route::get('/qdvs/{export}/download', function (App\Domains\Qdvs\Models\QdvsExport $export) {
