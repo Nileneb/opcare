@@ -42,7 +42,7 @@ class IsipPatientMapper
                 'd' => 'other',
                 default => 'unknown',
             },
-            'birthDate' => $r->geburtsdatum?->toDateString(),
+            'birthDate' => $r->geburtsdatum->toDateString(),
         ];
     }
 
@@ -58,7 +58,7 @@ class IsipPatientMapper
 
         // WHY(ISiK): name.given ist Pflicht (min=1) — „NN" (nomen nescio) als Platzhalter, falls kein
         // Vorname erfasst ist, statt eine ungültige Ressource zu erzeugen.
-        $given = $parts !== [] ? array_values($parts) : ['NN'];
+        $given = $parts !== [] ? $parts : ['NN'];
 
         return ['use' => 'official', 'family' => $family, 'given' => $given];
     }

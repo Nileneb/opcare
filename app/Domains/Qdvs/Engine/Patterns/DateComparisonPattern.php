@@ -41,8 +41,8 @@ class DateComparisonPattern extends AbstractPattern
                 '<' => $a->lessThan($b),
                 '>' => $a->greaterThan($b),
                 '<=' => $a->lessThanOrEqualTo($b),
-                '>=' => $a->greaterThanOrEqualTo($b),
-                default => false,
+                // WHY: self::RE lässt nur <,>,<=,>= zu → '>=' ist der erschöpfende Restfall.
+                default => $a->greaterThanOrEqualTo($b),
             };
         });
     }

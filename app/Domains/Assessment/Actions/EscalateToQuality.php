@@ -29,7 +29,7 @@ class EscalateToQuality
         return CareEvent::create([
             'resident_id' => $assessment->resident_id,
             'indicator' => $indicator,
-            'datum' => $assessment->durchgefuehrt_am?->toDateString() ?? now()->toDateString(),
+            'datum' => $assessment->durchgefuehrt_am->toDateString(),
             'severity' => EventSeverity::Schwer,
             'details' => [
                 'quelle' => 'assessment',

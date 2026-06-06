@@ -37,7 +37,7 @@ class SyncRiskItem
             $assessment->instrument->name,
             $assessment->score,
             $band?->label() ?? '—',
-            $assessment->durchgefuehrt_am?->format('d.m.Y') ?? '—',
+            $assessment->durchgefuehrt_am->format('d.m.Y'),
         );
         $risk->save();
 

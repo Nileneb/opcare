@@ -26,7 +26,7 @@ trait Versionable
         $new->fill($attributes);
         $new->version = $this->version + 1;
         if (in_array('status', $this->getFillable(), true)) {
-            $new->status = 'aktiv';
+            $new->setAttribute('status', 'aktiv');
         }
         $new->save();
 

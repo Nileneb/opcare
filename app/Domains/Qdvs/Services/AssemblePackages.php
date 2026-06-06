@@ -53,13 +53,13 @@ class AssemblePackages
 
             return new QdvsResidentPackage(
                 pseudonym: 'R-'.$r->id,
-                geburtsjahr: $r->geburtsdatum?->year,
+                geburtsjahr: $r->geburtsdatum->year,
                 geschlecht: $r->geschlecht,
                 pflegegrad: $r->pflegegrad,
-                aufnahme_am: $r->aufnahme_am?->toDateString(),
+                aufnahme_am: $r->aufnahme_am->toDateString(),
                 icd_codes: $r->diagnoses->pluck('icdCode.code')->filter()->values()->all(),
                 indikatoren: $indikatoren,
-                geburtsmonat: $r->geburtsdatum?->month,
+                geburtsmonat: $r->geburtsdatum->month,
                 gewicht_kg: $gewicht?->wert !== null ? (float) $gewicht->wert : null,
                 gewicht_datum: $gewicht?->gemessen_am?->toDateString(),
                 auszug_am: $r->entlassung_am?->toDateString(),

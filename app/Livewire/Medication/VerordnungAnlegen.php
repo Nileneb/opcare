@@ -143,7 +143,7 @@ class VerordnungAnlegen extends Component
             ));
 
             if ($this->bestandMenge && $this->medProductId) {
-                $einheit = MedProduct::find($this->medProductId)?->tradeForm?->einheit ?? 'Stk';
+                $einheit = data_get(MedProduct::find($this->medProductId), 'tradeForm.einheit', 'Stk');
                 $addStock->handle(new StockData(
                     resident_id: $this->resident->id,
                     med_product_id: $this->medProductId,

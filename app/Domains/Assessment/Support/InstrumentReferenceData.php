@@ -68,7 +68,7 @@ class InstrumentReferenceData
         $items = [];
         foreach ($skalen as $label => $stufen) {
             $options = [];
-            foreach (array_values($stufen) as $i => $stufe) {
+            foreach ($stufen as $i => $stufe) {
                 $options[] = ['label' => $stufe, 'punkte' => $i + 1];
             }
             $items[] = ['label' => $label, 'options' => $options];

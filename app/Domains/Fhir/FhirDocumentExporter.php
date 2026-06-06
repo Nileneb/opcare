@@ -60,7 +60,7 @@ class FhirDocumentExporter
 
         // Dokumentierende Einheit (Organization/Practitioner/PractitionerRole) — einmal je Bundle,
         // als Pflicht-author/performer wiederverwendet (KBV-MIO-Anforderung).
-        $documenting = $this->documentingEntityMapper->build((string) ($resident->tenant?->name ?? ''), $base);
+        $documenting = $this->documentingEntityMapper->build((string) $resident->tenant->name, $base);
         $entry = [...$entry, ...$documenting['entries']];
         $authorRef = $documenting['recorderReference'];
         $practitionerRef = $documenting['practitionerReference'];
@@ -153,7 +153,7 @@ class FhirDocumentExporter
             ->whereHas('instrument', fn ($q) => $q->whereNotNull('loinc'))
             ->with('instrument')->latest('durchgefuehrt_am')->first();
         if ($assessment) {
-            $effective = $assessment->durchgefuehrt_am?->toIso8601String() ?? $date;
+            $effective = $assessment->durchgefuehrt_am->toIso8601String();
             // WHY(ÜLB): Assessment_Free.performer akzeptiert nur Practitioner (nicht PractitionerRole)
             $free = $this->assessmentMapper->assessmentFree($assessment, $patientRef, $practitionerRef, $effective);
             $freeRef = $base.'Observation/'.$free['id'];

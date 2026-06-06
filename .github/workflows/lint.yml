@@ -32,3 +32,27 @@ jobs:
 
       - name: Run Pint (style check)
         run: ./vendor/bin/pint --test
+
+  phpstan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+          coverage: none
+
+      - name: Install Dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      # Statische Analyse (Larastan/PHPStan Level 5) — blockierend bei Typfehlern.
+      - name: Run PHPStan (static analysis)
+        run: php -d memory_limit=1G ./vendor/bin/phpstan analyse --no-progress
