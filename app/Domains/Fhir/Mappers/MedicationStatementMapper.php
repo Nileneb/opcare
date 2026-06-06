@@ -27,7 +27,7 @@ class MedicationStatementMapper
         ];
 
         $period = array_filter([
-            'start' => $p->gueltig_von?->toDateString(),
+            'start' => $p->gueltig_von->toDateString(),
             'end' => $p->gueltig_bis?->toDateString(),
         ]);
         if ($period !== []) {

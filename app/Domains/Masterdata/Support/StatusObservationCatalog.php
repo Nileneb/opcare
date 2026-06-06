@@ -12,7 +12,7 @@ class StatusObservationCatalog
     public const SNOMED = 'http://snomed.info/sct';
 
     /**
-     * @return array<string, array{label:string, section:string, kind:string, code:array{0:string,1:string}, options:array<string,string>}>
+     * @return array<string, array{label:string, section:string, kind:string, code:array{0:string,1:string}, options:array<int|string,string>}>
      */
     public static function all(): array
     {

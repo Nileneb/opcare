@@ -16,11 +16,8 @@ class Pflegeplanung extends Component
 
     public function mount(): void
     {
-        // Tenant-Kontext: im Live-Betrieb aus dem eingeloggten Nutzer, sonst Demo-Mandant.
-        $tenant = auth()->user()?->tenant ?? Tenant::query()->first();
-        if ($tenant) {
-            app(CurrentTenant::class)->set($tenant);
-        }
+        // Tenant-Kontext aus dem eingeloggten Nutzer (Komponente liegt hinter der auth-Middleware).
+        app(CurrentTenant::class)->set(auth()->user()->tenant);
     }
 
     #[Layout('layouts.sis')]
@@ -30,8 +27,8 @@ class Pflegeplanung extends Component
             'areas' => SisAreaCatalog::all(),
             'residents' => $this->residents(),
             'nurse' => [
-                'name' => auth()->user()?->name ?? 'Bettina Mertens',
-                'initials' => $this->initials(auth()->user()?->name ?? 'Bettina Mertens'),
+                'name' => auth()->user()->name,
+                'initials' => $this->initials(auth()->user()->name),
                 'schicht' => 'Frühdienst',
             ],
         ]);
@@ -76,7 +73,7 @@ class Pflegeplanung extends Component
             return [
                 'id' => $r->id,
                 'name' => $r->name,
-                'room' => $r->room?->nummer ?? '—',
+                'room' => data_get($r, 'room.nummer', '—'),
                 'pflegegrad' => $r->pflegegrad,
                 'initials' => $this->initials($r->name),
                 'avatarBg' => self::AVATAR_BG[$i % count(self::AVATAR_BG)],

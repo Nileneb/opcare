@@ -32,7 +32,7 @@ class AssessmentObservationMapper
                 'system' => self::SNOMED, 'version' => self::SNOMED_VERSION,
                 'code' => '424836000', 'display' => 'Assessment section (record artifact)',
             ]]]],
-            'code' => ['text' => $a->instrument?->name ?? 'Assessment'],
+            'code' => ['text' => $a->instrument->name],
             'subject' => ['reference' => $patientReference],
             'effectiveDateTime' => $effective,
             'performer' => [['reference' => $performerReference]],

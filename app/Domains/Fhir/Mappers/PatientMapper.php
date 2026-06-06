@@ -30,7 +30,7 @@ class PatientMapper
                 'd' => 'other',
                 default => 'unknown',
             },
-            'birthDate' => $r->geburtsdatum?->toDateString(),
+            'birthDate' => $r->geburtsdatum->toDateString(),
         ];
     }
 
@@ -45,7 +45,7 @@ class PatientMapper
         $family = array_pop($parts) ?? '';
         $name = ['use' => 'official', 'family' => $family];
         if ($parts !== []) {
-            $name['given'] = array_values($parts);
+            $name['given'] = $parts;
         }
 
         return $name;

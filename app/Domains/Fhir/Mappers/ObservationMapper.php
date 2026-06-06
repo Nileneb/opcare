@@ -110,7 +110,7 @@ class ObservationMapper
                 ['coding' => [$this->snomed('1184593002', 'Vital sign document section (record artifact)')]],
             ],
             'subject' => ['reference' => $patientReference],
-            'effectiveDateTime' => $v->gemessen_am?->toIso8601String(),
+            'effectiveDateTime' => $v->gemessen_am->toIso8601String(),
         ];
         if ($performerReference !== null) {
             $obs['performer'] = [['reference' => $performerReference]];
@@ -136,7 +136,7 @@ class ObservationMapper
             'category' => [['coding' => [['system' => 'http://terminology.hl7.org/CodeSystem/observation-category', 'code' => 'vital-signs']]]],
             'code' => ['coding' => [['system' => self::LOINC, 'code' => $loinc, 'display' => $display]], 'text' => $display],
             'subject' => ['reference' => $patientReference],
-            'effectiveDateTime' => $v->gemessen_am?->toIso8601String(),
+            'effectiveDateTime' => $v->gemessen_am->toIso8601String(),
             'valueQuantity' => $this->quantity((float) $v->wert, $v->einheit ?: '', $ucum),
         ];
     }

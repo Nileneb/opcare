@@ -1,0 +1,11 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 5
+    paths:
+        - app
+    tmpDir: build/phpstan
+    # WHY: Nach den ide-helper-@property-Annotationen sind PHPDoc-Typen "sicher" → PHPStan meldet sonst
+    # "immer wahr/falsch" für Code, der zur Laufzeit (DB-Nullability) korrekt defensiv ist.
+    treatPhpDocTypesAsCertain: false

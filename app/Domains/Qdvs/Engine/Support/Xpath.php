@@ -83,6 +83,6 @@ final class Xpath
             return false;
         }
 
-        return $d !== false && $d->format('Y-m-d') === (string) $v;
+        return $d !== null && $d->format('Y-m-d') === (string) $v;
     }
 }
