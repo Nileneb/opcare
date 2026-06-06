@@ -38,7 +38,7 @@ sichtbar machen. Immer gleich. „Abschreiben" ist hier Best Practice.
 | **Qualitätsmanagement** | DIN EN 15224, § 113 SGB XI, MD-QPR | Quality | ✅ QS-Indikatoren + **QM-Norm-Checkliste** (QB1–6 + Querschnittsnormen) |
 | **Personal & Lohn** | Personalfragebogen, ArbZG, SGB IV (DEÜV/SV-Meldung), ELStAM | Personnel, Scheduling | ✅ Stammakte + Dienstplan |
 | **Hauswirtschaft / Küche** | LMHV/HACCP, DIN 10506, LMIV (VO 1169/2011, Allergene), DGE-Qualitätsstandard | (neu) Catering | 🔴 — Allergien existieren schon (Bewohner) |
-| **Haustechnik / FM** | DIN 31051 (Instandhaltung), DGUV V3, TrinkwV (Legionellen), Brandschutz | (neu) Facility | 🔴 — Reparatur-Tickets vom Bewohner |
+| **Haustechnik / FM** | DIN 31051 (Instandhaltung), DGUV V3, TrinkwV (Legionellen), Brandschutz | Facility | ✅ Mängelmeldungen + Wartungsplan (Prüffristen) |
 | **Soziale Betreuung** | § 43b SGB XI, Biografiearbeit | (neu) SocialCare | 🔴 |
 | **Verwaltung / Heimaufsicht** | Landesheim-/WTG, Heimmitwirkungs-VO, Pflegesatz § 85 SGB XI | (neu) Administration | 🔴 |
 | **Geschäftsführung / Controlling** | Wirtschaftlichkeit, Vergütungsvereinbarung, Jahresberichte | Quality/Controlling-Ausbau | 🟡 KPIs da |
@@ -62,7 +62,9 @@ sichtbar machen. Immer gleich. „Abschreiben" ist hier Best Practice.
    Haustechnik/DIN 31051, Heimrecht), wie die ArbZG-Regel-Engine: Anforderung → Nachweis/Status → Erfüllungsgrad,
    Gesetzeslink je Anforderung. **Nebenprodukt erreicht:** die `QmBereich`-Enum **ist** die Abteilungs-Landkarte,
    die Anforderungen benennen die zu führenden Daten/Nachweise.
-2. **Facility-Tickets** — Bewohner/Personal melden Mängel → Haustechnik-Queue (DIN 31051).
+2. ✅ **Facility-Tickets** *(erledigt 2026-06-06)* — Personal meldet Mängel → Haustechnik-Queue
+   (offen → in Arbeit → erledigt) + Wartungsplan mit Prüffristen (DIN 31051). Macht den QM-Punkt
+   `ht_instand` operativ; das Meldung/Ticket-Muster ist für weitere Module wiederverwendbar.
 3. **Catering** — Speiseplan + Allergen-/Kostform-Sicht (LMIV), liest vorhandene Allergien.
 4. **Arbeitszeit-Ist-Erfassung** — Stempeln gegen den Plan (EuGH/BAG), füttert den ArbZG-§3-Schnitt.
 5. **Messaging-Querschnitt** — interne Nachrichten/Video.

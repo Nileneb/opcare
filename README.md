@@ -6,7 +6,7 @@ Qualitätssicherung (QDVS/DAS-Pflege)** und **FHIR / ÜLB-MIO** (Pflegeüberleit
 des eingestellten Java-Projekts **[Offene-Pflege.de (OPDE)](#herkunft)** — dessen Domänenwissen dient als
 Vorlage, der Code ist von Grund auf neu.
 
-> **Status:** Funktionsfähig und aktiv in Entwicklung. **309 Tests grün**, CI durchgehend grün
+> **Status:** Funktionsfähig und aktiv in Entwicklung. **316 Tests grün**, CI durchgehend grün
 > (Tests · Linter · Security-Audit · FHIR-Validierung). Open Source (AGPL-3.0), **kein Rechtsgate**,
 > solange keine Echt-Patientendaten verarbeitet werden.
 >
@@ -36,6 +36,9 @@ Vorlage, der Code ist von Grund auf neu.
   FEM …), QS-Indikatoren, KPI-Dashboard sowie eine **QM-Norm-Checkliste**: norm-verankerte Anforderungen
   (QPR-Qualitätsbereiche QB1–6 + Hygiene/IfSG, Datenschutz/DSGVO, Arbeitsschutz, Hauswirtschaft/LMIV,
   Haustechnik/DIN 31051, Heimrecht) mit Erfüllungsgrad, Zuständigkeit und Gesetzeslink je Anforderung.
+- **Haustechnik & Instandhaltung (DIN 31051)** — jede:r Mitarbeitende **meldet Mängel**; die Haustechnik
+  arbeitet die Queue ab (offen → in Arbeit → erledigt) und führt den **Wartungsplan** mit Prüffristen
+  (überfällige Prüfungen rot; DGUV V3 / MPBetreibV / BetrSichV / TrinkwV).
 - **QDVS / DAS-Pflege** — datengetriebene **Plausibilitäts-Regel-Engine** (440 DAS-Regeln, Pattern-Matcher
   statt Voll-XPath; ehrlicher Coverage-Report; aktuell 57 Regeln scharf).
 - **FHIR-Export** — FHIR-R4-Pflegeüberleitungs-**Document-Bundle**, validiert im CI mit dem **amtlichen
@@ -53,7 +56,7 @@ Vorlage, der Code ist von Grund auf neu.
 | Backend | **Laravel 13**, **PHP 8.3+** |
 | Frontend | Blade + **Livewire 4** + Alpine.js |
 | Datenbank | **SQLite** (Dev/CI) · **PostgreSQL** (Prod) |
-| Tests | **Pest 4** (309 Tests) |
+| Tests | **Pest 4** (316 Tests) |
 | Lint/Style | **Laravel Pint** |
 | DTOs / RBAC / Audit | `spatie/laravel-data` · `spatie/laravel-permission` · `spatie/laravel-activitylog` |
 | Deployment | **Docker Compose** (self-contained: eine `.env`, `docker compose up --build`) |
@@ -76,6 +79,7 @@ Domänen-orientierte Struktur unter `app/Domains/`. Layering als Einbahnstraße:
 | **Fhir** | FHIR-R4-Mapper + Document-Bundle-Export (ÜLB-MIO-Richtung) |
 | **Scheduling** | Dienstplan, Schichten, Kalender, **ArbZG-Compliance-Engine** (editierbares Regelwerk + § 14-Begründungen) |
 | **Personnel** | Personalakte (Personalfragebogen, verschlüsselt) 1:1 am Benutzer, gekoppelt an die Rollenverwaltung |
+| **Facility** | Haustechnik/Instandhaltung (DIN 31051): Mängelmeldungen + Wartungsplan mit Prüffristen |
 | **Speech** | Audio-Handling, Transkription, LLM→SIS®-Strukturierung (Human-in-the-Loop) |
 
 ## FHIR / ÜLB-MIO-Konformität
@@ -127,7 +131,7 @@ php artisan serve
 ## Entwicklung
 
 ```bash
-php artisan test                 # bzw. vendor/bin/pest   (309 Tests)
+php artisan test                 # bzw. vendor/bin/pest   (316 Tests)
 vendor/bin/pint                  # Code-Style
 php artisan fhir:export --output=bundle.json   # FHIR-Document-Bundle erzeugen
 ```
