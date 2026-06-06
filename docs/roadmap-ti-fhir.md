@@ -11,7 +11,7 @@ unkritisch; Pflichten (DSGVO, ggf. Zulassung) treffen erst den späteren *Betrei
 | Track | Inhalt | Status | Rechtsgate |
 |---|---|---|---|
 | **A — Daten-Konformität** | FHIR R4, deutsche Basisprofile (`de.basisprofil.r4`), **ÜLB-MIO** (`kbv.mio.ueberleitungsbogen` 1.0.0 — veröffentlicht). *ISiK ist krankenhausspezifisch → für Pflege sekundär.* | **Kern erreicht** — Composition + Bundle **voll ÜLB-konform** (7 Sektionen, im CI blockierend erzwungen); optionale Sektionen als Backlog (s. `docs/specs/2026-06-05-ulb-mio-gap.md`) | nein |
-| **B — Security-Hygiene** | Tenant-Isolation, RBAC, Audit-Log, IDOR-Härtung, Dependency-Audit (CVE-Gate ✅), SAST | **viel da**, ausbauen | nein |
+| **B — Security-Hygiene** | Tenant-Isolation, RBAC, Audit-Log, IDOR-Härtung, **MFA (TOTP, Pflicht)**, **At-Rest-Feldverschlüsselung**, **Security-Header**, CVE-Gate + **SAST (Semgrep)** | **weit ausgebaut** (s. `docs/security/sicherheitskonzept.md`) | nein |
 | **C — TI-Anbindung + Zulassung** | Online-Auth (GesundheitsID/TI-IDP), KIM, ePA-Schreibzugriff, eVerordnung, Konnektor-Light, gematik-Zulassung, BSI-TR-Konformität | **aufgeschoben** | **ja** |
 | **D — Domäne/Fachlichkeit** | Pflege-Fachfunktionen nach **Nationalen Expertenstandards** (Dekubitus/Sturz/Schmerz/Ernährung/Kontinenz) | **blockiert** auf Quelle (Expertenstandards nicht frei verfügbar) | nein |
 
@@ -40,8 +40,12 @@ Architektur-Vorsorge: Auth-Schicht abstrahiert halten, damit TI-IDP später ando
   Optionaler Sektions-Backlog: Status-Beobachtungen, Medizinprodukte (Basis-Device), Angehörige.
 - QDVS-Engine (DAS-Plausibilität, 57 Regeln aktiv), ICD-10-GM-Katalog, Maßnahmen-Katalog,
   Assessments (Braden/Sturz/BESD/Barthel), Vorkommnis-Erfassung, strukturierte Dekubitus-/Sturz-Doku.
-- Security-Basis: row-level Tenancy + `TenantScope`, spatie-RBAC (Teams je Mandant),
-  Audit-Log (`activitylog`), IDOR-Härtung (`tenantExists()`), Policy-Guards.
+- **Security (Track B):** row-level Tenancy + globaler `TenantScope` (alle Modelle via `BaseModel`),
+  spatie-RBAC (Teams je Mandant), Audit-Log (`activitylog`), IDOR-Härtung (`tenantExists()` +
+  tenant-scoped Model-Binding, Cross-Tenant-Regressionstests auf FHIR-/QDVS-Export), **MFA (TOTP, Pflicht
+  für alle)**, **At-Rest-Feldverschlüsselung** sensibler Gesundheits-Freitextdaten, **Security-Header**
+  (CSP/HSTS/…), CVE-Gate (`composer audit`) + **SAST-Gate (Semgrep)** — beide CI-blockierend.
+  Konzept: `docs/security/sicherheitskonzept.md`.
 
 ## Priorisierter Plan (jetzt → später)
 
