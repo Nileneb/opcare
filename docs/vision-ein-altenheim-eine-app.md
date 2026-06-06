@@ -54,7 +54,7 @@ sichtbar machen. Immer gleich. „Abschreiben" ist hier Best Practice.
 | **Personal & Lohn** | Personalfragebogen, ArbZG, SGB IV (DEÜV/SV-Meldung), ELStAM | Personnel, Scheduling | ✅ Stammakte + Dienstplan |
 | **Hauswirtschaft / Küche** | LMHV/HACCP, DIN 10506, LMIV (VO 1169/2011, Allergene), DGE-Qualitätsstandard | Catering | ✅ Diät-/Allergen-Sicht + Speiseplan mit Allergenwarnung |
 | **Haustechnik / FM** | DIN 31051 (Instandhaltung), DGUV V3, TrinkwV (Legionellen), Brandschutz | Facility | ✅ Mängelmeldungen + Wartungsplan (Prüffristen) |
-| **Soziale Betreuung** | § 43b SGB XI, Biografiearbeit | (neu) SocialCare | 🔴 |
+| **Soziale Betreuung** | § 43b SGB XI, Biografiearbeit | SocialCare | ✅ Angebote + Teilnahme-Nachweis je Bewohner |
 | **Verwaltung / Heimaufsicht** | Landesheim-/WTG, Heimmitwirkungs-VO, Pflegesatz § 85 SGB XI | (neu) Administration | 🔴 |
 | **Geschäftsführung / Controlling** | Wirtschaftlichkeit, Vergütungsvereinbarung, Jahresberichte | Quality/Controlling-Ausbau | 🟡 KPIs da |
 
