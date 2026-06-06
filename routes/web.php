@@ -6,6 +6,7 @@ use App\Http\Controllers\SpeechController;
 use App\Http\Middleware\RequireTwoFactorEnrollment;
 use App\Livewire\Admin\Tenants;
 use App\Livewire\Admin\Users;
+use App\Livewire\Personnel\Personalakte;
 use App\Livewire\Assessment\AssessmentDurchfuehren;
 use App\Livewire\Assessment\AssessmentVerlauf;
 use App\Livewire\Auth\ChallengeTwoFactor;
@@ -58,6 +59,7 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class])->group(
     Route::get('/profil', Profile::class)->name('profile');
     Route::get('/admin/einrichtungen', Tenants::class)->name('admin.tenants');
     Route::get('/admin/benutzer', Users::class)->name('admin.users');
+    Route::get('/admin/mitarbeitende/{user}', Personalakte::class)->name('personnel.akte');
     Route::get('/bewohner/{resident}/medikation', Stellplan::class)->name('medikation.stellplan');
     Route::get('/medikation/stamm', Stammdaten::class)->name('medikation.stammdaten');
     Route::get('/bewohner/{resident}/verordnung/neu', VerordnungAnlegen::class)->name('medikation.verordnung-anlegen');

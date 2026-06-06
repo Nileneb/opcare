@@ -167,3 +167,7 @@ table.plan th { font-size: 0.78em; color: var(--color-fg-muted); font-weight: va
 .plan-begruenden textarea { width: 100%; }
 .gesetz-zitat { margin: 0 0 16px; padding: 10px 14px; border-left: 3px solid var(--color-border-strong);
     background: var(--color-bg); color: var(--color-fg-muted); font-size: 0.9em; font-style: italic; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+
+/* ===== Personalakte: responsives Feld-Grid ===== */
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 4px 16px; }
+@media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }

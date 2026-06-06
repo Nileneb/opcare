@@ -58,7 +58,7 @@ class Users extends Component
     public function render()
     {
         return view('livewire.admin.users', [
-            'users' => User::where('tenant_id', app(CurrentTenant::class)->id())->with('roles')->orderBy('name')->get(),
+            'users' => User::where('tenant_id', app(CurrentTenant::class)->id())->with('roles', 'employeeProfile')->orderBy('name')->get(),
             'roles' => Role::orderBy('name')->pluck('name'),
         ]);
     }
