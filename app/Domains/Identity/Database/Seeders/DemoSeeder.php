@@ -51,8 +51,10 @@ use App\Domains\Medication\Models\VitalReading;
 use App\Domains\Personnel\Enums\Beschaeftigungsart;
 use App\Domains\Personnel\Enums\Krankenversicherung;
 use App\Domains\Personnel\Enums\Masernschutz;
+use App\Domains\Personnel\Enums\NachweisTyp;
 use App\Domains\Personnel\Enums\Qualifikation;
 use App\Domains\Personnel\Enums\Steuerklasse;
+use App\Domains\Personnel\Models\Schutznachweis;
 use App\Domains\Quality\Enums\EventSeverity;
 use App\Domains\Quality\Enums\QmStatus;
 use App\Domains\Quality\Enums\QualityIndicator;
@@ -412,6 +414,14 @@ class DemoSeeder extends Seeder
         app(Wareneingang::class)->handle($filter, 5, 6.50, now()->subDays(2)->toDateString(), 'Haustechnik-Service'); // unter Mindestbestand
         app(Warenverbrauch::class)->handle($mehl->fresh(), 12, now()->subDay()->toDateString(), 'Backtag Wohnbereich 1');
         app(Warenverbrauch::class)->handle($handschuhe->fresh(), 35, now()->toDateString(), 'Tagesbedarf Pflege');
+
+        // Arbeitsschutz-Nachweise: Demo je Mitarbeiter:in (eine gültige Unterweisung, eine überfällige Vorsorge).
+        foreach ([$sandra, $tom] as $ma) {
+            Schutznachweis::create(['tenant_id' => $tenant->id, 'user_id' => $ma->id,
+                'typ' => NachweisTyp::Unterweisung, 'datum' => now()->subMonths(2)->toDateString()]);
+            Schutznachweis::create(['tenant_id' => $tenant->id, 'user_id' => $ma->id,
+                'typ' => NachweisTyp::Vorsorge, 'datum' => now()->subMonths(28)->toDateString()]);
+        }
 
         // Betreuungsschlüssel (§ 113c) + ergonomische Schichtregeln: Defaults je Einrichtung anlegen.
         PersonalbemessungDefaults::ensureConfig($tenant->id);

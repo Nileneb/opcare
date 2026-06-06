@@ -33,6 +33,7 @@ const pages = [
     ['haustechnik', '/haustechnik', true],
     ['kueche', '/kueche', true],
     ['buchhaltung', '/buchhaltung', true],
+    ['arbeitsschutz-nachweise', '/arbeitsschutz/nachweise', true],
     ['mitarbeitende', '/admin/benutzer', true],
     ['qdvs', '/qdvs', true],
     ['einrichtung', '/einrichtung', true],

@@ -25,6 +25,7 @@ use App\Livewire\Medication\VerordnungAnlegen;
 use App\Livewire\Medication\Verordnungen;
 use App\Livewire\Medication\Vitalwerte;
 use App\Livewire\Overview;
+use App\Livewire\Personnel\Arbeitsschutz;
 use App\Livewire\Personnel\Personalakte;
 use App\Livewire\Pflegeplanung;
 use App\Livewire\Profile;
@@ -69,6 +70,7 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class])->group(
     Route::get('/admin/einrichtungen', Tenants::class)->name('admin.tenants');
     Route::get('/admin/benutzer', Users::class)->name('admin.users');
     Route::get('/admin/mitarbeitende/{user}', Personalakte::class)->name('personnel.akte');
+    Route::get('/arbeitsschutz/nachweise', Arbeitsschutz::class)->name('arbeitsschutz.nachweise');
     Route::get('/bewohner/{resident}/medikation', Stellplan::class)->name('medikation.stellplan');
     Route::get('/medikation/stamm', Stammdaten::class)->name('medikation.stammdaten');
     Route::get('/bewohner/{resident}/verordnung/neu', VerordnungAnlegen::class)->name('medikation.verordnung-anlegen');
