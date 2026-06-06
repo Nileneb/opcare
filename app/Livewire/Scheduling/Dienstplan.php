@@ -10,6 +10,7 @@ use App\Domains\Scheduling\Compliance\ComplianceReporter;
 use App\Domains\Scheduling\Compliance\WorkingHoursAnalyzer;
 use App\Domains\Scheduling\Data\ShiftAssignmentData;
 use App\Domains\Scheduling\Models\ComplianceJustification;
+use App\Domains\Scheduling\Models\Dienstwunsch;
 use App\Domains\Scheduling\Models\Shift;
 use App\Domains\Scheduling\Models\ShiftAssignment;
 use Carbon\CarbonImmutable;
@@ -159,12 +160,19 @@ class Dienstplan extends Component
             }
         }
 
+        // Wunschdienstplan: die Wünsche der Mitarbeitenden bei der Planung sichtbar machen (Vorschlag).
+        $wuensche = [];
+        foreach (Dienstwunsch::with('user')->whereBetween('datum', [$von, $bis])->get() as $dw) {
+            $wuensche[$dw->user_id][$dw->datum->toDateString()] = $dw;
+        }
+
         return view('livewire.scheduling.dienstplan', [
             'days' => $days,
             'weekLabel' => $start->isoFormat('DD.MM.').'–'.$start->addDays(6)->isoFormat('DD.MM.YYYY'),
             'users' => User::where('tenant_id', $tenantId)->with('employeeProfile')->orderBy('name')->get(),
             'shifts' => Shift::where('aktiv', true)->orderBy('beginn')->get(),
             'grid' => $grid,
+            'wuensche' => $wuensche,
             'geplant' => $geplant,
             'findingsByUser' => $findingsByUser,
             'marks' => $marks,

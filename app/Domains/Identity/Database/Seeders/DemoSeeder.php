@@ -53,7 +53,9 @@ use App\Domains\Quality\Models\CareEvent;
 use App\Domains\Quality\Support\QmKatalogDefaults;
 use App\Domains\Scheduling\Compliance\ArbeitszeitgesetzDefaults;
 use App\Domains\Scheduling\Database\Seeders\ShiftSeeder;
+use App\Domains\Scheduling\Enums\WunschTyp;
 use App\Domains\Scheduling\Models\ComplianceJustification;
+use App\Domains\Scheduling\Models\Dienstwunsch;
 use App\Domains\Scheduling\Models\Shift;
 use App\Domains\Scheduling\Models\ShiftAssignment;
 use App\Domains\Scheduling\Models\Zeitbuchung;
@@ -322,6 +324,11 @@ class DemoSeeder extends Seeder
             'grund' => 'Nachfolgekraft kurzfristig erkrankt — Bewohner durften nicht unbeaufsichtigt bleiben (§ 14 ArbZG).',
             'begruendet_von' => $admin->id,
         ]);
+
+        // Wunschdienstplan: Dienstwünsche, die die PDL im Dienstplan-Grid sieht.
+        Dienstwunsch::create(['user_id' => $sandra->id, 'datum' => $mon->copy()->addDays(4)->toDateString(), 'typ' => WunschTyp::Frei, 'notiz' => 'Familienfeier']);
+        Dienstwunsch::create(['user_id' => $tom->id, 'datum' => $mon->copy()->addDays(2)->toDateString(), 'typ' => WunschTyp::Arbeiten, 'notiz' => 'gern Frühdienst']);
+        Dienstwunsch::create(['user_id' => $tom->id, 'datum' => $mon->copy()->addDays(5)->toDateString(), 'typ' => WunschTyp::NichtVerfuegbar]);
 
         // QM-Norm-Checkliste: Startkatalog + ein paar gepflegte Status für die Demo.
         $qm = QmKatalogDefaults::ensureFor($tenant->id);

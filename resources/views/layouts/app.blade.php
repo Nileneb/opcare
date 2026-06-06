@@ -50,6 +50,7 @@
         <nav class="app-nav app-nav-kalender">
             <a href="{{ route('kalender') }}" @class(['is-active' => request()->routeIs('kalender')])>Kalender</a>
             <a href="{{ route('zeiterfassung') }}" @class(['is-active' => request()->routeIs('zeiterfassung')])>Zeiterfassung</a>
+            <a href="{{ route('wunschdienstplan') }}" @class(['is-active' => request()->routeIs('wunschdienstplan')])>Wunschdienst</a>
             <a href="{{ route('haustechnik') }}" @class(['is-active' => request()->routeIs('haustechnik')])>Haustechnik</a>
             @if (auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'pflegefachkraft', 'kueche']))
                 <a href="{{ route('kueche') }}" @class(['is-active' => request()->routeIs('kueche')])>Küche</a>

@@ -47,6 +47,10 @@
                         </td>
                         @foreach ($days as $day)
                             <td @class(['plan-cell', 'plan-sun' => $day['sonntag'], 'plan-warn' => isset($marks[$user->id][$day['datum']])])>
+                                @php $wunsch = $wuensche[$user->id][$day['datum']] ?? null; @endphp
+                                @if ($wunsch)
+                                    <span class="badge {{ $wunsch->typ->badge() }}" title="Wunsch: {{ $wunsch->typ->label() }}{{ $wunsch->notiz ? ' — '.$wunsch->notiz : '' }}" style="display:block;margin-bottom:2px;font-size:.68em">{{ $wunsch->typ->kurz() }}</span>
+                                @endif
                                 @foreach ($grid[$user->id][$day['datum']] ?? [] as $e)
                                     <span class="plan-shift" title="{{ $e->shift?->beginn }}–{{ $e->shift?->ende }}">
                                         {{ $e->shift?->name }}
