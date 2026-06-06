@@ -12,7 +12,7 @@ unkritisch; Pflichten (DSGVO, ggf. Zulassung) treffen erst den späteren *Betrei
 |---|---|---|---|
 | **A — Daten-Konformität** | FHIR R4, deutsche Basisprofile (`de.basisprofil.r4`), **ÜLB-MIO** (`kbv.mio.ueberleitungsbogen` 1.0.0 — veröffentlicht). *ISiK ist krankenhausspezifisch → für Pflege sekundär.* | **Kern erreicht** — Composition + Bundle **voll ÜLB-konform** (7 Sektionen, im CI blockierend erzwungen); optionale Sektionen als Backlog (s. `docs/specs/2026-06-05-ulb-mio-gap.md`) | nein |
 | **B — Security-Hygiene** | Tenant-Isolation, RBAC, Audit-Log, IDOR-Härtung, **MFA (TOTP, Pflicht)**, **At-Rest-Feldverschlüsselung**, **Security-Header**, CVE-Gate + **SAST (Semgrep)** | **weit ausgebaut** (s. `docs/security/sicherheitskonzept.md`) | nein |
-| **C — TI-Anbindung + Zulassung** | Online-Auth (GesundheitsID/TI-IDP), KIM, ePA-Schreibzugriff, eVerordnung, Konnektor-Light, gematik-Zulassung, BSI-TR-Konformität | **aufgeschoben** | **ja** |
+| **C — TI 2.0-Anbindung + Zulassung** | **TI 2.0 / Zero-Trust (ZETA)** statt Konnektor: ZETA-Client-Anbindung (RFC 9728/8693, SMC-B), VSDM 2.0, POPP, ePA-Schreibzugriff, eVerordnung, gematik-Zulassung, BSI-TR. Konformitäts-Gate: **gematik Testhub 2.0** (s. `docs/ti2.0/ti2.0-konformitaets-gate.md`) | **Vorbereitung läuft** (Bauen/Testen ohne Rechtsgate; Zulassung/Echtbetrieb = ja) | Betrieb: **ja** |
 | **D — Domäne/Fachlichkeit** | Pflege-Fachfunktionen nach **Nationalen Expertenstandards** (Dekubitus/Sturz/Schmerz/Ernährung/Kontinenz) | **blockiert** auf Quelle (Expertenstandards nicht frei verfügbar) | nein |
 
 **Wichtig:** „BSI-TR-Konformität" und „Konnektor-Light-Migration" gehören zu **Track C**
