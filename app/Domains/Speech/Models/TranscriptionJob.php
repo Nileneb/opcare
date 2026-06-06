@@ -16,7 +16,9 @@ class TranscriptionJob extends BaseModel
 
     protected $casts = [
         'status' => TranscriptionStatus::class,
-        'sis_vorschlag' => 'array',
+        // WHY(Track B, At-Rest): gesprochene Gesundheitsdaten — Rohtranskript + LLM-SIS-Vorschlag verschlüsselt.
+        'rohtranskript' => 'encrypted',
+        'sis_vorschlag' => 'encrypted:array',
         'freigegeben_at' => 'datetime',
     ];
 

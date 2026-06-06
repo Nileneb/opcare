@@ -26,6 +26,8 @@ class Assessment extends BaseModel
         'durchgefuehrt_am' => 'date',
         'faellig_am' => 'date',
         'version' => 'integer',
+        // WHY(Track B, At-Rest): Assessment-Notiz = sensibler Gesundheits-Freitext → verschlüsselt.
+        'notiz' => 'encrypted',
     ];
 
     protected $attributes = ['version' => 1, 'status' => 'aktiv'];

@@ -10,7 +10,8 @@ class RiskItem extends BaseModel
 {
     protected $fillable = ['tenant_id', 'sis_assessment_id', 'risiko', 'eingeschaetzt', 'begruendung'];
 
-    protected $casts = ['risiko' => RiskType::class, 'eingeschaetzt' => 'boolean'];
+    // WHY(Track B, At-Rest): Risiko-Begründung ist sensibler Gesundheits-Freitext → verschlüsselt.
+    protected $casts = ['risiko' => RiskType::class, 'eingeschaetzt' => 'boolean', 'begruendung' => 'encrypted'];
 
     public function sisAssessment(): BelongsTo
     {
