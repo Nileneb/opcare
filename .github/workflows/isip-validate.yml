@@ -1,0 +1,84 @@
+name: isip-validate
+
+# Track C-Vorbereitung (kostenlos, ohne Anmeldung): validiert opcare-erzeugte gematik-ISiP-Ressourcen
+# mit dem OFFIZIELLEN gematik Referenzvalidator (Modul isip1). De-riskt die spätere bezahlte
+# FHIR-/Pflege-Interop-Konformitätsprüfung. Blockierend.
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [master, 'feat/**', 'fix/**', 'chore/**']
+  pull_request:
+    branches: [master]
+
+env:
+  REFVALIDATOR_VERSION: '2.16.2'
+  ISIP_PLUGIN_VERSION: 'isip1-1.1.0'
+
+jobs:
+  isip:
+    runs-on: ubuntu-latest
+    env:
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ${{ github.workspace }}/database/ci.sqlite
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+      BROADCAST_CONNECTION: log
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_sqlite, sqlite3, mbstring, intl, bcmath, gd
+          tools: composer:v2
+          coverage: none
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install Dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress --optimize-autoloader
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          touch "$DB_DATABASE"
+
+      - name: Migrate + seed (SQLite)
+        run: php artisan migrate --force --seed
+
+      - name: Export ISiP-Ressource
+        run: php artisan isip:export --output=isip-patient.json
+
+      - name: Cache gematik Referenzvalidator + Plugin
+        uses: actions/cache@v4
+        with:
+          path: refval
+          key: refvalidator-${{ env.REFVALIDATOR_VERSION }}-${{ env.ISIP_PLUGIN_VERSION }}
+
+      - name: Referenzvalidator + ISiP-Plugin laden (falls nicht gecacht)
+        run: |
+          mkdir -p refval/plugins
+          if [ ! -f "refval/referencevalidator-cli.jar" ]; then
+            curl -fsSL -o refval/referencevalidator-cli.jar \
+              "https://github.com/gematik/app-referencevalidator/releases/download/${REFVALIDATOR_VERSION}/referencevalidator-cli-${REFVALIDATOR_VERSION}.jar"
+          fi
+          if [ ! -f "refval/plugins/isip1.zip" ]; then
+            curl -fsSL -o refval/plugins/isip1.zip \
+              "https://github.com/gematik/app-referencevalidator-plugins/releases/download/${ISIP_PLUGIN_VERSION}/${ISIP_PLUGIN_VERSION}.zip"
+          fi
+
+      - name: ISiP-Konformität gegen den gematik Referenzvalidator (fails on errors)
+        env:
+          REFVALIDATOR_JAR: ${{ github.workspace }}/refval/referencevalidator-cli.jar
+        run: bash scripts/isip/validate.sh isip1 isip-patient.json
