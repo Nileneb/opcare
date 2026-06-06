@@ -1,0 +1,58 @@
+# Dev-AI-Dienste (Ollama + whisperX-mcp) für den GPU-Dev-Rechner.
+#
+# NICHT Teil des prod `docker compose up` (siehe ../../docker-compose.yml) — auf dem GPU-losen
+# Prod-Server läuft Ollama NIE als Docker-Service (CLAUDE.md-Invariante). Start/Stop ausschließlich
+# über ../../scripts/ai-services.sh, das ZUERST die Erreichbarkeit der lokal laufenden Dienste prüft
+# und nur baut, was wirklich fehlt.
+#
+# Diese Basis ist CPU-sicher. GPU kommt per Override docker-compose.ai.gpu.yml (CDI) — das Skript
+# legt es automatisch drauf, wenn nvidia-container-toolkit erkannt wird.
+name: opcare-ai
+
+services:
+  ollama:
+    build:
+      context: ./ollama
+    image: opcare/ollama:latest
+    # Modelle kommen zur Laufzeit über den ModelRouter, nicht aus OLLAMA_MODEL-env (CLAUDE.md).
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  whisperx-mcp:
+    # Baut aus dem Schwester-Repo (Vorlage). Pfad überschreibbar via WHISPERX_CONTEXT.
+    build:
+      context: ${WHISPERX_CONTEXT:-../../../whisperx-mcp}
+    image: whisperx-mcp:latest
+    environment:
+      HF_TOKEN: ${HF_TOKEN:-}
+      API_TOKEN: ${WHISPER_TOKEN:-}
+      MODEL: ${WHISPER_MODEL:-large-v3-turbo}
+      # CPU-Default; das GPU-Override setzt DEVICE=cuda/float16.
+      DEVICE: ${WHISPERX_DEVICE:-cpu}
+      COMPUTE_TYPE: ${WHISPERX_COMPUTE:-int8}
+      LANGUAGE: ${WHISPER_LANGUAGE:-de}
+    ports:
+      - "${WHISPER_PORT:-8000}:8000"
+    volumes:
+      - whisperx-cache:/root/.cache
+    healthcheck:
+      # ready=true sobald der Dienst lauscht (Modell ggf. idle-entladen) — kein model_loaded-Gate.
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if __import__('json').load(urllib.request.urlopen('http://localhost:8000/health')).get('ready') else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  ollama-models:
+  whisperx-cache:

@@ -1,0 +1,30 @@
+# GPU-Override (CDI) für die Dev-AI-Dienste. Wird von ../../scripts/ai-services.sh automatisch
+# zusätzlich geladen, WENN nvidia-container-toolkit + CDI-Spec vorhanden sind. Fehlt das Toolkit,
+# bleibt es bei der CPU-Basis (docker-compose.ai.yml) — kein harter Fehler.
+#
+# CDI (Docker ≥ 25 nativ) statt runtime:nvidia → kein Daemon-Restart, stört parallele Container nicht.
+name: opcare-ai
+
+services:
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: cdi
+              device_ids:
+                - nvidia.com/gpu=all
+              capabilities: [gpu]
+
+  whisperx-mcp:
+    environment:
+      DEVICE: cuda
+      COMPUTE_TYPE: float16
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: cdi
+              device_ids:
+                - nvidia.com/gpu=all
+              capabilities: [gpu]

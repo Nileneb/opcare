@@ -31,12 +31,11 @@ das gegen einen toten Backend-Endpoint zeigt.
 | Dienst | Dev-Port | Prod-Upstream | Quelle |
 |---|---|---|---|
 | **Ollama** | `localhost:11434` | `192.168.178.11:11434` (LAN-GPU-Host) | CLAUDE.md, `config/speech.php` `OLLAMA_URL` |
-| **whisperX-mcp** | `localhost:8099` | eigener whisperx-mcp-Host (Bearer-Token) | User-Vorgabe |
+| **whisperX-mcp** | `localhost:8000` | eigener whisperx-mcp-Host (Bearer-Token) | whisperx-mcp-Repo (`/health`, `/mcp/`) |
 
-> ⚠️ **Port-Kollision beachten:** Der Web-Container im `docker-compose.yml` nutzt `APP_PORT:-8099`.
-> whisperX-Dev-Port 8099 kollidiert damit. Bei Umsetzung **einen von beiden umlegen** (z. B. App auf 8080-Bereich
-> oder whisperX-Dev auf 8099 nur wenn die App woanders lauscht). Außerdem: `config/speech.php` `WHISPER_URL`
-> hat heute Default `http://localhost:8000` — auf den vereinbarten Standard-Port angleichen.
+> ✅ **Korrektur (2026-06-06):** whisperX-mcp lauscht real auf **`:8000`** (nicht 8099) — `config/speech.php`
+> `WHISPER_URL` zeigt bereits korrekt dorthin, **keine** Kollision mit dem App-Port (`APP_PORT:-8099`).
+> Health-Endpoint: `GET /health` (auth-frei, `{"ready":true,"model_loaded":…}`), MCP: `POST /mcp/` (Bearer).
 
 ### 1.3 Dockerfile-Muster (Healthcheck-im-Build)
 
@@ -78,6 +77,23 @@ das eigentliche Modell läuft auf dem GPU-Host. `host.docker.internal` per
   Bei Umsetzung: Modellwahl über eine `config/model_routes.yaml`-Entsprechung (Task→Modell) statt fixer env —
   als eigener kleiner Cleanup im Speech-Modul. Bis dahin als Inbetriebnahme-Schalter festhalten.
 - Beide Dienste sind **extern-gegatet** (Upstream muss laufen) → Eintrag in [INBETRIEBNAHME.md](INBETRIEBNAHME.md) §5/§1.
+
+### 1.5 Dev-Praxis (bigone) — ✅ umgesetzt 2026-06-06
+
+Auf dem GPU-Dev-Rechner ist `localhost` unproblematisch und **beide Dienste laufen hier** (Ollama + whisperX-mcp).
+Statt des prod-orientierten Build-Pre-Flight (§1.3, der bei totem Upstream abbricht) gilt hier die vom User
+vorgegebene **Erreichbarkeit-zuerst-Orchestrierung**:
+
+- `docker/ai-services/` — `docker-compose.ai.yml` (CPU-Basis) + `docker-compose.ai.gpu.yml` (CDI-GPU-Override)
+  für Ollama (`ollama/ollama`-Passthrough-Dockerfile) und whisperX-mcp (Build aus dem Schwester-Repo, Pfad via
+  `WHISPERX_CONTEXT`). Nicht Teil des prod `docker compose up`.
+- `scripts/ai-services.sh` — `check` prüft `localhost:11434/api/version` + `localhost:8000/health` und gibt bei
+  Nichterreichbarkeit **erst eine Diagnose** (hört der Port? läuft der Prozess?) statt zu bauen. `up` baut **nur die
+  nicht erreichbaren** Dienste — ein laufender Host-Dienst wird nie durch einen kollidierenden Container überbaut.
+- **GPU/CPU-Zweig:** `up` baut mit GPU, wenn `nvidia-ctk` **und** eine CDI-Spec (`/etc/cdi/nvidia.yaml` oder
+  `/var/run/cdi/nvidia.yaml`) vorhanden sind; sonst automatisch CPU-Build (whisperX `DEVICE=cpu/int8`).
+- **Prod bleibt unberührt:** kein AI-Container auf dem GPU-losen Server; die App zeigt per `OLLAMA_URL`/`WHISPER_URL`
+  auf externe Endpoints. Siehe [`docker/ai-services/README.md`](../docker/ai-services/README.md).
 
 ---
 
