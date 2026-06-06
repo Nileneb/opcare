@@ -137,7 +137,7 @@ Pflegefachkräfte: regelmäßige Fortbildung als Qualitätskriterium. **Datenmod
 (geplant/absolviert je Person, Pflicht mit Frist) an die vorhandenen `Kompetenz`/`MitarbeiterKompetenz` andocken
 (Nachweis-mit-Frist) + Fortbildungswünsche. Ideen-Backlog #8/Doku.
 
-## 8. Bundesland-Overrides (föderales Heimrecht)
+## 8. Bundesland-Overrides (föderales Heimrecht) — ✅ umgesetzt 2026-06-06
 
 **Rechtsgrundlage:** Seit der Föderalismusreform 2006 ist das Heimrecht **Landesrecht** (WTG NRW, BbgPBWoG,
 Bremisches WBG u. a.) — **Nachtdienst-Schlüssel, Fachkraftquote, Heimbeirat, Meldepflichten** variieren je Land.
@@ -145,14 +145,14 @@ Bremisches WBG u. a.) — **Nachtdienst-Schlüssel, Fachkraftquote, Heimbeirat, 
 eine **Bundesland-/Träger-Override-Ebene** ergänzen (Norm-als-Daten: Default → Landes-Override). Offen aus
 `OFFENE-PUNKTE.md` §B.
 
-## 9. Energielevel-Ampel (Beschäftigtendaten)
+## 9. Energielevel-Ampel (Beschäftigtendaten) — ✅ umgesetzt 2026-06-06
 
 **Rechtsgrundlage:** **§ 87 Abs. 1 BetrVG** (Mitbestimmung des Betriebsrats bei techn. Überwachungseinrichtungen)
 + **§ 26 BDSG** (Beschäftigtendatenschutz, Freiwilligkeit). **Datenmodell-Implikation:** nur aktueller Wert +
 aggregierter Hausschnitt, **kein** personenbezogenes Verlaufstracking; Freiwilligkeit + BR-Mitbestimmung
 dokumentieren. Ideen-Backlog #6.
 
-## 10. Freie Buchung im Hauptbuch (Buchhaltungs-Lücke)
+## 10. Freie Buchung im Hauptbuch (Buchhaltungs-Lücke) — ✅ umgesetzt 2026-06-06
 
 **Befund (User 2026-06-06):** `/buchhaltung` kann heute nur Wareneingang/-verbrauch — **keine generische
 Einzahlung/Zahlung** im Hauptbuch. (In der [[Taschengeldkasse]] existiert Einzahlung bereits.) **Rechtsgrundlage:**

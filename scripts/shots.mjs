@@ -48,6 +48,8 @@ const pages = [
     ['datenschutz', '/datenschutz', true],
     ['hygiene', '/qualitaet/hygiene', true],
     ['fortbildung', '/personal/fortbildung', true],
+    ['heimrecht', '/heimrecht', true],
+    ['energiebarometer', '/energiebarometer', true],
     ['arbeitsschutz-nachweise', '/arbeitsschutz/nachweise', true],
     ['mitarbeitende', '/admin/benutzer', true],
     ['qdvs', '/qdvs', true],

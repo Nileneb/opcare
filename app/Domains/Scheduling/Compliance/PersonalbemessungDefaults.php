@@ -2,6 +2,7 @@
 
 namespace App\Domains\Scheduling\Compliance;
 
+use App\Domains\Identity\Models\Tenant;
 use App\Domains\Scheduling\Models\StaffingConfig;
 
 /**
@@ -24,7 +25,14 @@ class PersonalbemessungDefaults
 
     public static function ensureConfig(int $tenantId): StaffingConfig
     {
-        return StaffingConfig::firstOrCreate(['tenant_id' => $tenantId]);
+        // Landes-Override des föderalen Heimrechts beim ersten Anlegen als Default einspeisen
+        // (Bundes-Default → Landes-Override → Träger-Override). firstOrCreate setzt diese Werte nur bei Neuanlage.
+        $heimrecht = HeimrechtRegelwerk::fuer(Tenant::find($tenantId)?->landesrecht());
+
+        return StaffingConfig::firstOrCreate(['tenant_id' => $tenantId], [
+            'fachkraftquote_min' => $heimrecht['fachkraftquote_min'],
+            'nachtdienst_je_fachkraft' => $heimrecht['nachtdienst_je_fachkraft'],
+        ]);
     }
 
     /**

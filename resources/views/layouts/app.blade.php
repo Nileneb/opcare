@@ -54,6 +54,7 @@
                 <a href="{{ route('quality.fem') }}" @class(['is-active' => request()->routeIs('quality.fem')])>FEM</a>
                 <a href="{{ route('quality.gremien') }}" @class(['is-active' => request()->routeIs('quality.gremien')])>Gremien</a>
                 <a href="{{ route('vertretungen') }}" @class(['is-active' => request()->routeIs('vertretungen')])>Vertretungen</a>
+                <a href="{{ route('heimrecht') }}" @class(['is-active' => request()->routeIs('heimrecht')])>Heimrecht</a>
             </nav>
         @endif
         @can('manage', \App\Domains\Scheduling\Models\Shift::class)
@@ -68,6 +69,7 @@
             <a href="{{ route('zeiterfassung') }}" @class(['is-active' => request()->routeIs('zeiterfassung')])>Zeiterfassung</a>
             <a href="{{ route('wunschdienstplan') }}" @class(['is-active' => request()->routeIs('wunschdienstplan')])>Wunschdienst</a>
             <a href="{{ route('tauschboerse') }}" @class(['is-active' => request()->routeIs('tauschboerse')])>Tauschbörse</a>
+            <a href="{{ route('energiebarometer') }}" @class(['is-active' => request()->routeIs('energiebarometer')])>Energie</a>
             <a href="{{ route('haustechnik') }}" @class(['is-active' => request()->routeIs('haustechnik')])>Haustechnik</a>
             <a href="{{ route('medizinprodukte') }}" @class(['is-active' => request()->routeIs('medizinprodukte')])>Medizinprodukte</a>
             @if (auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'pflegefachkraft', 'pflegehilfskraft', 'betreuungskraft', 'kueche', 'haustechnik', 'buchhaltung']))

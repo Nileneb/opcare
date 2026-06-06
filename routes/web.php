@@ -8,6 +8,7 @@ use App\Http\Middleware\RequireTwoFactorEnrollment;
 use App\Http\Middleware\RestrictPortalUsers;
 use App\Livewire\Accounting\Buchhaltung;
 use App\Livewire\Accounting\Taschengeldkasse;
+use App\Livewire\Admin\Heimrecht;
 use App\Livewire\Admin\Tenants;
 use App\Livewire\Admin\Users;
 use App\Livewire\Assessment\AssessmentDurchfuehren;
@@ -36,6 +37,7 @@ use App\Livewire\Overview;
 use App\Livewire\Personnel\Arbeitsschutz;
 use App\Livewire\Personnel\Beauftragtenregister;
 use App\Livewire\Personnel\Berechtigungen;
+use App\Livewire\Personnel\Energiebarometer;
 use App\Livewire\Personnel\Fortbildungsplan;
 use App\Livewire\Personnel\Personalakte;
 use App\Livewire\Personnel\SkillBaum;
@@ -109,6 +111,8 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class, Restrict
     Route::get('/qualitaet/hygiene', Hygiene::class)->name('hygiene');
     Route::get('/datenschutz', Datenschutz::class)->name('datenschutz');
     Route::get('/personal/fortbildung', Fortbildungsplan::class)->name('personnel.fortbildung');
+    Route::get('/heimrecht', Heimrecht::class)->name('heimrecht');
+    Route::get('/energiebarometer', Energiebarometer::class)->name('energiebarometer');
 
     // Querschnitts-Sprachfunktionen für jedes Textfeld (inline, synchron).
     Route::post('/speech/transcribe', [SpeechController::class, 'transcribe'])->name('speech.transcribe');

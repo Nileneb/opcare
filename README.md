@@ -6,7 +6,7 @@ Qualitätssicherung (QDVS/DAS-Pflege)** und **FHIR / ÜLB-MIO** (Pflegeüberleit
 des eingestellten Java-Projekts **[Offene-Pflege.de (OPDE)](#herkunft)** — dessen Domänenwissen dient als
 Vorlage, der Code ist von Grund auf neu.
 
-> **Status:** Funktionsfähig und aktiv in Entwicklung. **482 Tests grün**, CI durchgehend grün
+> **Status:** Funktionsfähig und aktiv in Entwicklung. **497 Tests grün**, CI durchgehend grün
 > (Tests · Linter · Security-Audit · FHIR-Validierung). Open Source (AGPL-3.0), **kein Rechtsgate**,
 > solange keine Echt-Patientendaten verarbeitet werden.
 >
@@ -83,7 +83,7 @@ Vorlage, der Code ist von Grund auf neu.
 | Backend | **Laravel 13**, **PHP 8.3+** |
 | Frontend | Blade + **Livewire 4** + Alpine.js |
 | Datenbank | **SQLite** (Dev/CI) · **PostgreSQL** (Prod) |
-| Tests | **Pest 4** (482 Tests) |
+| Tests | **Pest 4** (497 Tests) |
 | Lint/Style | **Laravel Pint** |
 | DTOs / RBAC / Audit | `spatie/laravel-data` · `spatie/laravel-permission` · `spatie/laravel-activitylog` |
 | Deployment | **Docker Compose** (self-contained: eine `.env`, `docker compose up --build`) |
@@ -96,7 +96,7 @@ Domänen-orientierte Struktur unter `app/Domains/`. Layering als Einbahnstraße:
 
 | Domäne | Inhalt |
 |---|---|
-| **Identity** | Auth, Benutzer, Rollen/Rechte, Mandanten, Tenant-Scoping |
+| **Identity** | Auth, Benutzer, Rollen/Rechte, Mandanten, Tenant-Scoping, **föderales Heimrecht** (Bundesland automatisch aus der Adresse → Landesheimgesetz + Personalbemessungs-Defaults Bund→Land→Träger) |
 | **Masterdata** | Bewohner, Diagnosen/ICD, Versicherungen, **rechtliche Vertretung mit Aufgabenkreisen (§§ 1814 ff. BGB) + Vertreter-Portal + Bewohner-Ereignisse**, Ärzte, Gebäude/Zimmer, Allergien, Medizinprodukte, Kontakte, Status-Observationen |
 | **CarePlanning** | SIS®-Strukturmodell: Informationssammlung → Maßnahmenplan → Bericht → Evaluation |
 | **Assessment** | Instrument-Engine (Braden/Sturz/BESD/Barthel), Scoring, Risiko-Bänder, Eskalation |
@@ -107,11 +107,11 @@ Domänen-orientierte Struktur unter `app/Domains/`. Layering als Einbahnstraße:
 | **Qdvs** | DAS-Plausibilitäts-Regel-Engine + QDVS-Export |
 | **Fhir** | FHIR-R4-Mapper + Document-Bundle-Export (ÜLB-MIO-Richtung) |
 | **Scheduling** | Dienstplan, Schichten, Kalender, **ArbZG-Compliance-Engine** (Regelwerk + § 14) + **Arbeitszeiterfassung** (BAG/EuGH) |
-| **Personnel** | Personalakte (Personalfragebogen, verschlüsselt) 1:1 am Benutzer, gekoppelt an die Rollenverwaltung; Arbeitsschutz-Nachweise + **Betriebsarzt/Sifa-Betreuung** (ASiG/DGUV V2), Beauftragten-Register, **Fortbildungsplan** (QPR QB6, Pflicht-Themen-Matrix) |
+| **Personnel** | Personalakte (Personalfragebogen, verschlüsselt) 1:1 am Benutzer, gekoppelt an die Rollenverwaltung; Arbeitsschutz-Nachweise + **Betriebsarzt/Sifa-Betreuung** (ASiG/DGUV V2), Beauftragten-Register, **Fortbildungsplan** (QPR QB6, Pflicht-Themen-Matrix), **Team-Energiebarometer** (freiwillig/anonym, § 26 BDSG/§ 87 BetrVG) |
 | **Facility** | Haustechnik/Instandhaltung (DIN 31051): Mängelmeldungen + Wartungsplan mit Prüffristen; Medizinprodukte-Bestandsverzeichnis + Medizinproduktebuch (MPBetreibV) |
 | **Catering** | Küche/Verpflegung (LMIV): Diät-/Allergen-Sicht der Bewohner + Speiseplan mit Allergenwarnung |
 | **SocialCare** | Soziale Betreuung (§ 43b SGB XI): Angebote + Teilnahme-Nachweis je Bewohner |
-| **Accounting** | Doppelte Buchführung (Soll/Haben) + Warenwirtschaft je Abteilung (Lager→Aufwand, automatische Buchung) |
+| **Accounting** | Doppelte Buchführung (Soll/Haben) + **freie Hauptbuchung** (generischer Buchungssatz, GoB/PBV) + Warenwirtschaft je Abteilung (Lager→Aufwand, automatische Buchung) |
 | **Speech** | Audio-Handling, Transkription, LLM→SIS®-Strukturierung (Human-in-the-Loop) |
 
 ## FHIR / ÜLB-MIO-Konformität
@@ -163,7 +163,7 @@ php artisan serve
 ## Entwicklung
 
 ```bash
-php artisan test                 # bzw. vendor/bin/pest   (482 Tests)
+php artisan test                 # bzw. vendor/bin/pest   (497 Tests)
 vendor/bin/pint                  # Code-Style
 php artisan fhir:export --output=bundle.json   # FHIR-Document-Bundle erzeugen
 ```

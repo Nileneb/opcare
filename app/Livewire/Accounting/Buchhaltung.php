@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Accounting;
 
+use App\Domains\Accounting\Actions\Buchen;
 use App\Domains\Accounting\Actions\Wareneingang;
 use App\Domains\Accounting\Actions\Warenverbrauch;
 use App\Domains\Accounting\Enums\Abteilung;
@@ -11,6 +12,8 @@ use App\Domains\Accounting\Models\Buchung;
 use App\Domains\Accounting\Models\Konto;
 use App\Domains\Accounting\Support\AccountingDefaults;
 use App\Domains\Identity\Support\CurrentTenant;
+use App\Support\Concerns\ScopesTenantValidation;
+use InvalidArgumentException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -23,6 +26,20 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class Buchhaltung extends Component
 {
+    use ScopesTenantValidation;
+
+    public ?int $b_soll = null;
+
+    public ?int $b_haben = null;
+
+    public ?float $b_betrag = null;
+
+    public string $b_text = '';
+
+    public string $b_beleg = '';
+
+    public ?string $b_datum = null;
+
     public string $a_name = '';
 
     public string $a_einheit = 'Stück';
@@ -45,6 +62,7 @@ class Buchhaltung extends Component
     {
         abort_unless($this->darfSehen(), 403);
         AccountingDefaults::ensureFor(app(CurrentTenant::class)->id());
+        $this->b_datum = today()->toDateString();
     }
 
     private function darfSehen(): bool
@@ -72,6 +90,31 @@ class Buchhaltung extends Component
         ]);
         $this->reset('a_name', 'a_mindestbestand', 'a_einkaufspreis');
         session()->flash('status', 'Artikel angelegt.');
+    }
+
+    public function freieBuchung(Buchen $action): void
+    {
+        abort_unless($this->darfSehen(), 403);
+        $data = $this->validate([
+            'b_soll' => ['required', 'integer', $this->tenantExists('konten')],
+            'b_haben' => ['required', 'integer', 'different:b_soll', $this->tenantExists('konten')],
+            'b_betrag' => ['required', 'numeric', 'gt:0'],
+            'b_text' => ['required', 'string', 'max:200'],
+            'b_datum' => ['required', 'date'],
+            'b_beleg' => ['nullable', 'string', 'max:80'],
+        ]);
+
+        try {
+            $action->handle($data['b_soll'], $data['b_haben'], (float) $data['b_betrag'], $data['b_text'], $data['b_datum'], $this->b_beleg ?: null);
+        } catch (InvalidArgumentException $e) {
+            $this->addError('b_betrag', $e->getMessage());
+
+            return;
+        }
+
+        $this->reset('b_soll', 'b_haben', 'b_betrag', 'b_text', 'b_beleg');
+        $this->b_datum = today()->toDateString();
+        session()->flash('status', 'Buchung erfasst.');
     }
 
     public function wareneingang(Wareneingang $action): void
@@ -109,6 +152,7 @@ class Buchhaltung extends Component
 
         return view('livewire.accounting.buchhaltung', [
             'kontenNachTyp' => $salden,
+            'konten' => $konten,
             'kontoTypen' => KontoTyp::cases(),
             'artikel' => Artikel::where('tenant_id', $tenantId)->orderBy('abteilung')->orderBy('name')->get(),
             'buchungen' => Buchung::with(['sollKonto', 'habenKonto'])->orderByDesc('datum')->orderByDesc('id')->limit(40)->get(),

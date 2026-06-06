@@ -2,6 +2,8 @@
 
 namespace App\Domains\Identity\Models;
 
+use App\Domains\Identity\Enums\Bundesland;
+use App\Domains\Identity\Support\BundeslandResolver;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -22,6 +24,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $hausnummer
  * @property string|null $plz
  * @property string|null $ort
+ * @property Bundesland|null $bundesland
  * @property-read Collection<int, User> $users
  * @property-read int|null $users_count
  *
@@ -30,6 +33,7 @@ use Illuminate\Support\Carbon;
  * @method static Builder<static>|Tenant newQuery()
  * @method static Builder<static>|Tenant query()
  * @method static Builder<static>|Tenant whereAktiv($value)
+ * @method static Builder<static>|Tenant whereBundesland($value)
  * @method static Builder<static>|Tenant whereCreatedAt($value)
  * @method static Builder<static>|Tenant whereHausnummer($value)
  * @method static Builder<static>|Tenant whereId($value)
@@ -47,11 +51,12 @@ use Illuminate\Support\Carbon;
  */
 class Tenant extends Model
 {
-    protected $fillable = ['name', 'traeger', 'slug', 'ik_nummer', 'settings', 'aktiv', 'strasse', 'hausnummer', 'plz', 'ort'];
+    protected $fillable = ['name', 'traeger', 'slug', 'ik_nummer', 'settings', 'aktiv', 'strasse', 'hausnummer', 'plz', 'ort', 'bundesland'];
 
     protected $casts = [
         'settings' => 'array',
         'aktiv' => 'boolean',
+        'bundesland' => Bundesland::class,
     ];
 
     public function users(): HasMany
@@ -62,5 +67,13 @@ class Tenant extends Model
     public function scopeAktiv(Builder $q): Builder
     {
         return $q->where('aktiv', true);
+    }
+
+    /**
+     * Maßgebliches Bundesland fürs Landesheimrecht: explizit gewählt, sonst automatisch aus der PLZ abgeleitet.
+     */
+    public function landesrecht(): ?Bundesland
+    {
+        return $this->bundesland ?? BundeslandResolver::fromPlz($this->plz);
     }
 }

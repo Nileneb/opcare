@@ -2,6 +2,7 @@
 
 namespace App\Domains\Identity\Database\Seeders;
 
+use App\Domains\Accounting\Actions\Buchen;
 use App\Domains\Accounting\Actions\TreuhandBuchen;
 use App\Domains\Accounting\Actions\Wareneingang;
 use App\Domains\Accounting\Actions\Warenverbrauch;
@@ -75,6 +76,7 @@ use App\Domains\Medication\Models\TradeForm;
 use App\Domains\Medication\Models\VitalReading;
 use App\Domains\Personnel\Enums\Beschaeftigungsart;
 use App\Domains\Personnel\Enums\BetriebsbetreuungArt;
+use App\Domains\Personnel\Enums\Energiestufe;
 use App\Domains\Personnel\Enums\FortbildungsThema;
 use App\Domains\Personnel\Enums\Krankenversicherung;
 use App\Domains\Personnel\Enums\Masernschutz;
@@ -84,6 +86,7 @@ use App\Domains\Personnel\Enums\Steuerklasse;
 use App\Domains\Personnel\Models\Beauftragtenbestellung;
 use App\Domains\Personnel\Models\Betriebsbetreuung;
 use App\Domains\Personnel\Models\Delegation;
+use App\Domains\Personnel\Models\Energielevel;
 use App\Domains\Personnel\Models\Fortbildung;
 use App\Domains\Personnel\Models\MitarbeiterKompetenz;
 use App\Domains\Personnel\Models\Schutznachweis;
@@ -483,6 +486,16 @@ class DemoSeeder extends Seeder
         app(Wareneingang::class)->handle($filter, 5, 6.50, now()->subDays(2)->toDateString(), 'Haustechnik-Service'); // unter Mindestbestand
         app(Warenverbrauch::class)->handle($mehl->fresh(), 12, now()->subDay()->toDateString(), 'Backtag Wohnbereich 1');
         app(Warenverbrauch::class)->handle($handschuhe->fresh(), 35, now()->toDateString(), 'Tagesbedarf Pflege');
+        // Freie Hauptbuchung (GoB/PBV): generischer Buchungssatz, hier Bargeld-Aufnahme von der Bank in die Kasse.
+        app(Buchen::class)->handle(
+            AccountingDefaults::konto(AccountingDefaults::KASSE)->id,
+            AccountingDefaults::konto(AccountingDefaults::BANK)->id,
+            300.0, 'Bargeld-Aufnahme für die Handkasse', now()->subDays(2)->toDateString(), 'KB-2026-014');
+
+        // Team-Energiebarometer (freiwillig, § 26 BDSG): aktueller Wert je Mitarbeitendem, gemischter Hausschnitt.
+        foreach ([[$sandra, Energiestufe::Erschoepft], [$tom, Energiestufe::Mittel], [$betreuerin, Energiestufe::Energiegeladen], [$koechin, Energiestufe::Mittel]] as [$ma, $stufe]) {
+            Energielevel::create(['tenant_id' => $tenant->id, 'user_id' => $ma->id, 'stufe' => $stufe]);
+        }
 
         // Arbeitsschutz-Nachweise: Demo je Mitarbeiter:in (eine gültige Unterweisung, eine überfällige Vorsorge).
         foreach ([$sandra, $tom] as $ma) {

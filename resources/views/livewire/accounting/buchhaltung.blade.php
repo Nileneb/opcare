@@ -92,6 +92,30 @@
     </div>
 
     <div class="card">
+        <div class="card-head"><h3>Freie Buchung</h3><span class="badge gray">Hauptbuch</span></div>
+        <p class="muted">Generischer Buchungssatz „Soll an Haben" (z. B. Einzahlung, Zahlung, Korrektur) direkt im Hauptbuch (GoB / PBV).</p>
+        <form wire:submit="freieBuchung" style="margin-top:10px">
+            <div class="form-row-2">
+                <div class="field"><label>Soll-Konto</label>
+                    <select wire:model="b_soll"><option value="">– wählen –</option>@foreach ($konten as $k)<option value="{{ $k->id }}">{{ $k->nummer }} · {{ $k->name }}</option>@endforeach</select>
+                    @error('b_soll')<span class="err">{{ $message }}</span>@enderror
+                </div>
+                <div class="field"><label>Haben-Konto</label>
+                    <select wire:model="b_haben"><option value="">– wählen –</option>@foreach ($konten as $k)<option value="{{ $k->id }}">{{ $k->nummer }} · {{ $k->name }}</option>@endforeach</select>
+                    @error('b_haben')<span class="err">{{ $message }}</span>@enderror
+                </div>
+            </div>
+            <div class="form-row-3">
+                <div class="field"><label>Betrag (€)</label><input type="number" step="0.01" wire:model="b_betrag" />@error('b_betrag')<span class="err">{{ $message }}</span>@enderror</div>
+                <div class="field"><label>Datum</label><input type="date" wire:model="b_datum" />@error('b_datum')<span class="err">{{ $message }}</span>@enderror</div>
+                <div class="field"><label>Beleg (optional)</label><input type="text" wire:model="b_beleg" placeholder="Beleg-Nr." /></div>
+            </div>
+            <div class="field"><label>Buchungstext</label><input type="text" wire:model="b_text" placeholder="z. B. Bareinzahlung Spende" />@error('b_text')<span class="err">{{ $message }}</span>@enderror</div>
+            <button class="btn btn-primary btn-sm">Buchen</button>
+        </form>
+    </div>
+
+    <div class="card">
         <div class="card-head"><h3>Journal</h3><span class="badge gray">letzte {{ $buchungen->count() }} Buchungen</span></div>
         <table class="data-table">
             <thead><tr><th style="width:100px">Datum</th><th>Soll</th><th>Haben</th><th>Text</th><th style="text-align:right">Betrag</th></tr></thead>

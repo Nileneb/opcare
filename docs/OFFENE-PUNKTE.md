@@ -1,6 +1,6 @@
 # Offene & ungeklärte Punkte (Stand 2026-06-06, Session-Handoff)
 
-Stand: 482 Tests grün, PHPStan 0, Pint clean. Diese Liste sammelt, was vor/nach einem Neustart offen ist.
+Stand: 497 Tests grün, PHPStan 0, Pint clean. Diese Liste sammelt, was vor/nach einem Neustart offen ist.
 Querbezug: [Ideen-Backlog](ideen-backlog-2026-06.md), [Norm-Recherche](recherche-normen-erweiterung-2026-06.md),
 **[Gesetzes-Recherche zu den offenen Punkten](recherche-offene-punkte-2026-06.md)** (Rechtsgrundlage + Datenmodell je Punkt).
 
@@ -18,8 +18,10 @@ Querbezug: [Ideen-Backlog](ideen-backlog-2026-06.md), [Norm-Recherche](recherche
 - **Vereinfachung**: „Fachkraft darf alles außer Spezialqualifikation" ist eine pragmatische Regel. Echte
   Differenzierung (welche ärztliche Tätigkeit zwingend pro-Person-Delegation braucht — z. B. i.v. auch für Fachkräfte)
   ist bewusst vereinfacht. Juristisch zu schärfen, falls gewünscht.
-- **Bundesland-Konfiguration**: Fachkraftquote/Nachtdienst/Heimrecht/Hygienebeauftragten-Qualifikation sind
-  föderal verschieden. Aktuell ein Default-Satz; mandanten-/bundesland-spezifische Overrides noch offen.
+- **Bundesland-Konfiguration**: ✅ Grundgerüst umgesetzt (2026-06-06) — Bundesland automatisch aus der
+  Einrichtungs-Adresse, Landesheimgesetz + Link je Land, Drei-Schichten-Defaults (Bund→Land→Träger), siehe
+  [bundesland-heimrecht.md](bundesland-heimrecht.md). **Offen**: konkrete quantitative Landeswerte (Nachtdienst-
+  Schlüssel je Land) sind noch nicht verifiziert hinterlegt (`HeimrechtRegelwerk::overrides()` leer, kein Raten).
 - **Tätigkeits-Abzeichnen ↔ Doku**: Die Tätigkeiten sind ein eigener Katalog; eine echte Verknüpfung „diese
   konkrete dokumentierte Maßnahme = Tätigkeit X" (für lückenlosen Berechtigungsnachweis je Eintrag) fehlt noch.
 
@@ -62,9 +64,16 @@ Querbezug: [Ideen-Backlog](ideen-backlog-2026-06.md), [Norm-Recherche](recherche
   mit Auffrischungs-Ampel, `Personnel`). Siehe [datenschutz-vvt-avv.md](datenschutz-vvt-avv.md),
   [hygiene-mre.md](hygiene-mre.md), [fortbildungsplan.md](fortbildungsplan.md).
 
+- ✅ **Bundesland-Overrides** (föderales Heimrecht, Recherche §8) · **freie Hauptbuchung** (Recherche §10) ·
+  **Energielevel-Ampel** (Recherche §9) — **umgesetzt 2026-06-06**: Landesheimrecht automatisch aus der
+  Einrichtungs-Adresse (PLZ→Bundesland) mit 16 Landesheimgesetzen + amtlichen Links und Drei-Schichten-Defaults
+  (Bund→Land→Träger, keine geratenen Landeswerte); freie „Soll an Haben"-Maske im Hauptbuch (GoB/PBV); freiwilliges,
+  anonymes Team-Energiebarometer (§ 26 BDSG/§ 87 BetrVG, kein Verlauf, k-Anonymität). Siehe
+  [bundesland-heimrecht.md](bundesland-heimrecht.md), [freie-hauptbuchung.md](freie-hauptbuchung.md),
+  [energiebarometer.md](energiebarometer.md).
+
 Noch offen:
-1. **Bundesland-Overrides** (föderales Heimrecht, Recherche §8) · **freie Buchung im Hauptbuch** (Recherche §10) ·
-   **Energielevel-Ampel** (Recherche §9) · **Übergangs-/Spitzendienste** (Idee #4).
+1. **Übergangs-/Spitzendienste** (Idee #4).
 2. **AI-Services** (eigene Session): Ollama + whisperX-mcp als Container mit Build-Pre-Flight-Healthcheck,
    **VLM-Beleg-Capture** und **Budget-Setzungen**. Voll spezifiziert in [ai-services-plan.md](ai-services-plan.md).
 
