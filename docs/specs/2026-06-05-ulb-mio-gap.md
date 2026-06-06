@@ -1,6 +1,7 @@
 # Spec: ÜLB-MIO Gap-Analyse + zukunftsfester DB-Fahrplan
 
-**Stand:** 2026-06-05 · **Track A (Daten-Konformität)** · **Quelle:** `kbv.mio.ueberleitungsbogen` 1.0.0
+**Stand:** 2026-06-06 (Schritt 9: optionaler Sektions-Backlog verdrahtet) · **Track A (Daten-Konformität)** ·
+**Quelle:** `kbv.mio.ueberleitungsbogen` 1.0.0
 (FHIR R4; Deps `kbv.basis 1.3.0`, `de.basisprofil.r4 1.3.2`). Package lokal extrahiert + introspiziert.
 
 ## Warum dieser MIO
@@ -40,6 +41,12 @@ Kontinenz/Ernährung, soziale Felder).
 | `anzahlStuerzeLetzte6Monate` (Falls_Last_6_Months) | `CareEvent` Sturz (strukturiert: Anzahl/Fraktur) | (QDVS 71/72) ✅ |
 | `freiheitsentziehendeMassnahmen` | `CareEvent` FEM | — |
 | `allergienUndUnvertraeglichkeiten` | **`ResidentAllergy`** (neu 2026-06-05) | **AllergyIntolerance ✅** |
+| `orientierungPsyche` | `ResidentStatusObservation` (Bewusstsein) | **Cognitive_Awareness ✅** (neu 2026-06-06) |
+| `harnkontinenzDifferenzierteEinschaetzung` / `stuhlkontinenz…` | `ResidentStatusObservation` | **Continence_Differentiated_Assessment ✅** |
+| `qualitativeBeschreibungAtmung` | `ResidentStatusObservation` (Atmung, Freitext) | **Qualitative_Description_Breathing ✅** |
+| `ernaehrung` | `ResidentStatusObservation` (Kostform/Form) | **Presence_Information_Nutrition ✅** (Presence; Detail im Narrativ) |
+| `medizinprodukte` | **`ResidentDevice`** | **Relevant_Information_Medical_Devices → DeviceUseStatement → Device ✅** |
+| `patientenAdressbuch` | **`ResidentContact`** | **RelatedPerson_Contact_Person ✅** (neu 2026-06-06) |
 
 ### 🟡 Teilweise (Daten da, aber nicht ÜLB-strukturiert/-codiert)
 
@@ -55,12 +62,12 @@ Kontinenz/Ernährung, soziale Felder).
 
 ### 🔴 Fehlend (kein Store)
 
-`medizinprodukte` (Device) · `atemwegszugang` / `atmungsunterstuetzung` / `qualitativeBeschreibungAtmung` ·
-`harnkontinenzDifferenzierteEinschaetzung` / `harnableitung` / `zeitpunktLetzteMiktion` ·
-`stuhlkontinenz…` / `stuhlableitung` / `zeitpunktLetzterStuhlgang` · `orientierungPsyche` /
-`Cognitive_Awareness` · `auffaelligesVerhalten` · `raeumlicheIsolation` · `patientenwunsch` /
-`Personal_Statements` · `relevanteInformationsquellen` · `empfehlung` · `mitgegebeneDokumente…` ·
-`gradDerBehinderung` · administrative Flags (`mitgabeKrankenkassenkarte`, `zuzahlungsbefreiung`).
+`atemwegszugang` / `atmungsunterstuetzung` · `harnableitung` / `zeitpunktLetzteMiktion` ·
+`stuhlableitung` / `zeitpunktLetzterStuhlgang` · `auffaelligesVerhalten` · `raeumlicheIsolation` ·
+`patientenwunsch` / `Personal_Statements` · `relevanteInformationsquellen` · `empfehlung` ·
+`mitgegebeneDokumente…` · `gradDerBehinderung` · `Observation_Relatives_Notified` (Benachrichtigungs-Ereignis,
+nicht die Präferenz `contacts.benachrichtigen`) · administrative Flags (`mitgabeKrankenkassenkarte`,
+`zuzahlungsbefreiung`).
 
 ## Phasierter DB-Fahrplan (Regret-minimal, jede Phase voll verdrahtet)
 
@@ -139,25 +146,38 @@ Kontinenz/Ernährung, soziale Felder).
     AssessmentObservationMapper → Assessment_Free; CompositionMapper neu (closed slicing); DocumentingEntity
     liefert auch Practitioner-Ref (Assessment_Free.performer nur Practitioner). Document-Reachability: nicht
     wrappbare Leaves liegen nicht mehr lose im Bundle; ungenutzte Mapper (CarePlan/Device/Status/RelatedPerson)
-    bereinigt. **Optionaler Backlog:** Status-Beobachtungen (Orientierung/Ernährung/Atmung/Kontinenz, je eigenes
-    Profil), Medizinprodukte (Basis-`Device`-Variante statt `Device_Other_Item` + DeviceUseStatement), Angehörige.
+    bereinigt.
+  - ✅ Schritt 9 (2026-06-06): **Optionaler Sektions-Backlog verdrahtet** — 5 weitere slice-konforme Sektionen,
+    alle gegen `kbv.mio.ueberleitungsbogen#1.0.0` auf **0 errors** validiert, je mit Feature-Test:
+    - **Status-Beobachtungen** (`StatusObservationMapper`): Bewusstsein → `orientierungPsyche`
+      (Cognitive_Awareness), Harn-/Stuhlkontinenz → `harn-/stuhlkontinenzDifferenzierteEinschaetzung`
+      (Continence_Differentiated_Assessment, gebundene SNOMED-ValueSets), Atmung → `qualitativeBeschreibungAtmung`
+      (valueString), Kostform/Form → `ernaehrung` als aggregierte `Presence_Information_Nutrition`.
+    - **Medizinprodukte** (`MedicalDeviceMapper`): `Relevant_Information_Medical_Devices` (Presence) verweist
+      per Has_Member auf je `DeviceUseStatement → Device` (Basis-Variante: `Device.type.text` = Bezeichnung).
+    - **Angehörige** (`RelatedPersonMapper`): `patientenAdressbuch` als `RelatedPerson_Contact_Person`
+      (Name family/given, Beziehung als `relationship.text`).
+    - Bewusst NICHT geclaimt: `Observation_Relatives_Notified` (opcare-`benachrichtigen` ist Präferenz, kein
+      Ereignis), SNOMED-codierte `Device.type.coding` (braucht kuratierte Geräte-Codeliste), Orientierungs-
+      4-Komponenten-Profil (Zeit/Ort/Person/Situation nicht erhoben). Register: `docs/INBETRIEBNAHME.md §3a`.
+    - UI: Bewohner-Detail mit Sprung-Navigation + „→ ÜLB-Export"-Affordanz an den speisenden Karten.
   - **Tooling-Hinweis:** `kbv.basis 1.3.0` erzeugt im aktuellen Validator einen Snapshot-Fehler
     (`Same id 'Observation.dataAbsentReason'`) — bekannte KBV/Validator-Inkompatibilität, nicht unsere Daten.
 
-**Dokument-Stand:** ÜLB-konforme Composition mit 7 slice-konformen Sektionen (pflegegrad, vitalparameter,
-probleme, allergien, medikationsplan, funktionsbeurteilungen, pflegerischeMassnahme). HL7-Validator
-**0 errors** gegen R4 + de.basisprofil.r4#1.5.0 + kbv.mio.ueberleitungsbogen#1.0.0, plus expliziter
-blockierender `-profile KBV_PR_MIO_ULB_Bundle`-Check.
+**Dokument-Stand:** ÜLB-konforme Composition mit bis zu **12 slice-konformen Sektionen** (pflegegrad,
+vitalparameter, probleme, allergien, medikationsplan, funktionsbeurteilungen, pflegerischeMassnahme,
+orientierungPsyche, harn-/stuhlkontinenzDifferenzierteEinschaetzung, qualitativeBeschreibungAtmung,
+ernaehrung; dazu medizinprodukte + patientenAdressbuch sobald Daten erfasst). HL7-Validator **0 errors**
+gegen R4 + de.basisprofil.r4#1.5.0 + kbv.mio.ueberleitungsbogen#1.0.0, plus expliziter blockierender
+`-profile KBV_PR_MIO_ULB_Bundle`-Check.
 
 ## Restlicher (optionaler) Sektions-Backlog
 
-Alle offenen Sektionen sind **optional** (Bundle ist bereits voll konform). Je Sektion ein eigenes
-ÜLB-Profil mit ValueSet-Bindungen:
-- **Status-Beobachtungen:** orientierungPsyche (Cognitive_Awareness/Orientation), ernaehrung
-  (Presence_Information_Nutrition), qualitativeBeschreibungAtmung, Harn-/Stuhlkontinenz (Continence-Profile).
-- **Medizinprodukte:** Basis-`KBV_PR_MIO_ULB_Device` (verlangt `Device.patient` + gebundenes `type.coding`)
-  ← `DeviceUseStatement` ← Presence_Medical_Devices. `Device_Other_Item` ist hierfür inkompatibel.
-- **Angehörige:** ÜLB hat keine eigene Composition-Sektion für RelatedPerson (Adressbuch/Patient.contact).
+Der Kern-Backlog (Status-Beobachtungen, Medizinprodukte, Angehörige) ist **erledigt** (Schritt 9). Genuin
+offen bleiben — alle optional, Bundle ist voll konform — die Sektionen ohne opcare-Store bzw. ohne ehrliche
+Datenquelle (s. `🔴 Fehlend` oben + `INBETRIEBNAHME.md §3a` für die bewusst zurückgestellte codierte Tiefe):
+Drainage/Atemwegszugang, gradDerBehinderung, Patientenwunsch/Personal_Statements, gesetzliche Betreuung
+strukturiert, administrative Mitgabe-Flags, `Observation_Relatives_Notified`.
 
 **Muster für neue Sektionen:** Profil introspizieren (fixe `code.coding`, `section.title`, value-ValueSet) →
 Wrapper-Mapper + Leaf → Kandidat-Bundle gegen `-ig kbv.mio.ueberleitungsbogen#1.0.0` iterieren → Sektion in

@@ -10,7 +10,7 @@ unkritisch; Pflichten (DSGVO, ggf. Zulassung) treffen erst den späteren *Betrei
 
 | Track | Inhalt | Status | Rechtsgate |
 |---|---|---|---|
-| **A — Daten-Konformität** | FHIR R4, deutsche Basisprofile (`de.basisprofil.r4`), **ÜLB-MIO** (`kbv.mio.ueberleitungsbogen` 1.0.0 — veröffentlicht). *ISiK ist krankenhausspezifisch → für Pflege sekundär.* | **Kern erreicht** — Composition + Bundle **voll ÜLB-konform** (7 Sektionen, im CI blockierend erzwungen); optionale Sektionen als Backlog (s. `docs/specs/2026-06-05-ulb-mio-gap.md`) | nein |
+| **A — Daten-Konformität** | FHIR R4, deutsche Basisprofile (`de.basisprofil.r4`), **ÜLB-MIO** (`kbv.mio.ueberleitungsbogen` 1.0.0 — veröffentlicht). *ISiK ist krankenhausspezifisch → für Pflege sekundär.* | **Kern + optionaler Backlog erreicht** — Composition + Bundle **voll ÜLB-konform** (bis zu 12 Sektionen inkl. Status-Beobachtungen/Medizinprodukte/Angehörige, im CI blockierend erzwungen); s. `docs/specs/2026-06-05-ulb-mio-gap.md` | nein |
 | **B — Security-Hygiene** | Tenant-Isolation, RBAC, Audit-Log, IDOR-Härtung, **MFA (TOTP, Pflicht)**, **At-Rest-Feldverschlüsselung**, **Security-Header**, CVE-Gate + **SAST (Semgrep)** | **weit ausgebaut** (s. `docs/security/sicherheitskonzept.md`) | nein |
 | **C — TI 2.0-Anbindung + Zulassung** | **TI 2.0 / Zero-Trust (ZETA)** statt Konnektor: ZETA-Client-Anbindung (RFC 9728/8693, SMC-B), VSDM 2.0, POPP, ePA-Schreibzugriff, eVerordnung, gematik-Zulassung, BSI-TR. Konformitäts-Gate: **gematik Testhub 2.0** (s. `docs/ti2.0/ti2.0-konformitaets-gate.md`) | **Vorbereitung läuft** (Bauen/Testen ohne Rechtsgate; Zulassung/Echtbetrieb = ja) | Betrieb: **ja** |
 | **D — Domäne/Fachlichkeit** | Pflege-Fachfunktionen nach **Nationalen Expertenstandards** (Dekubitus/Sturz/Schmerz/Ernährung/Kontinenz) | **blockiert** auf Quelle (Expertenstandards nicht frei verfügbar) | nein |
@@ -33,11 +33,12 @@ Architektur-Vorsorge: Auth-Schicht abstrahiert halten, damit TI-IDP später ando
 - **Voll ÜLB-MIO-konformes** FHIR-R4-**Document-Bundle** (`KBV_PR_MIO_ULB_Bundle`) + `fhir:export` +
   Download-Route + **CI-Gate mit amtlichem HL7-Validator** — 0 errors gegen R4 + `de.basisprofil.r4` +
   ÜLB, plus expliziter blockierender ÜLB-Bundle-Profil-Check.
-- **Konforme Composition (7 slice-konforme Sektionen):** pflegegrad (Care_Level, Pflicht), vitalparameter
+- **Konforme Composition (bis zu 12 slice-konforme Sektionen):** pflegegrad (Care_Level, Pflicht), vitalparameter
   (DiagnosticReport), probleme (Condition), allergien (AllergyIntolerance), medikationsplan
   (MedicationStatement+Medication), funktionsbeurteilungen (Assessment_Free/Barthel), pflegerischeMassnahme
-  (Procedure) — jeweils via Presence-/Wrapper-Ressourcen; dokumentierende Einheit + ÜLB-Patient.
-  Optionaler Sektions-Backlog: Status-Beobachtungen, Medizinprodukte (Basis-Device), Angehörige.
+  (Procedure), orientierungPsyche/harn-/stuhlkontinenz/qualitativeBeschreibungAtmung/ernaehrung
+  (Status-Beobachtungen), medizinprodukte (DeviceUseStatement→Device), patientenAdressbuch (RelatedPerson)
+  — jeweils via Presence-/Wrapper-Ressourcen; dokumentierende Einheit + ÜLB-Patient. Kern-Backlog erledigt.
 - QDVS-Engine (DAS-Plausibilität, 57 Regeln aktiv), ICD-10-GM-Katalog, Maßnahmen-Katalog,
   Assessments (Braden/Sturz/BESD/Barthel), Vorkommnis-Erfassung, strukturierte Dekubitus-/Sturz-Doku.
 - **Security (Track B):** row-level Tenancy + globaler `TenantScope` (alle Modelle via `BaseModel`),
