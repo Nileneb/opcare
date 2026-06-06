@@ -327,6 +327,22 @@ class DemoSeeder extends Seeder
             'beschaeftigungsart' => Beschaeftigungsart::Teilzeit, 'wochenstunden' => 25, 'position' => 'Pflegehilfskraft',
             'eintritt_am' => now()->subMonths(8)->toDateString(), 'masernschutz' => Masernschutz::Geimpft,
         ]);
+        // Weitere planbare Mitarbeitende (Personalakte) — Basis für Auto-Dienstplan + Arbeitsschutz-Matrix.
+        foreach ([
+            ['Nina Kraus', 'nina', Qualifikation::Pflegefachkraft, 38.5],
+            ['Jens Pohl', 'jens', Qualifikation::Pflegehilfskraft, 30.0],
+            ['Lea Brandt', 'lea', Qualifikation::Betreuungskraft, 20.0],
+        ] as [$name, $slug, $qual, $std]) {
+            [$vn, $nn] = explode(' ', $name, 2);
+            $mitarbeiter = User::create(['name' => $name, 'email' => $slug.'@opcare.local', 'password' => Hash::make('password'), 'tenant_id' => $tenant->id]);
+            $mitarbeiter->assignRole($qual === Qualifikation::Pflegefachkraft ? 'pflegefachkraft' : ($qual === Qualifikation::Betreuungskraft ? 'betreuungskraft' : 'pflegehilfskraft'));
+            $mitarbeiter->employeeProfile()->create([
+                'vorname' => $vn, 'nachname' => $nn, 'qualifikation' => $qual,
+                'beschaeftigungsart' => $std >= 38 ? Beschaeftigungsart::Vollzeit : Beschaeftigungsart::Teilzeit,
+                'wochenstunden' => $std, 'eintritt_am' => now()->subYears(2)->toDateString(), 'masernschutz' => Masernschutz::Geimpft,
+            ]);
+        }
+
         $frueh = Shift::query()->where('name', 'Frühdienst')->first();
         $spaet = Shift::query()->where('name', 'Spätdienst')->first();
         $mon = now()->startOfWeek();

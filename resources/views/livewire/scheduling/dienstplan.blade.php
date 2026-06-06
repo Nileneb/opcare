@@ -20,6 +20,17 @@
         @endif
     </div>
 
+    <div class="plan-nav" style="margin-top:6px">
+        <button class="btn btn-primary btn-sm" wire:click="autoGenerieren" wire:loading.attr="disabled" wire:target="autoGenerieren">✨ Automatisch erstellen</button>
+        <span wire:loading wire:target="autoGenerieren" class="muted">erstelle Vorschlag …</span>
+        @if ($vorschlaegeCount > 0)
+            <span class="badge amber">{{ $vorschlaegeCount }} Vorschläge</span>
+            <button class="btn btn-ghost btn-sm" wire:click="vorschlaegeFreigeben">Vorschläge freigeben</button>
+            <button class="btn btn-ghost btn-sm" wire:click="vorschlaegeVerwerfen" wire:confirm="Alle Auto-Vorschläge dieser Woche verwerfen?">Verwerfen</button>
+        @endif
+        <span class="muted" style="margin-left:auto;font-size:.82em">Vorschlag aus Soll-Besetzung, ArbZG, Ergonomie &amp; Wünschen — PDL prüft &amp; gibt frei.</span>
+    </div>
+
     <div class="card">
         <div class="card-head"><h3>Betreuungsschlüssel (§ 113c SGB XI)</h3>
             <span class="badge gray" title="Personalbemessung aus dem Pflegegrad-Mix (PeBeM)">PeBeM</span>
@@ -80,8 +91,8 @@
                                     <span class="badge {{ $wunsch->typ->badge() }}" title="Wunsch: {{ $wunsch->typ->label() }}{{ $wunsch->notiz ? ' — '.$wunsch->notiz : '' }}" style="display:block;margin-bottom:2px;font-size:.68em">{{ $wunsch->typ->kurz() }}</span>
                                 @endif
                                 @foreach ($grid[$user->id][$day['datum']] ?? [] as $e)
-                                    <span class="plan-shift" title="{{ $e->shift?->beginn }}–{{ $e->shift?->ende }}">
-                                        {{ $e->shift?->name }}
+                                    <span class="plan-shift" title="{{ $e->shift?->beginn }}–{{ $e->shift?->ende }}{{ $e->auto_generiert ? ' — Vorschlag (Auto)' : '' }}" @style(['border:1px dashed var(--c-primary, #16a34a)' => $e->auto_generiert])>
+                                        @if ($e->auto_generiert)<span title="Auto-Vorschlag">✨</span>@endif{{ $e->shift?->name }}
                                         <button wire:click="entfernen({{ $e->id }})" title="Entfernen">×</button>
                                     </span>
                                 @endforeach

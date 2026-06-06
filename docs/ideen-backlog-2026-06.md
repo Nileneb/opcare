@@ -41,7 +41,7 @@ QM-Instrument (Beschwerdemanagement § 114 SGB XI — deckt sich mit Audit-Lück
 - Vorschläge, wo zusätzliche kurze Dienste den Soll-Ist-Deckungsgrad zur Spitzenzeit verbessern.
 **Aufwand:** klein (Erweiterung Schicht-Stammdaten) bis mittel (Spitzenzeit-Gewichtung im Schlüssel).
 
-## 5. Automatischer Dienstplan-Generator
+## 5. Automatischer Dienstplan-Generator ✅ (umgesetzt 2026-06-06)
 
 **Idee (User):** Aus Soll-Dienstplan (Betreuungsschlüssel, Strang B), Negativ-Regeln (ArbZG), Positiv-Regeln
 (Ergonomie, Strang B) und Wunschdienstplan automatisch einen Dienstplan erzeugen, den die PDL nur prüft/freigibt.
@@ -50,6 +50,8 @@ QM-Instrument (Beschwerdemanagement § 114 SGB XI — deckt sich mit Audit-Lück
 - Ansatz: regelbasierter Greedy + lokale Optimierung, oder ein CP/ILP-Solver. Ergebnis = Entwurf → PDL bestätigt/ändert.
 - Alle vier vorhandenen Bausteine sind die Eingaben — das Feature ist die Krönung von Strang B + Wunschdienstplan.
 **Aufwand:** groß (Kern-Algorithmus + Tuning), aber hoher Nutzen. Eigene Iteration wert.
+**Umgesetzt:** Greedy-Constraint-Generator (`DienstplanGenerator`) — füllt offene Slots als Vorschlag (PDL prüft/gibt frei),
+harte ArbZG-Filter + Ergonomie-/Fairness-/Wunsch-Scoring, Unterdeckung transparent gemeldet. Siehe [auto-dienstplan.md](auto-dienstplan.md).
 
 ## 6. Energielevel-Ampel (Mitarbeiter-Wohlbefinden, freiwillig)
 

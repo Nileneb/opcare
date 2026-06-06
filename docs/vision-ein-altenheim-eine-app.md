@@ -139,6 +139,8 @@ Tiefenrecherche zu den noch unvollständigen Bereichen → [recherche-normen-erw
   append-only, Zwei-Zeugen-Vernichtung, Monatsabschluss mit Arzt-Signatur; FEM mit milderen Mitteln, Genehmigungs-/Befristungs-Ampel,
   Überwachungsprotokoll + Dokument-Anhang ([e-btm-fem-konzept.md](e-btm-fem-konzept.md)).
 
-**Ideen-Backlog** (User-Vorschläge, dokumentiert): Bewohner/Angehörige als Nutzer, anonyme Feedback-Form,
-Taschengeldkonto (§27b SGB XII), Übergangs-/Spitzendienste, **automatischer Dienstplan-Generator**, Energielevel-Ampel
-→ [ideen-backlog-2026-06.md](ideen-backlog-2026-06.md).
+- ✅ **Auto-Dienstplan-Generator** *(erledigt 2026-06-06)* — erstellt aus Soll-Besetzung + ArbZG + Ergonomie + Wunschdienstplan
+  automatisch einen Wochen-Vorschlag (PDL prüft & gibt frei); Unterdeckung transparent ([auto-dienstplan.md](auto-dienstplan.md)).
+
+**Ideen-Backlog** (User-Vorschläge): Bewohner/Angehörige als Nutzer, anonyme Feedback-Form, Taschengeldkonto (§27b SGB XII),
+Übergangs-/Spitzendienste, ~~Auto-Dienstplan-Generator~~ ✅, Energielevel-Ampel → [ideen-backlog-2026-06.md](ideen-backlog-2026-06.md).

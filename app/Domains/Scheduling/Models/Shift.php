@@ -23,6 +23,7 @@ use Spatie\Activitylog\Models\Activity;
  * @property bool $aktiv
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property int $soll_besetzung
  * @property-read Collection<int, Activity> $activitiesAsSubject
  * @property-read int|null $activities_as_subject_count
  * @property-read Collection<int, ShiftAssignment> $assignments
@@ -40,6 +41,7 @@ use Spatie\Activitylog\Models\Activity;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereKind($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereSollBesetzung($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereTenantId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereTimeslots($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereUpdatedAt($value)
@@ -50,12 +52,15 @@ class Shift extends BaseModel
 {
     use HasFactory;
 
-    protected $fillable = ['tenant_id', 'name', 'kind', 'beginn', 'ende', 'timeslots', 'aktiv'];
+    protected $fillable = ['tenant_id', 'name', 'kind', 'beginn', 'ende', 'soll_besetzung', 'timeslots', 'aktiv'];
+
+    protected $attributes = ['soll_besetzung' => 1];
 
     protected $casts = [
         'kind' => ShiftKind::class,
         'timeslots' => 'array',
         'aktiv' => 'boolean',
+        'soll_besetzung' => 'integer',
     ];
 
     public function assignments(): HasMany

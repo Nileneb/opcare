@@ -19,6 +19,7 @@ use Spatie\Activitylog\Models\Activity;
  * @property string|null $notiz
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property bool $auto_generiert
  * @property-read Collection<int, Activity> $activitiesAsSubject
  * @property-read int|null $activities_as_subject_count
  * @property-read Shift $shift
@@ -28,6 +29,7 @@ use Spatie\Activitylog\Models\Activity;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ShiftAssignment newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ShiftAssignment newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ShiftAssignment query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ShiftAssignment whereAutoGeneriert($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ShiftAssignment whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ShiftAssignment whereDienstAm($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ShiftAssignment whereId($value)
@@ -41,9 +43,9 @@ use Spatie\Activitylog\Models\Activity;
  */
 class ShiftAssignment extends BaseModel
 {
-    protected $fillable = ['tenant_id', 'user_id', 'shift_id', 'dienst_am', 'notiz'];
+    protected $fillable = ['tenant_id', 'user_id', 'shift_id', 'dienst_am', 'notiz', 'auto_generiert'];
 
-    protected $casts = ['dienst_am' => 'date'];
+    protected $casts = ['dienst_am' => 'date', 'auto_generiert' => 'boolean'];
 
     public function user(): BelongsTo
     {

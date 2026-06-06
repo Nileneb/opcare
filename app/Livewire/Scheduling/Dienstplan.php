@@ -16,6 +16,7 @@ use App\Domains\Scheduling\Models\ComplianceJustification;
 use App\Domains\Scheduling\Models\Dienstwunsch;
 use App\Domains\Scheduling\Models\Shift;
 use App\Domains\Scheduling\Models\ShiftAssignment;
+use App\Domains\Scheduling\Support\DienstplanGenerator;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
@@ -88,6 +89,42 @@ class Dienstplan extends Component
     {
         abort_unless(auth()->user()?->can('manage', Shift::class), 403);
         ShiftAssignment::findOrFail($id)->delete();
+    }
+
+    /** Auto-Generator: füllt offene Slots der Woche als Vorschlag (manuelle Zuweisungen bleiben). */
+    public function autoGenerieren(DienstplanGenerator $generator): void
+    {
+        abort_unless(auth()->user()?->can('manage', Shift::class), 403);
+        $result = $generator->generate(app(CurrentTenant::class)->id(), $this->weekStart);
+        $msg = "Vorschlag erstellt: {$result->erstellt} Dienste, Deckung {$result->deckung()} %.";
+        if ($result->offeneSlots !== []) {
+            $msg .= ' Unbesetzt: '.implode(', ', array_slice($result->offeneSlots, 0, 8)).(count($result->offeneSlots) > 8 ? ' …' : '');
+        }
+        session()->flash('status', $msg);
+    }
+
+    public function vorschlaegeFreigeben(): void
+    {
+        abort_unless(auth()->user()?->can('manage', Shift::class), 403);
+        [$von, $bisExklusiv] = $this->wochenSpanne();
+        $n = ShiftAssignment::where('dienst_am', '>=', $von)->where('dienst_am', '<', $bisExklusiv)->where('auto_generiert', true)->update(['auto_generiert' => false]);
+        session()->flash('status', "{$n} Vorschläge freigegeben.");
+    }
+
+    public function vorschlaegeVerwerfen(): void
+    {
+        abort_unless(auth()->user()?->can('manage', Shift::class), 403);
+        [$von, $bisExklusiv] = $this->wochenSpanne();
+        $n = ShiftAssignment::where('dienst_am', '>=', $von)->where('dienst_am', '<', $bisExklusiv)->where('auto_generiert', true)->delete();
+        session()->flash('status', "{$n} Vorschläge verworfen.");
+    }
+
+    /** @return array{0: string, 1: string} von (inkl.) und exklusive Obergrenze (nächster Montag). */
+    private function wochenSpanne(): array
+    {
+        $start = CarbonImmutable::parse($this->weekStart);
+
+        return [$start->toDateString(), $start->addDays(7)->toDateString()];
     }
 
     public function begruendeStart(string $ruleKey, int $userId, string $datum): void
@@ -189,6 +226,7 @@ class Dienstplan extends Component
             'staffing' => $staffing,
             'qualityByUser' => $qualityByUser,
             'qualityCount' => count($qualityFindings),
+            'vorschlaegeCount' => $assignments->where('auto_generiert', true)->count(),
             'days' => $days,
             'weekLabel' => $start->isoFormat('DD.MM.').'–'.$start->addDays(6)->isoFormat('DD.MM.YYYY'),
             'users' => $users,
