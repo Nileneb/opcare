@@ -23,7 +23,7 @@ QM-Instrument (Beschwerdemanagement § 114 SGB XI — deckt sich mit Audit-Lück
 - Bei anonym: kein User-Bezug gespeichert, nur tenant_id + Inhalt. Leitung sieht Eingänge + Status (offen/in Arbeit/erledigt).
 **Aufwand:** klein–mittel.
 
-## 3. Taschengeldkonto / Barbetragsverwaltung (§ 27b SGB XII)
+## 3. Taschengeldkonto / Barbetragsverwaltung (§ 27b SGB XII) ✅ (umgesetzt 2026-06-06)
 
 **Idee (User):** Angehörige (z. B. von Demenzkranken) hinterlegen Geld (Friseur etc.), die Pflege zahlt treuhänderisch aus.
 **Deckt sich mit Audit-Lücke #6** (Barbetragsverwaltung). 
@@ -34,6 +34,10 @@ QM-Instrument (Beschwerdemanagement § 114 SGB XI — deckt sich mit Audit-Lück
 **Recht:** GoB, Treuhand getrennt führen, prüfbar durch Heimaufsicht. **Aufwand:** mittel (Buchhaltung als Basis).
 **Budget-Setzungen (User 2026-06-06):** je Treuhandkonto Budgets (Kategorie/Zeitraum) mit Warn-/Sperr-Ampel —
 generisches Muster, auch für Wirtschaftsbudgets der Buchhaltung. Spezifiziert in [ai-services-plan.md §3](ai-services-plan.md).
+**Umgesetzt 2026-06-06:** Treuhandkonto je Bewohner (`Accounting\Treuhandkonto`), append-only Journal (`Treuhandbuchung`,
+Überziehungs-Schutz + Einzelbelegpflicht, HeimSiV § 8/§ 17), Budget-Setzungen mit Warn-/Sperr-Ampel (`BudgetMonitor`),
+monatliche Rechnungslegung (HeimSiV § 15) + Befugnis über Rolle `admin`/`buchhaltung`. Rechtsgrundlagen per
+Legal Data Hunter belegt. Siehe [taschengeldkasse.md](taschengeldkasse.md).
 
 ## 4. Dienstplan: Übergangs-/Spitzendienste
 

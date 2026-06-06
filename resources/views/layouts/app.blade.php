@@ -72,6 +72,7 @@
         @if (auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'buchhaltung']))
             <nav class="app-nav app-nav-finanzen">
                 <a href="{{ route('buchhaltung') }}" @class(['is-active' => request()->routeIs('buchhaltung')])>Buchhaltung</a>
+                <a href="{{ route('taschengeld') }}" @class(['is-active' => request()->routeIs('taschengeld')])>Taschengeldkasse</a>
             </nav>
         @endif
         @if (auth()->user()?->hasAnyRole(['admin', 'super-admin']))

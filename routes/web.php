@@ -6,6 +6,7 @@ use App\Http\Controllers\MediaDownloadController;
 use App\Http\Controllers\SpeechController;
 use App\Http\Middleware\RequireTwoFactorEnrollment;
 use App\Livewire\Accounting\Buchhaltung;
+use App\Livewire\Accounting\Taschengeldkasse;
 use App\Livewire\Admin\Tenants;
 use App\Livewire\Admin\Users;
 use App\Livewire\Assessment\AssessmentDurchfuehren;
@@ -106,6 +107,7 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class])->group(
     Route::get('/wunschdienstplan', Wunschdienstplan::class)->name('wunschdienstplan');
     Route::get('/tauschboerse', Tauschboerse::class)->name('tauschboerse');
     Route::get('/buchhaltung', Buchhaltung::class)->name('buchhaltung');
+    Route::get('/taschengeld', Taschengeldkasse::class)->name('taschengeld');
     Route::get('/dokumente/{media}', MediaDownloadController::class)->name('media.download')->middleware('signed');
     Route::get('/bewohner/{resident}/assessment/{instrument}', AssessmentDurchfuehren::class)->name('assessment.durchfuehren');
     Route::get('/bewohner/{resident}/assessments', AssessmentVerlauf::class)->name('assessment.verlauf');

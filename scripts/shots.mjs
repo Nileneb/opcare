@@ -35,6 +35,7 @@ const pages = [
     ['haustechnik', '/haustechnik', true],
     ['kueche', '/kueche', true],
     ['buchhaltung', '/buchhaltung', true],
+    ['taschengeld', '/taschengeld', true],
     ['skill-baum', '/personal/kompetenzen', true],
     ['berechtigungen', '/personal/berechtigungen', true],
     ['beauftragte', '/personal/beauftragte', true],

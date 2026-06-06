@@ -2,10 +2,15 @@
 
 namespace App\Domains\Identity\Database\Seeders;
 
+use App\Domains\Accounting\Actions\TreuhandBuchen;
 use App\Domains\Accounting\Actions\Wareneingang;
 use App\Domains\Accounting\Actions\Warenverbrauch;
 use App\Domains\Accounting\Enums\Abteilung;
+use App\Domains\Accounting\Enums\BarbetragKategorie;
+use App\Domains\Accounting\Enums\TreuhandVorgang;
 use App\Domains\Accounting\Models\Artikel;
+use App\Domains\Accounting\Models\Treuhandbudget;
+use App\Domains\Accounting\Models\Treuhandkonto;
 use App\Domains\Accounting\Support\AccountingDefaults;
 use App\Domains\Assessment\Actions\ConductAssessment;
 use App\Domains\Assessment\Data\AssessmentInputData;
@@ -502,6 +507,19 @@ class DemoSeeder extends Seeder
                 'aktenzeichen' => 'XVII 4521/26', 'gericht' => 'Amtsgericht Wuppertal', 'beschluss_am' => now()->subDays(18)->toDateString(),
                 'gueltig_bis' => now()->addMonths(11)->toDateString()]);
             $fem->protokolle()->create(['tenant_id' => $tenant->id, 'zeitpunkt' => now()->subHours(6), 'typ' => 'kontrolle', 'befund' => 'ruhig, Haut o. B.', 'indikation_gegeben' => true, 'dokumentiert_von' => $admin->id]);
+        }
+
+        // Taschengeldkasse (§ 27b SGB XII): Treuhandkonto + Buchungen + Budget mit Warn-/Sperr-Ampel.
+        if ($btmBewohner !== null) {
+            $treuhand = Treuhandkonto::create(['tenant_id' => $tenant->id, 'resident_id' => $btmBewohner->id,
+                'iban' => 'DE02120300000000202051', 'eroeffnet_am' => now()->subMonths(3)->toDateString()]);
+            app(TreuhandBuchen::class)->handle($treuhand, TreuhandVorgang::Einzahlung, 150.00, now()->subMonths(3)->toDateString(), ['zweck' => 'Einzahlung Angehörige', 'erfasst_von' => $admin->id]);
+            app(TreuhandBuchen::class)->handle($treuhand, TreuhandVorgang::Auszahlung, 18.50, now()->subDays(20)->toDateString(), ['zweck' => 'Friseurbesuch', 'kategorie' => BarbetragKategorie::Friseur, 'beleg_nr' => 'Q-1042', 'erfasst_von' => $admin->id]);
+            app(TreuhandBuchen::class)->handle($treuhand, TreuhandVorgang::Auszahlung, 9.90, now()->subDays(5)->toDateString(), ['zweck' => 'Zeitschriften', 'kategorie' => BarbetragKategorie::Freizeit, 'beleg_nr' => 'Q-1067', 'erfasst_von' => $admin->id]);
+            Treuhandbudget::create(['tenant_id' => $tenant->id, 'treuhand_konto_id' => $treuhand->id,
+                'kategorie' => BarbetragKategorie::Friseur->value, 'limit_betrag' => 30.00, 'warn_prozent' => 80, 'sperre' => false]);
+            Treuhandbudget::create(['tenant_id' => $tenant->id, 'treuhand_konto_id' => $treuhand->id,
+                'kategorie' => null, 'limit_betrag' => 120.00, 'warn_prozent' => 90, 'sperre' => true]);
         }
 
         // Skill-Baum + Berechtigungsmatrix + Delegation + Beauftragten-Register (Demo).
