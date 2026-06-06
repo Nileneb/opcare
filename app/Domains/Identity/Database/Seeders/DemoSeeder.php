@@ -62,12 +62,14 @@ use App\Domains\Medication\Models\MedProduct;
 use App\Domains\Medication\Models\TradeForm;
 use App\Domains\Medication\Models\VitalReading;
 use App\Domains\Personnel\Enums\Beschaeftigungsart;
+use App\Domains\Personnel\Enums\BetriebsbetreuungArt;
 use App\Domains\Personnel\Enums\Krankenversicherung;
 use App\Domains\Personnel\Enums\Masernschutz;
 use App\Domains\Personnel\Enums\NachweisTyp;
 use App\Domains\Personnel\Enums\Qualifikation;
 use App\Domains\Personnel\Enums\Steuerklasse;
 use App\Domains\Personnel\Models\Beauftragtenbestellung;
+use App\Domains\Personnel\Models\Betriebsbetreuung;
 use App\Domains\Personnel\Models\Delegation;
 use App\Domains\Personnel\Models\MitarbeiterKompetenz;
 use App\Domains\Personnel\Models\Schutznachweis;
@@ -77,10 +79,13 @@ use App\Domains\Personnel\Support\TaetigkeitDefaults;
 use App\Domains\Quality\Enums\EventSeverity;
 use App\Domains\Quality\Enums\FemArt;
 use App\Domains\Quality\Enums\FemEinwilligung;
+use App\Domains\Quality\Enums\GremiumTyp;
 use App\Domains\Quality\Enums\QmStatus;
 use App\Domains\Quality\Enums\QualityIndicator;
+use App\Domains\Quality\Models\Beschwerde;
 use App\Domains\Quality\Models\CareEvent;
 use App\Domains\Quality\Models\FemFall;
+use App\Domains\Quality\Models\Gremium;
 use App\Domains\Quality\Support\QmKatalogDefaults;
 use App\Domains\Scheduling\Compliance\ArbeitszeitgesetzDefaults;
 use App\Domains\Scheduling\Compliance\PersonalbemessungDefaults;
@@ -563,6 +568,48 @@ class DemoSeeder extends Seeder
             'user_id' => $sandra->id, 'bestellt_am' => now()->subMonths(2)->toDateString(), 'gueltig_bis' => now()->subMonths(2)->addMonths(36)->toDateString()]);
         Beauftragtenbestellung::create(['tenant_id' => $tenant->id, 'beauftragten_rolle_id' => $brollen['ersthelfer']->id,
             'user_id' => $tom->id, 'bestellt_am' => now()->subMonths(20)->toDateString(), 'gueltig_bis' => now()->subMonths(20)->addMonths(24)->toDateString()]);
+
+        // Betriebsärztliche & sicherheitstechnische Betreuung (ASiG/DGUV V2): Begehung überfällig → Ampel.
+        $betriebsarzt = Betriebsbetreuung::create(['tenant_id' => $tenant->id, 'art' => BetriebsbetreuungArt::Betriebsarzt,
+            'name' => 'Dr. med. Petra Vogt', 'firma' => 'B·A·D Gesundheitsdienst', 'extern' => true, 'telefon' => '0202 555-120',
+            'email' => 'vogt@bad-dienst.de', 'bestellt_am' => now()->subYears(3)->toDateString(), 'einsatzzeit_stunden' => 30,
+            'letzte_begehung' => now()->subMonths(14)->toDateString(), 'begehung_intervall_monate' => 12]); // Begehung überfällig → rot
+        $sifa = Betriebsbetreuung::create(['tenant_id' => $tenant->id, 'art' => BetriebsbetreuungArt::Sifa,
+            'name' => 'Markus Renner', 'firma' => 'B·A·D Gesundheitsdienst', 'extern' => true, 'telefon' => '0202 555-121',
+            'einsatzzeit_stunden' => 40, 'letzte_begehung' => now()->subMonths(4)->toDateString(), 'begehung_intervall_monate' => 12]);
+
+        // Gremien & Mitwirkung: Heimbeirat (Neuwahl fällig) + Arbeitsschutzausschuss (§ 11 ASiG, vierteljährlich).
+        $heimbeirat = Gremium::create(['tenant_id' => $tenant->id, 'typ' => GremiumTyp::Heimbeirat, 'name' => 'Heimbeirat',
+            'beschreibung' => 'Vertretung der Bewohnerinnen und Bewohner (HeimmwV, § 10 WBVG).',
+            'gewaehlt_am' => now()->subMonths(26)->toDateString(), 'periode_monate' => 24, 'sitzung_intervall_monate' => 3]); // Wahlperiode abgelaufen → rot
+        $heimbeirat->mitglieder()->create(['tenant_id' => $tenant->id, 'name' => 'Wilhelm Müller', 'art' => 'bewohner', 'funktion' => 'vorsitz', 'resident_id' => $wilhelm->id]);
+        $heimbeirat->mitglieder()->create(['tenant_id' => $tenant->id, 'name' => 'Kurt Petersen', 'art' => 'bewohner', 'funktion' => 'stellvertretung', 'resident_id' => $kurt->id]);
+        $heimbeirat->mitglieder()->create(['tenant_id' => $tenant->id, 'name' => 'Sandra Berg', 'art' => 'mitarbeiter', 'funktion' => 'schriftfuehrung', 'user_id' => $sandra->id]);
+        $heimbeirat->sitzungen()->create(['tenant_id' => $tenant->id, 'datum' => now()->subMonths(5)->toDateString(), 'thema' => 'Speiseplan & Aktivitäten',
+            'protokoll' => 'Wünsche zur Wochenkarte besprochen.', 'beschluesse' => 'Monatlicher Wunschtag wird eingeführt.', 'teilnehmerzahl' => 7, 'protokoll_von' => $sandra->id]);
+
+        $asa = Gremium::create(['tenant_id' => $tenant->id, 'typ' => GremiumTyp::Arbeitsschutzausschuss, 'name' => 'Arbeitsschutzausschuss (ASA)',
+            'beschreibung' => 'Quartalssitzung mit Betriebsarzt und Sifa (§ 11 ASiG).', 'sitzung_intervall_monate' => 3]);
+        $asa->mitglieder()->create(['tenant_id' => $tenant->id, 'name' => 'Dr. med. Petra Vogt', 'art' => 'betriebsarzt', 'funktion' => 'mitglied']);
+        $asa->mitglieder()->create(['tenant_id' => $tenant->id, 'name' => 'Markus Renner', 'art' => 'sifa', 'funktion' => 'mitglied']);
+        $asa->mitglieder()->create(['tenant_id' => $tenant->id, 'name' => 'Heimleitung', 'art' => 'leitung', 'funktion' => 'vorsitz', 'user_id' => $admin->id]);
+        $asa->sitzungen()->create(['tenant_id' => $tenant->id, 'datum' => now()->subMonths(2)->toDateString(), 'thema' => 'Gefährdungsbeurteilung Pflege',
+            'beschluesse' => 'Hebehilfen WB 1 werden beschafft.', 'teilnehmerzahl' => 5, 'protokoll_von' => $admin->id]);
+
+        // Beschwerde-/Gewaltschutz-Management (§ 113 SGB XI): inkl. anonymer Weiterleitung an die Küche.
+        $kalt = Beschwerde::create(['tenant_id' => $tenant->id, 'titel' => 'Mittagessen mehrfach zu kalt', 'beschreibung' => 'Das Essen kommt seit zwei Wochen lauwarm auf WB 1 an.',
+            'kategorie' => 'beschwerde', 'bereich' => 'kueche', 'quelle' => 'bewohner', 'melder_sichtbarkeit' => 'anonym',
+            'eingang_am' => now()->subDays(4)->toDateString(), 'frist' => now()->addDays(3)->toDateString(), 'status' => 'weitergeleitet', 'bearbeiter_user_id' => $sandra->id]);
+        $kalt->vorgaenge()->create(['tenant_id' => $tenant->id, 'art' => 'weiterleitung', 'an_bereich' => 'kueche', 'anonym' => true,
+            'text' => 'Bitte Temperaturkette prüfen. Melder bleibt anonym.', 'von_user_id' => $sandra->id]);
+
+        Beschwerde::create(['tenant_id' => $tenant->id, 'titel' => 'Verdacht auf grobe Ansprache nachts', 'beschreibung' => 'Angehörige berichtet von ruppigem Umgangston in der Nachtschicht.',
+            'kategorie' => 'gewaltvorfall', 'bereich' => 'pflege', 'quelle' => 'angehoerige', 'melder_sichtbarkeit' => 'namentlich', 'melder_name' => 'Tochter von Frau Schneider',
+            'eingang_am' => now()->subDay()->toDateString(), 'frist' => now()->addDays(2)->toDateString(), 'status' => 'in_bearbeitung', 'schweregrad' => 'mittel', 'bearbeiter_user_id' => $admin->id]); // ohne Sofortmaßnahme → rot
+
+        Beschwerde::create(['tenant_id' => $tenant->id, 'titel' => 'Lob für die Betreuung', 'beschreibung' => 'Großes Lob an das Betreuungsteam für den Sommerausflug.',
+            'kategorie' => 'lob', 'bereich' => 'betreuung', 'quelle' => 'angehoerige', 'melder_sichtbarkeit' => 'namentlich', 'melder_name' => 'Familie Müller',
+            'eingang_am' => now()->subDays(10)->toDateString(), 'status' => 'erledigt', 'erledigt_am' => now()->subDays(9)->toDateString(), 'ergebnis' => 'Im Team weitergegeben.']);
 
         // Zweites Heim — Haus Birkenhof (2 Bewohner, kein SIS für Minimal-Demo)
         $birkenhof = Tenant::create(['name' => 'Haus Birkenhof', 'slug' => 'birkenhof']);

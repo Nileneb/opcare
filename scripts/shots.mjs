@@ -42,6 +42,8 @@ const pages = [
     ['beauftragte', '/personal/beauftragte', true],
     ['btm-nachweis', '/medikation/btm', true],
     ['fem', '/qualitaet/fem', true],
+    ['beschwerden', '/qualitaet/beschwerden', true],
+    ['gremien', '/qualitaet/gremien', true],
     ['arbeitsschutz-nachweise', '/arbeitsschutz/nachweise', true],
     ['mitarbeitende', '/admin/benutzer', true],
     ['qdvs', '/qdvs', true],

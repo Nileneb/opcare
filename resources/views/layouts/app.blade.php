@@ -45,6 +45,7 @@
                 <a href="{{ route('personnel.berechtigungen') }}" @class(['is-active' => request()->routeIs('personnel.berechtigungen')])>Berechtigungen</a>
                 <a href="{{ route('personnel.beauftragte') }}" @class(['is-active' => request()->routeIs('personnel.beauftragte')])>Beauftragte</a>
                 <a href="{{ route('quality.fem') }}" @class(['is-active' => request()->routeIs('quality.fem')])>FEM</a>
+                <a href="{{ route('quality.gremien') }}" @class(['is-active' => request()->routeIs('quality.gremien')])>Gremien</a>
             </nav>
         @endif
         @can('manage', \App\Domains\Scheduling\Models\Shift::class)
@@ -60,6 +61,9 @@
             <a href="{{ route('tauschboerse') }}" @class(['is-active' => request()->routeIs('tauschboerse')])>Tauschbörse</a>
             <a href="{{ route('haustechnik') }}" @class(['is-active' => request()->routeIs('haustechnik')])>Haustechnik</a>
             <a href="{{ route('medizinprodukte') }}" @class(['is-active' => request()->routeIs('medizinprodukte')])>Medizinprodukte</a>
+            @if (auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'pflegefachkraft', 'pflegehilfskraft', 'betreuungskraft', 'kueche', 'haustechnik', 'buchhaltung']))
+                <a href="{{ route('quality.beschwerden') }}" @class(['is-active' => request()->routeIs('quality.beschwerden')])>Beschwerden</a>
+            @endif
             @if (auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'pflegefachkraft', 'kueche']))
                 <a href="{{ route('kueche') }}" @class(['is-active' => request()->routeIs('kueche')])>Küche</a>
             @endif

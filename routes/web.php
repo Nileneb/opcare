@@ -36,8 +36,10 @@ use App\Livewire\Personnel\SkillBaum;
 use App\Livewire\Pflegeplanung;
 use App\Livewire\Profile;
 use App\Livewire\Qdvs\Export as QdvsExport;
+use App\Livewire\Quality\Beschwerden;
 use App\Livewire\Quality\Controlling;
 use App\Livewire\Quality\FemUebersicht;
+use App\Livewire\Quality\Gremien;
 use App\Livewire\Quality\QmCheckliste;
 use App\Livewire\Quality\QualityReport;
 use App\Livewire\Residents;
@@ -94,6 +96,8 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class])->group(
     Route::get('/qualitaet/report', QualityReport::class)->name('quality.report');
     Route::get('/qualitaet/qm-checkliste', QmCheckliste::class)->name('quality.qm');
     Route::get('/qualitaet/fem', FemUebersicht::class)->name('quality.fem');
+    Route::get('/qualitaet/beschwerden', Beschwerden::class)->name('quality.beschwerden');
+    Route::get('/qualitaet/gremien', Gremien::class)->name('quality.gremien');
 
     // Querschnitts-Sprachfunktionen für jedes Textfeld (inline, synchron).
     Route::post('/speech/transcribe', [SpeechController::class, 'transcribe'])->name('speech.transcribe');

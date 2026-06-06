@@ -1,6 +1,6 @@
 # Offene & ungeklärte Punkte (Stand 2026-06-06, Session-Handoff)
 
-Stand: 427 Tests grün, PHPStan 0, Pint clean. Diese Liste sammelt, was vor/nach einem Neustart offen ist.
+Stand: 451 Tests grün, PHPStan 0, Pint clean. Diese Liste sammelt, was vor/nach einem Neustart offen ist.
 Querbezug: [Ideen-Backlog](ideen-backlog-2026-06.md), [Norm-Recherche](recherche-normen-erweiterung-2026-06.md),
 **[Gesetzes-Recherche zu den offenen Punkten](recherche-offene-punkte-2026-06.md)** (Rechtsgrundlage + Datenmodell je Punkt).
 
@@ -43,17 +43,19 @@ Querbezug: [Ideen-Backlog](ideen-backlog-2026-06.md), [Norm-Recherche](recherche
 - ✅ **MPBetreibV-Bestandsverzeichnis** (§ 13/§ 14) — **umgesetzt 2026-06-06**: Medizinprodukte-Stammdaten +
   Medizinproduktebuch mit STK/MTK-Frist-Ampel + Einweisungen + Vorkommnisse (BfArM), siehe
   [medizinprodukte.md](medizinprodukte.md). MPSB (§ 6) im Beauftragten-Register vorhanden.
+- ✅ **Beschwerde-/Gewaltschutz + Heimbeirat/Gremien + Betriebsarzt/Sifa** — **umgesetzt 2026-06-06**:
+  Beschwerdemanagement (§ 113 SGB XI) mit **Weiterleitung anonym/namentlich nach Wahl des Melders** +
+  Bereichs-Benachrichtigung, Gewaltschutz-Sofortmaßnahme, Gremien/Heimbeirat (HeimmwV/§ 10 WBVG/§ 11 ASiG) und
+  Betriebsarzt/Sifa-Stammdaten (ASiG/DGUV V2). Siehe [beschwerden-gremien.md](beschwerden-gremien.md).
 
 Noch offen:
-1. **Beschwerde-/Gewaltschutz** + **anonyme Feedback-Form** (Idee #2) und **Heimbeirat/Gremien-Modul** (Idee #7,
-   Recherche §4) — Betriebsarzt/Sifa-Stammdaten inklusive (Recherche §5). **Neuer Top-Kandidat.**
-2. **Bewohner/Angehörige/Betreuer als Nutzer** — Vertretung mit Aufgabenkreisen (Betreuungsrecht §§ 1814 ff. BGB),
+1. **Bewohner/Angehörige/Betreuer als Nutzer** — Vertretung mit Aufgabenkreisen (Betreuungsrecht §§ 1814 ff. BGB),
    Posteingang/**Briefwahl-Benachrichtigung** (Recherche §1, User-Wunsch 2026-06-06).
-3. **Datenschutz-VVT/AVV** (Art. 30/28 DSGVO, Recherche §3) · **Hygiene/MRE** (§ 23 IfSG, Recherche §6) ·
+2. **Datenschutz-VVT/AVV** (Art. 30/28 DSGVO, Recherche §3) · **Hygiene/MRE** (§ 23 IfSG, Recherche §6) ·
    **Fortbildungsplan** (Recherche §7).
-4. **Bundesland-Overrides** (föderales Heimrecht, Recherche §8) · **freie Buchung im Hauptbuch** (Recherche §10) ·
+3. **Bundesland-Overrides** (föderales Heimrecht, Recherche §8) · **freie Buchung im Hauptbuch** (Recherche §10) ·
    **Energielevel-Ampel** (Recherche §9) · **Übergangs-/Spitzendienste** (Idee #4).
-5. **AI-Services** (eigene Session): Ollama + whisperX-mcp als Container mit Build-Pre-Flight-Healthcheck,
+4. **AI-Services** (eigene Session): Ollama + whisperX-mcp als Container mit Build-Pre-Flight-Healthcheck,
    **VLM-Beleg-Capture** und **Budget-Setzungen**. Voll spezifiziert in [ai-services-plan.md](ai-services-plan.md).
 
 ## E. Technische/Infra-Notizen

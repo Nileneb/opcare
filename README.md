@@ -6,7 +6,7 @@ Qualitätssicherung (QDVS/DAS-Pflege)** und **FHIR / ÜLB-MIO** (Pflegeüberleit
 des eingestellten Java-Projekts **[Offene-Pflege.de (OPDE)](#herkunft)** — dessen Domänenwissen dient als
 Vorlage, der Code ist von Grund auf neu.
 
-> **Status:** Funktionsfähig und aktiv in Entwicklung. **427 Tests grün**, CI durchgehend grün
+> **Status:** Funktionsfähig und aktiv in Entwicklung. **451 Tests grün**, CI durchgehend grün
 > (Tests · Linter · Security-Audit · FHIR-Validierung). Open Source (AGPL-3.0), **kein Rechtsgate**,
 > solange keine Echt-Patientendaten verarbeitet werden.
 >
@@ -45,6 +45,11 @@ Vorlage, der Code ist von Grund auf neu.
 - **Medizinprodukte (MPBetreibV § 13/§ 14)** — Bestandsverzeichnis + Medizinproduktebuch mit
   **STK/MTK-Prüffristen-Ampel**, dokumentierten **Einweisungen** und Funktionsstörungen/**Vorkommnissen**
   (BfArM-Meldung). Siehe [docs/medizinprodukte.md](docs/medizinprodukte.md).
+- **Beschwerde- & Gewaltschutz-Management (§ 113 SGB XI / Landes-WTG / § 5 SGB XI)** — Eingang erfassen und an die
+  betroffene Abteilung **weiterleiten — anonym oder namentlich, je nach Wahl des Melders** (Bereichsrolle wird
+  benachrichtigt); Gewaltvorfälle bleiben bis zur Sofortmaßnahme rot. Plus **Gremien/Heimbeirat** (HeimmwV, § 10
+  WBVG, ASA § 11 ASiG) und **Betriebsarzt/Sifa-Stammdaten** (ASiG/DGUV V2).
+  Siehe [docs/beschwerden-gremien.md](docs/beschwerden-gremien.md).
 - **Küche & Verpflegung (LMIV)** — die Küche sieht die **Lebensmittelallergien + Kostformen** der Bewohner
   (aus den vorhandenen Pflegedaten) und pflegt den **Speiseplan mit Allergenkennzeichnung** (14 EU-Allergene);
   je Gericht werden **betroffene Bewohner gewarnt**. **Essenswünsche** (Vorliebe/Abneigung) sind jederzeit
@@ -73,7 +78,7 @@ Vorlage, der Code ist von Grund auf neu.
 | Backend | **Laravel 13**, **PHP 8.3+** |
 | Frontend | Blade + **Livewire 4** + Alpine.js |
 | Datenbank | **SQLite** (Dev/CI) · **PostgreSQL** (Prod) |
-| Tests | **Pest 4** (427 Tests) |
+| Tests | **Pest 4** (451 Tests) |
 | Lint/Style | **Laravel Pint** |
 | DTOs / RBAC / Audit | `spatie/laravel-data` · `spatie/laravel-permission` · `spatie/laravel-activitylog` |
 | Deployment | **Docker Compose** (self-contained: eine `.env`, `docker compose up --build`) |
@@ -91,11 +96,11 @@ Domänen-orientierte Struktur unter `app/Domains/`. Layering als Einbahnstraße:
 | **CarePlanning** | SIS®-Strukturmodell: Informationssammlung → Maßnahmenplan → Bericht → Evaluation |
 | **Assessment** | Instrument-Engine (Braden/Sturz/BESD/Barthel), Scoring, Risiko-Bänder, Eskalation |
 | **Medication** | Verordnungen, Stellplan, Bestände, Gaben, Vitalwerte |
-| **Quality** | Vorkommnisse/CareEvents, QS-Indikatoren, KPIs, **QM-Norm-Checkliste** (datengetrieben, Erfüllungsgrad) |
+| **Quality** | Vorkommnisse/CareEvents, QS-Indikatoren, KPIs, **QM-Norm-Checkliste**, **Beschwerde-/Gewaltschutz-Management** (Weiterleitung anonym/namentlich), **Gremien/Heimbeirat** (HeimmwV/§ 11 ASiG) |
 | **Qdvs** | DAS-Plausibilitäts-Regel-Engine + QDVS-Export |
 | **Fhir** | FHIR-R4-Mapper + Document-Bundle-Export (ÜLB-MIO-Richtung) |
 | **Scheduling** | Dienstplan, Schichten, Kalender, **ArbZG-Compliance-Engine** (Regelwerk + § 14) + **Arbeitszeiterfassung** (BAG/EuGH) |
-| **Personnel** | Personalakte (Personalfragebogen, verschlüsselt) 1:1 am Benutzer, gekoppelt an die Rollenverwaltung |
+| **Personnel** | Personalakte (Personalfragebogen, verschlüsselt) 1:1 am Benutzer, gekoppelt an die Rollenverwaltung; Arbeitsschutz-Nachweise + **Betriebsarzt/Sifa-Betreuung** (ASiG/DGUV V2), Beauftragten-Register |
 | **Facility** | Haustechnik/Instandhaltung (DIN 31051): Mängelmeldungen + Wartungsplan mit Prüffristen; Medizinprodukte-Bestandsverzeichnis + Medizinproduktebuch (MPBetreibV) |
 | **Catering** | Küche/Verpflegung (LMIV): Diät-/Allergen-Sicht der Bewohner + Speiseplan mit Allergenwarnung |
 | **SocialCare** | Soziale Betreuung (§ 43b SGB XI): Angebote + Teilnahme-Nachweis je Bewohner |
@@ -151,7 +156,7 @@ php artisan serve
 ## Entwicklung
 
 ```bash
-php artisan test                 # bzw. vendor/bin/pest   (427 Tests)
+php artisan test                 # bzw. vendor/bin/pest   (451 Tests)
 vendor/bin/pint                  # Code-Style
 php artisan fhir:export --output=bundle.json   # FHIR-Document-Bundle erzeugen
 ```

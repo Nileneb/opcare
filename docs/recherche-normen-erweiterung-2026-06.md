@@ -162,10 +162,10 @@ Kriterien: Rechtspflicht (Bußgeld/Straf) × MD-Prüfrelevanz × Machbarkeit aus
 | 4 ✅ | **Medizinprodukte** | MPBetreibV 2025/MDR | Facility | Bestandsverzeichnis, Medizinproduktebuch, STK/MTK-Fristen, Einweisungsnachweis — **umgesetzt 2026-06-06** (medizinprodukte.md) |
 | 5 | **Datenschutz operativ** | DSGVO 30/28/33 | Security | VVT, AVV-Inventar, Datenpannen-Register (72-h-Timer), Betroffenenrechte-Workflow |
 | 6 ✅ | **Barbetragsverwaltung** | §27b SGB XII | Buchhaltung | Treuhand-Bewohnerkonto, Einzelbelege, Monats-/Jahresbericht fürs Betreuungsgericht, Pfändungsschutz — **umgesetzt 2026-06-06** (taschengeldkasse.md) |
-| 7 | **Beschwerde + Gewaltschutz** | §114 SGB XI, QPR 2024, QA 2026 | (neu) | Beschwerde-Ticket; Gewaltschutzkonzept + Vorfall-Meldung (vertraulich); Auswertungs-Dashboard |
+| 7 ✅ | **Beschwerde + Gewaltschutz** | §113 SGB XI, Landes-WTG, §5 SGB XI | Quality | Beschwerde-Vorgang mit Weiterleitung (anonym/namentlich, Melder wählt) + Bereichs-Benachrichtigung; Gewaltvorfall-Sofortmaßnahme — **umgesetzt 2026-06-06** (beschwerden-gremien.md) |
 | 8 | **Hygiene operativ + MRE** | §23/§36 IfSG, KRINKO | QM-Checkliste→Modul | Hygieneplan versioniert, MRE-Status je Bewohner, Ausbruchs-Meldekette, Hygiene-Unterweisung |
 | 9 | **Brandschutz + Evakuierungsklassen** | DIN 14096, LBO | Personal+Bewohner | Doku/Schulung/Übungsprotokoll; **Evakuierungsklasse je Bewohner** (selbstständig/Hilfe/Trage) |
-| 10 | **Heimbeirat + WBVG-Vertrag** | HeimmwV, WBVG | (neu)/Stammdaten | Heimbeirat-Protokolle; WBVG-Vertrag mit Mindestinhalten + Entgeltänderungs-/Kündigungs-Workflow |
+| 10 ◑ | **Heimbeirat + WBVG-Vertrag** | HeimmwV, WBVG, §11 ASiG | Quality | Heimbeirat/Gremien (Wahlperioden-/Sitzungs-Ampel) + ASA + Betriebsarzt/Sifa — **umgesetzt 2026-06-06** (beschwerden-gremien.md); WBVG-Vertrags-Workflow noch offen |
 
 Auf dem Radar (11–13): Trinkwasser/Legionellen (TrinkwV 2023, Facility-Erweiterung), Heimaufsicht-Meldeworkflow (länderspezifisch),
 Pflegecharta-Aufnahme-Workflow (BMFSFJ, minimal aber MD-relevant).
