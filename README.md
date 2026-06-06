@@ -6,7 +6,7 @@ Qualitätssicherung (QDVS/DAS-Pflege)** und **FHIR / ÜLB-MIO** (Pflegeüberleit
 des eingestellten Java-Projekts **[Offene-Pflege.de (OPDE)](#herkunft)** — dessen Domänenwissen dient als
 Vorlage, der Code ist von Grund auf neu.
 
-> **Status:** Funktionsfähig und aktiv in Entwicklung. **301 Tests grün**, CI durchgehend grün
+> **Status:** Funktionsfähig und aktiv in Entwicklung. **309 Tests grün**, CI durchgehend grün
 > (Tests · Linter · Security-Audit · FHIR-Validierung). Open Source (AGPL-3.0), **kein Rechtsgate**,
 > solange keine Echt-Patientendaten verarbeitet werden.
 >
@@ -33,7 +33,9 @@ Vorlage, der Code ist von Grund auf neu.
   App-Benutzer, **an die Rollenverwaltung gekoppelt**; sensible Felder (Steuer-ID/SV-Nr/IBAN)
   At-Rest-verschlüsselt.
 - **Qualität & Controlling** — Vorkommnis-Erfassung (Sturz strukturiert mit Folgen, Dekubitus mit Stadium,
-  FEM …), QS-Indikatoren, KPI-Dashboard.
+  FEM …), QS-Indikatoren, KPI-Dashboard sowie eine **QM-Norm-Checkliste**: norm-verankerte Anforderungen
+  (QPR-Qualitätsbereiche QB1–6 + Hygiene/IfSG, Datenschutz/DSGVO, Arbeitsschutz, Hauswirtschaft/LMIV,
+  Haustechnik/DIN 31051, Heimrecht) mit Erfüllungsgrad, Zuständigkeit und Gesetzeslink je Anforderung.
 - **QDVS / DAS-Pflege** — datengetriebene **Plausibilitäts-Regel-Engine** (440 DAS-Regeln, Pattern-Matcher
   statt Voll-XPath; ehrlicher Coverage-Report; aktuell 57 Regeln scharf).
 - **FHIR-Export** — FHIR-R4-Pflegeüberleitungs-**Document-Bundle**, validiert im CI mit dem **amtlichen
@@ -51,7 +53,7 @@ Vorlage, der Code ist von Grund auf neu.
 | Backend | **Laravel 13**, **PHP 8.3+** |
 | Frontend | Blade + **Livewire 4** + Alpine.js |
 | Datenbank | **SQLite** (Dev/CI) · **PostgreSQL** (Prod) |
-| Tests | **Pest 4** (301 Tests) |
+| Tests | **Pest 4** (309 Tests) |
 | Lint/Style | **Laravel Pint** |
 | DTOs / RBAC / Audit | `spatie/laravel-data` · `spatie/laravel-permission` · `spatie/laravel-activitylog` |
 | Deployment | **Docker Compose** (self-contained: eine `.env`, `docker compose up --build`) |
@@ -69,7 +71,7 @@ Domänen-orientierte Struktur unter `app/Domains/`. Layering als Einbahnstraße:
 | **CarePlanning** | SIS®-Strukturmodell: Informationssammlung → Maßnahmenplan → Bericht → Evaluation |
 | **Assessment** | Instrument-Engine (Braden/Sturz/BESD/Barthel), Scoring, Risiko-Bänder, Eskalation |
 | **Medication** | Verordnungen, Stellplan, Bestände, Gaben, Vitalwerte |
-| **Quality** | Vorkommnisse/CareEvents, QS-Indikatoren, KPIs |
+| **Quality** | Vorkommnisse/CareEvents, QS-Indikatoren, KPIs, **QM-Norm-Checkliste** (datengetrieben, Erfüllungsgrad) |
 | **Qdvs** | DAS-Plausibilitäts-Regel-Engine + QDVS-Export |
 | **Fhir** | FHIR-R4-Mapper + Document-Bundle-Export (ÜLB-MIO-Richtung) |
 | **Scheduling** | Dienstplan, Schichten, Kalender, **ArbZG-Compliance-Engine** (editierbares Regelwerk + § 14-Begründungen) |
@@ -125,7 +127,7 @@ php artisan serve
 ## Entwicklung
 
 ```bash
-php artisan test                 # bzw. vendor/bin/pest   (301 Tests)
+php artisan test                 # bzw. vendor/bin/pest   (309 Tests)
 vendor/bin/pint                  # Code-Style
 php artisan fhir:export --output=bundle.json   # FHIR-Document-Bundle erzeugen
 ```

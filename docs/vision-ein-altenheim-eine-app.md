@@ -35,7 +35,7 @@ sichtbar machen. Immer gleich. „Abschreiben" ist hier Best Practice.
 |---|---|---|---|
 | **Pflege** | SGB XI, DNQP-Expertenstandards, Strukturmodell/SIS®, MD-QPR | CarePlanning, Assessment, Masterdata | ✅ Kern |
 | **Pflege-Datenaustausch** | FHIR R4, KBV-MIO ÜLB | Fhir | ✅ |
-| **Qualitätsmanagement** | DIN EN 15224, DIN EN ISO 9001, § 113 SGB XI, MD-QPR | Quality | 🟡 QS-Indikatoren da → **DIN/QM-Checkliste nächstes** |
+| **Qualitätsmanagement** | DIN EN 15224, § 113 SGB XI, MD-QPR | Quality | ✅ QS-Indikatoren + **QM-Norm-Checkliste** (QB1–6 + Querschnittsnormen) |
 | **Personal & Lohn** | Personalfragebogen, ArbZG, SGB IV (DEÜV/SV-Meldung), ELStAM | Personnel, Scheduling | ✅ Stammakte + Dienstplan |
 | **Hauswirtschaft / Küche** | LMHV/HACCP, DIN 10506, LMIV (VO 1169/2011, Allergene), DGE-Qualitätsstandard | (neu) Catering | 🔴 — Allergien existieren schon (Bewohner) |
 | **Haustechnik / FM** | DIN 31051 (Instandhaltung), DGUV V3, TrinkwV (Legionellen), Brandschutz | (neu) Facility | 🔴 — Reparatur-Tickets vom Bewohner |
@@ -57,9 +57,11 @@ sichtbar machen. Immer gleich. „Abschreiben" ist hier Best Practice.
 
 ## Staged Roadmap (jede Stufe voll verdrahtet, kein totes Feature)
 
-1. **DIN/QM-Checkliste im Quality-Modul** *(nächster konkreter Schritt)* — datengetriebene Norm-Checkliste
-   (DIN EN 15224 / MD-QPR), wie die ArbZG-Regel-Engine: Anforderung → Nachweis/Status → Audit. **Nebenprodukt:
-   die vollständige Abteilungs- + Pflichtdaten-Liste** entsteht aus den Norm-Anforderungen selbst.
+1. ✅ **DIN/QM-Checkliste im Quality-Modul** *(erledigt 2026-06-06)* — datengetriebene Norm-Checkliste
+   (QPR-Qualitätsbereiche QB1–6 + Hygiene/IfSG, Datenschutz, Arbeitsschutz, Hauswirtschaft/LMIV,
+   Haustechnik/DIN 31051, Heimrecht), wie die ArbZG-Regel-Engine: Anforderung → Nachweis/Status → Erfüllungsgrad,
+   Gesetzeslink je Anforderung. **Nebenprodukt erreicht:** die `QmBereich`-Enum **ist** die Abteilungs-Landkarte,
+   die Anforderungen benennen die zu führenden Daten/Nachweise.
 2. **Facility-Tickets** — Bewohner/Personal melden Mängel → Haustechnik-Queue (DIN 31051).
 3. **Catering** — Speiseplan + Allergen-/Kostform-Sicht (LMIV), liest vorhandene Allergien.
 4. **Arbeitszeit-Ist-Erfassung** — Stempeln gegen den Plan (EuGH/BAG), füttert den ArbZG-§3-Schnitt.
