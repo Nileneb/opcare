@@ -135,5 +135,10 @@ Tiefenrecherche zu den noch unvollständigen Bereichen → [recherche-normen-erw
 - ✅ **C — Nachweis-mit-Frist (Arbeitsschutz)** — Unterweisung/Vorsorge/Erste Hilfe/Brandschutz/BEM mit Fälligkeits-Ampel
   ([arbeitsschutz-nachweise.md](arbeitsschutz-nachweise.md)).
 - ✅ **D — §5 SGB XI Bewohner-Prävention** — kassenfinanzierte Programme + Verwendungsnachweis ([praevention-sgb-xi.md](praevention-sgb-xi.md)).
-- 📋 **E — BtM-Nachweis (BtMVV) + FEM-Genehmigung (§1831 BGB)** — als Konzept dokumentiert, Umsetzung folgt
-  ([e-btm-fem-konzept.md](e-btm-fem-konzept.md)).
+- ✅ **E — BtM-Nachweis (§13 BtMVV) + FEM-Genehmigung (§1831 BGB)** — rechtssicher umgesetzt: BtM-Konto bewohnerbezogen,
+  append-only, Zwei-Zeugen-Vernichtung, Monatsabschluss mit Arzt-Signatur; FEM mit milderen Mitteln, Genehmigungs-/Befristungs-Ampel,
+  Überwachungsprotokoll + Dokument-Anhang ([e-btm-fem-konzept.md](e-btm-fem-konzept.md)).
+
+**Ideen-Backlog** (User-Vorschläge, dokumentiert): Bewohner/Angehörige als Nutzer, anonyme Feedback-Form,
+Taschengeldkonto (§27b SGB XII), Übergangs-/Spitzendienste, **automatischer Dienstplan-Generator**, Energielevel-Ampel
+→ [ideen-backlog-2026-06.md](ideen-backlog-2026-06.md).

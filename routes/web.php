@@ -19,6 +19,7 @@ use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Catering\Kueche;
 use App\Livewire\Facility;
 use App\Livewire\Facility\Haustechnik;
+use App\Livewire\Medication\BtmNachweis;
 use App\Livewire\Medication\Stammdaten;
 use App\Livewire\Medication\Stellplan;
 use App\Livewire\Medication\VerordnungAnlegen;
@@ -31,6 +32,7 @@ use App\Livewire\Pflegeplanung;
 use App\Livewire\Profile;
 use App\Livewire\Qdvs\Export as QdvsExport;
 use App\Livewire\Quality\Controlling;
+use App\Livewire\Quality\FemUebersicht;
 use App\Livewire\Quality\QmCheckliste;
 use App\Livewire\Quality\QualityReport;
 use App\Livewire\Residents;
@@ -75,12 +77,14 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class])->group(
     Route::get('/arbeitsschutz/nachweise', Arbeitsschutz::class)->name('arbeitsschutz.nachweise');
     Route::get('/bewohner/{resident}/medikation', Stellplan::class)->name('medikation.stellplan');
     Route::get('/medikation/stamm', Stammdaten::class)->name('medikation.stammdaten');
+    Route::get('/medikation/btm', BtmNachweis::class)->name('medikation.btm');
     Route::get('/bewohner/{resident}/verordnung/neu', VerordnungAnlegen::class)->name('medikation.verordnung-anlegen');
     Route::get('/bewohner/{resident}/verordnungen', Verordnungen::class)->name('medikation.verordnungen');
     Route::get('/bewohner/{resident}/vitalwerte', Vitalwerte::class)->name('medikation.vitalwerte');
     Route::get('/controlling', Controlling::class)->name('controlling');
     Route::get('/qualitaet/report', QualityReport::class)->name('quality.report');
     Route::get('/qualitaet/qm-checkliste', QmCheckliste::class)->name('quality.qm');
+    Route::get('/qualitaet/fem', FemUebersicht::class)->name('quality.fem');
 
     // Querschnitts-Sprachfunktionen für jedes Textfeld (inline, synchron).
     Route::post('/speech/transcribe', [SpeechController::class, 'transcribe'])->name('speech.transcribe');

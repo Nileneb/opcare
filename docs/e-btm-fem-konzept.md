@@ -1,43 +1,46 @@
-# Konzept (noch nicht implementiert): BtM-Nachweis + FEM-Genehmigung
+# BtM-Nachweis (§ 13 BtMVV) + FEM (§ 1831 BGB) — implementiert
 
-Recherche-Strang E — die beiden Bereiche mit dem höchsten **Rechtsrisiko** (Straf-/Freiheitsentzug). Hier
-bewusst **nur als Umsetzungskonzept** festgehalten; Implementierung folgt separat (Auftrag: „E erstmal nur
-dokumentieren").
+Recherche-Strang E, **rechtssicher umgesetzt** (2026-06-06, quellengestützte Recherche + adversarial geprüft).
+Beide Bereiche mit dem höchsten Rechtsrisiko (Straf-/Freiheitsentzug).
 
-## E1 — Betäubungsmittel-Nachweisführung (BtMVV § 13)
+> Screenshots: Wiki-Seiten **BtM Nachweis** und **FEM**.
 
-**Pflicht:** Lückenlose Dokumentation von Zugang (BtM-Rezept) und Abgang (Verabreichung) je BtM-pflichtiger
-Substanz und Bewohner; monatlicher Abschluss mit Prüfung + Gegenzeichnung; Aufbewahrung 3 Jahre. Stationäre
-Altenpflege: **kein** Notfallvorrat (nur Hospiz/SAPV), BtM sind bewohnerbezogen und rezeptpflichtig.
+## E1 — Betäubungsmittel-Nachweisführung (§ 13 BtMVV)
 
-**Geplante Abbildung (Erweiterung Medikationsmodul):**
-- `btm`-Flag je `MedProduct` ist bereits vorhanden → BtM-pflichtige Produkte sind erkennbar.
-- Neues **BtM-Konto je Bewohner + Substanz**: Transaktionen (Zugang/Abgang, Menge, Datum, durchführende Person,
-  Restbestand), lückenlos und unveränderbar (append-only, wie das SIS-Berichteblatt).
-- **Monatsabschluss-Workflow**: Soll-/Ist-Bestand, Prüfung + Signatur (analog § 14-Begründung im Dienstplan),
-  Druck-/Export-Funktion für die Behörde; 3-Jahres-Archiv.
-- Verknüpfung mit der vorhandenen Gabe-Dokumentation (jede BtM-Gabe erzeugt automatisch einen Abgang).
+**Rechtssichere Eckpunkte (umgesetzt):**
+- **Bewohnerbezogen**: jedes Konto = genau 1 Bewohner + 1 Substanz (§ 5c BtMVV — kein Stationsvorrat in Pflegeheimen).
+- **Append-only**: Buchungen werden nie geändert/gelöscht (`BtmBuchung` ohne `updated_at`); Fehler werden über eine
+  **Korrektur**-Buchung mit Bezug auf die Fehlbuchung + Pflichtgrund neutralisiert.
+- **Fortlaufende Nummer + fortgeschriebener Bestand** je Buchung; Abgang über den Bestand hinaus wird abgelehnt.
+- **Vorgänge**: Lieferung (Zugang, mit Lieferant/Apotheke + verschreibendem Arzt), Gabe an Bewohner (namentlich
+  erfasste Pflegekraft), **Vernichtung** (Zwei-Zeugen-Prinzip, BtMG § 16, + Methode), Rücknahme Apotheke, Transfer, Korrektur.
+- **Monatsabschluss** (§ 13 Abs. 2): Soll-Bestand (berechnet) vs. Ist-Bestand (Zählung), Prüfung durch den
+  verantwortlichen Arzt mit Namenszeichen + Datum; bei Differenz **Begründung Pflicht**; nach dem Abschluss **gesperrt** (read-only).
+- **Aufbewahrung 3 Jahre** (§ 13 Abs. 3) — im UI ausgewiesen.
 
-**Wiederverwendbare Bausteine:** append-only-Journal (wie Berichteblatt), Prüf-/Signatur-Workflow (wie § 14),
-Behörden-Export (wie QDVS/FHIR).
+**Bausteine:** `Enums/BtmVorgang`, `Models/BtmKonto`/`BtmBuchung`/`BtmMonatsabschluss`, `Actions/BtmBuchen`
+(append-only Fortschreibung in DB-Transaktion mit Lock), Livewire `Medication/BtmNachweis` (Route `/medikation/btm`,
+Nav „BtM-Nachweis", Rollen admin/pflegefachkraft). Tests: `tests/Feature/Medication/BtmNachweisTest.php`.
 
-## E2 — Freiheitsentziehende Maßnahmen (FEM, § 1831 BGB)
+## E2 — Freiheitsentziehende Maßnahmen (§ 1831 BGB, seit 2023)
 
-**Pflicht:** Richterliche Genehmigung (Betreuungsgericht) vor jeder FEM (außer ärztlich attestierte
-Bewegungsunfähigkeit); Antrag mit ärztlichem Attest; laufende Verhältnismäßigkeits-Überprüfung; sofortige,
-dokumentierte Beendigung bei Wegfall der Indikation; Nachweis geprüfter Alternativen.
+**Rechtssichere Eckpunkte (umgesetzt):**
+- **Mildere Mittel sind Pflicht** (Werdenfelser Weg / Ultima Ratio): Auswahl geprüfter Alternativen + Pflicht-Begründung,
+  warum sie nicht ausreichen — vor dem Anlegen erzwungen.
+- **Genehmigungsweg**: Status beantragt → genehmigt (mit **Aktenzeichen + Gericht + Beschlussdatum + Befristung**) →
+  bei „genehmigt" sind diese Felder Pflicht. Auch: Bewohner-Einwilligung (einwilligungsfähig), Notfall (nachzuholen),
+  ohne Genehmigung (Eskalation).
+- **Befristungs-Ampel** (FamFG § 329: max. 1–2 Jahre): grün (gültig) → gelb (`Überprüfung fällig`, ≤ 30 Tage) →
+  rot (`abgelaufen`, darf nicht fortgeführt werden). Kopf zeigt „X mit Handlungsbedarf".
+- **Laufendes Überwachungsprotokoll** (Kontrolle/Vitalzeichen) mit Indikationsprüfung; **Beendigung** mit Grund,
+  automatisch als Protokolleintrag.
+- **Dokumente** (ärztliches Attest, Gerichtsbeschluss) werden angehängt (spatie media, konfigurierbare Disk → Strang A).
 
-**Geplante Abbildung (Erweiterung CareEvent/Quality):**
-- FEM wird heute schon als `CareEvent` erfasst → Ausbau zu einem **Genehmigungs-/Fristen-Workflow**:
-  Antrag anlegen → ärztliches Attest als Dokument anhängen (nutzt **Strang A**, MinIO-Datei-Upload) →
-  Gerichtsbeschluss + Geltungsdauer hinterlegen → **Review-Reminder** (nutzt **Strang C**, Nachweis-mit-Frist:
-  Genehmigung als fristgebundener „Nachweis" mit Ampel) → Beendigungsprotokoll → Alternativen-Dokumentation.
-- Status-Ampel: genehmigt-gültig / Review fällig / ohne Genehmigung (rot, Eskalation).
+**Bausteine:** `Enums/FemArt`/`FemEinwilligung`, `Models/FemFall` (HasMedia, Status/Ampel) + `FemProtokoll`,
+Livewire `Quality/FemUebersicht` (Route `/qualitaet/fem`, Nav „FEM", Rollen admin/pflegefachkraft).
+Tests: `tests/Feature/Quality/FemTest.php`.
 
-**Synergie:** E2 ist im Wesentlichen die Komposition aus den bereits gebauten Strängen A (Dokument-Upload) +
-C (Nachweis-mit-Frist) + dem bestehenden CareEvent — daher mit überschaubarem Aufwand umsetzbar.
+## Komposition
 
-## Reihenfolge-Empfehlung für die Umsetzung
-
-1. **E1 BtM** zuerst (höchstes Straf-/Prüfrisiko, klar abgegrenzt, Medikationsmodul als Basis).
-2. **E2 FEM** danach (komponiert A+C+CareEvent; profitiert vom fertigen Datei-Upload + Fristen-Mechanismus).
+Wie im Konzept vorgesehen komponiert E2 die bereits gebauten Stränge: **Strang A** (Dokument-Upload an den FEM-Fall)
+und das **Ampel-/Fristen-Muster** (analog Strang C). E1 nutzt die append-only/Signatur-/Sperr-Muster (analog SIS-Berichteblatt + § 14).

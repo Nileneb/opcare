@@ -41,6 +41,7 @@
                 <a href="{{ route('quality.qm') }}" @class(['is-active' => request()->routeIs('quality.qm')])>QM-Checkliste</a>
                 <a href="{{ route('qdvs.export') }}" @class(['is-active' => request()->routeIs('qdvs.export')])>QDVS-Export</a>
                 <a href="{{ route('arbeitsschutz.nachweise') }}" @class(['is-active' => request()->routeIs('arbeitsschutz.nachweise')])>Arbeitsschutz</a>
+                <a href="{{ route('quality.fem') }}" @class(['is-active' => request()->routeIs('quality.fem')])>FEM</a>
             </nav>
         @endif
         @can('manage', \App\Domains\Scheduling\Models\Shift::class)
@@ -61,6 +62,7 @@
         @if (auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'pflegefachkraft']))
             <nav class="app-nav app-nav-medikation-stamm">
                 <a href="{{ route('medikation.stammdaten') }}" @class(['is-active' => request()->routeIs('medikation.stammdaten')])>Medikationsstamm</a>
+                <a href="{{ route('medikation.btm') }}" @class(['is-active' => request()->routeIs('medikation.btm')])>BtM-Nachweis</a>
             </nav>
         @endif
         @if (auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'buchhaltung']))

@@ -37,14 +37,17 @@ use App\Domains\Masterdata\Models\Room;
 use App\Domains\Masterdata\Models\Station;
 use App\Domains\Medication\Actions\AddSchedule;
 use App\Domains\Medication\Actions\AddStock;
+use App\Domains\Medication\Actions\BtmBuchen;
 use App\Domains\Medication\Actions\CreatePrescription;
 use App\Domains\Medication\Actions\GenerateAdministrations;
 use App\Domains\Medication\Data\PrescriptionData;
 use App\Domains\Medication\Data\ScheduleData;
 use App\Domains\Medication\Data\StockData;
 use App\Domains\Medication\Database\Seeders\MedicationReferenceSeeder;
+use App\Domains\Medication\Enums\BtmVorgang;
 use App\Domains\Medication\Enums\ScheduleFrequency;
 use App\Domains\Medication\Enums\VitalType;
+use App\Domains\Medication\Models\BtmKonto;
 use App\Domains\Medication\Models\MedProduct;
 use App\Domains\Medication\Models\TradeForm;
 use App\Domains\Medication\Models\VitalReading;
@@ -56,9 +59,12 @@ use App\Domains\Personnel\Enums\Qualifikation;
 use App\Domains\Personnel\Enums\Steuerklasse;
 use App\Domains\Personnel\Models\Schutznachweis;
 use App\Domains\Quality\Enums\EventSeverity;
+use App\Domains\Quality\Enums\FemArt;
+use App\Domains\Quality\Enums\FemEinwilligung;
 use App\Domains\Quality\Enums\QmStatus;
 use App\Domains\Quality\Enums\QualityIndicator;
 use App\Domains\Quality\Models\CareEvent;
+use App\Domains\Quality\Models\FemFall;
 use App\Domains\Quality\Support\QmKatalogDefaults;
 use App\Domains\Scheduling\Compliance\ArbeitszeitgesetzDefaults;
 use App\Domains\Scheduling\Compliance\PersonalbemessungDefaults;
@@ -447,6 +453,27 @@ class DemoSeeder extends Seeder
         foreach ($aktive->take(4) as $bewohner) {
             $sturz->teilnahmen()->create(['tenant_id' => $tenant->id, 'resident_id' => $bewohner->id,
                 'datum' => now()->subDays(3)->toDateString(), 'dauer_minuten' => 45, 'beobachtung' => 'gute Beteiligung']);
+        }
+
+        // BtM-Nachweis (§ 13 BtMVV): Konto + Zugang + Gabe für eine:n Bewohner:in.
+        $btmBewohner = $aktive->first();
+        if ($btmBewohner !== null) {
+            $btmKonto = BtmKonto::create(['tenant_id' => $tenant->id, 'resident_id' => $btmBewohner->id,
+                'substanz' => 'Morphin', 'staerke' => '10 mg/ml', 'einheit' => 'ml', 'arzt_name' => 'Dr. Wagner', 'eroeffnet_am' => now()->subDays(10)->toDateString()]);
+            app(BtmBuchen::class)->handle($btmKonto, BtmVorgang::Lieferung, 20, now()->subDays(10)->toDateString(), ['lieferant' => 'St.-Anna-Apotheke', 'arzt_name' => 'Dr. Wagner', 'durchgefuehrt_von' => $admin->id]);
+            app(BtmBuchen::class)->handle($btmKonto, BtmVorgang::Gabe, 3, now()->subDays(2)->toDateString(), ['durchgefuehrt_von' => $admin->id]);
+        }
+
+        // FEM (§ 1831 BGB): ein gerichtlich genehmigter, befristeter Fall + Überwachungseintrag.
+        if ($btmBewohner !== null) {
+            $fem = FemFall::create(['tenant_id' => $tenant->id, 'resident_id' => $btmBewohner->id,
+                'art' => FemArt::Bettgitter, 'anlass' => 'wiederholte nächtliche Stürze mit Verletzungsgefahr',
+                'mildere_mittel' => ['Niederflurbett', 'Sensormatte'], 'mildere_begruendung' => 'Niederflurbett baulich nicht möglich, Sensormatte allein unzureichend',
+                'anordnung_pflegekraft' => $admin->id, 'anordnung_arzt' => 'Dr. Wagner', 'anordnung_am' => now()->subDays(20),
+                'einwilligungsstatus' => FemEinwilligung::GenehmigungErteilt,
+                'aktenzeichen' => 'XVII 4521/26', 'gericht' => 'Amtsgericht Wuppertal', 'beschluss_am' => now()->subDays(18)->toDateString(),
+                'gueltig_bis' => now()->addMonths(11)->toDateString()]);
+            $fem->protokolle()->create(['tenant_id' => $tenant->id, 'zeitpunkt' => now()->subHours(6), 'typ' => 'kontrolle', 'befund' => 'ruhig, Haut o. B.', 'indikation_gegeben' => true, 'dokumentiert_von' => $admin->id]);
         }
 
         // Zweites Heim — Haus Birkenhof (2 Bewohner, kein SIS für Minimal-Demo)
