@@ -3,66 +3,40 @@
 namespace App\Domains\Fhir\Mappers;
 
 use App\Domains\Assessment\Models\Assessment;
-use App\Domains\Assessment\Models\AssessmentAnswer;
 
 /**
- * Assessment (z. B. Barthel-Index) → FHIR-R4-Observations für die ÜLB-Sektion funktionsbeurteilungen.
- * Ein Item-Observation je beantwortetem LOINC-codierten Item + ein Summen-Observation (hasMember).
- * Nur Instrumente mit LOINC-Code werden gemappt (sonst nicht ÜLB-adressierbar → übersprungen).
+ * Assessment (z. B. Barthel-Index) → KBV_PR_MIO_ULB_Observation_Assessment_Free (Leaf der Sektion
+ * funktionsbeurteilungen). Der ICNP-/Scale-SNOMED-Code (code.coding) ist optional → code.text trägt den
+ * Instrumentnamen, valueQuantity den Summenscore.
  */
 class AssessmentObservationMapper
 {
-    public static function totalId(Assessment $a): string
+    private const SNOMED = 'http://snomed.info/sct';
+
+    private const SNOMED_VERSION = 'http://snomed.info/sct/900000000000207008/version/20220331';
+
+    public static function id(Assessment $a): string
     {
         return 'observation-assessment-'.$a->id;
     }
 
-    public static function itemId(AssessmentAnswer $answer): string
-    {
-        return 'observation-assessment-'.$answer->assessment_id.'-item-'.$answer->instrument_item_id;
-    }
-
     /** @return array<string, mixed> */
-    public function itemObservation(AssessmentAnswer $answer, string $patientReference, string $effective): array
+    public function assessmentFree(Assessment $a, string $patientReference, string $performerReference, string $effective): array
     {
-        $item = $answer->instrumentItem;
-
-        return $this->base(self::itemId($answer), $item?->loinc, $item?->label ?? '', $patientReference, $effective, (int) $answer->punkte);
-    }
-
-    /**
-     * @param  array<int, string>  $memberRefs
-     * @return array<string, mixed>
-     */
-    public function totalObservation(Assessment $a, string $patientReference, string $effective, array $memberRefs): array
-    {
-        $obs = $this->base(self::totalId($a), $a->instrument?->loinc, $a->instrument?->name ?? 'Assessment', $patientReference, $effective, (int) $a->score);
-        if ($a->risk_band) {
-            $obs['interpretation'] = [['text' => $a->risk_band->value]];
-        }
-        if ($memberRefs !== []) {
-            $obs['hasMember'] = array_map(fn (string $r) => ['reference' => $r], $memberRefs);
-        }
-
-        return $obs;
-    }
-
-    /** @return array<string, mixed> */
-    private function base(string $id, ?string $loinc, string $display, string $patientReference, string $effective, int $value): array
-    {
-        $coding = $loinc ? [['system' => 'http://loinc.org', 'code' => $loinc, 'display' => $display]] : [];
-
         return [
             'resourceType' => 'Observation',
-            'id' => $id,
+            'id' => self::id($a),
+            'meta' => ['profile' => ['https://fhir.kbv.de/StructureDefinition/KBV_PR_MIO_ULB_Observation_Assessment_Free|1.0.0']],
             'status' => 'final',
-            'category' => [[
-                'coding' => [['system' => 'http://terminology.hl7.org/CodeSystem/observation-category', 'code' => 'survey']],
-            ]],
-            'code' => array_filter(['coding' => $coding ?: null, 'text' => $display]),
+            'category' => [['coding' => [[
+                'system' => self::SNOMED, 'version' => self::SNOMED_VERSION,
+                'code' => '424836000', 'display' => 'Assessment section (record artifact)',
+            ]]]],
+            'code' => ['text' => $a->instrument?->name ?? 'Assessment'],
             'subject' => ['reference' => $patientReference],
             'effectiveDateTime' => $effective,
-            'valueQuantity' => ['value' => $value, 'unit' => 'Punkte'],
+            'performer' => [['reference' => $performerReference]],
+            'valueQuantity' => ['value' => (int) $a->score, 'unit' => 'Punkte'],
         ];
     }
 }

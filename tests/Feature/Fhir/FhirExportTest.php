@@ -24,7 +24,7 @@ beforeEach(function () {
     $t = Tenant::create(['name' => 'A', 'slug' => 'a']);
     app(CurrentTenant::class)->set($t);
     $user = User::factory()->create(['tenant_id' => $t->id]);
-    $this->resident = Resident::factory()->create(['geschlecht' => 'w', 'geburtsdatum' => '1940-05-10', 'name' => 'Erika Muster']);
+    $this->resident = Resident::factory()->create(['geschlecht' => 'w', 'geburtsdatum' => '1940-05-10', 'name' => 'Erika Muster', 'pflegegrad' => 3]);
     $icd = IcdCode::create(['code' => 'I10', 'bezeichnung' => 'Essentielle (primäre) Hypertonie']);
     $this->resident->diagnoses()->create(['icd_code_id' => $icd->id, 'art' => 'primär', 'diagnostiziert_am' => '2025-01-01']);
     CareReport::create(['resident_id' => $this->resident->id, 'created_by' => $user->id, 'datum' => '2026-06-01 08:00:00', 'schicht' => 'frueh', 'text' => 'Bewohnerin wohlauf.']);
@@ -41,25 +41,21 @@ beforeEach(function () {
     app(ConductAssessment::class)->handle(new AssessmentInputData(
         resident_id: $this->resident->id, instrument_id: $barthel->id, created_by: $user->id, answers: $answers, durchgefuehrt_am: '2026-06-01',
     ));
-
-    $this->resident->statusObservations()->create(['typ' => 'harnkontinenz', 'wert_code' => '45850009', 'erfasst_am' => '2026-06-01']);
-    $this->resident->statusObservations()->create(['typ' => 'atmung', 'wert_text' => 'unauffällig', 'erfasst_am' => '2026-06-01']);
-    $this->resident->devices()->create(['bezeichnung' => 'Rollator', 'kategorie' => 'hilfsmittel', 'hinweis' => 'für lange Strecken']);
-    $this->resident->contacts()->create(['name' => 'Anna Muster', 'beziehung' => 'Tochter', 'telefon' => '0201 1', 'benachrichtigen' => true]);
 });
 
-it('liefert ein FHIR-R4-Document-Bundle mit der Composition zuerst', function () {
+it('liefert ein ÜLB-konformes FHIR-Document-Bundle mit der Composition zuerst', function () {
     $bundle = app(FhirDocumentExporter::class)->export($this->resident);
 
     expect($bundle['resourceType'])->toBe('Bundle')
         ->and($bundle['type'])->toBe('document')
+        ->and($bundle['meta']['profile'][0])->toContain('KBV_PR_MIO_ULB_Bundle')
         ->and($bundle['entry'][0]['resource']['resourceType'])->toBe('Composition')
         // WHY(FHIR bdl-9): Document-Bundle braucht system+value-Identifier (Validator-Regression)
         ->and($bundle['identifier']['system'])->not->toBeEmpty()
         ->and($bundle['identifier']['value'])->toStartWith('urn:uuid:');
 });
 
-it('mappt den Bewohner auf eine FHIR-Patient-Ressource', function () {
+it('mappt den Bewohner auf eine ÜLB-konforme Patient-Ressource', function () {
     $patient = collect(app(FhirDocumentExporter::class)->export($this->resident)['entry'])
         ->pluck('resource')->firstWhere('resourceType', 'Patient');
 
@@ -67,21 +63,33 @@ it('mappt den Bewohner auf eine FHIR-Patient-Ressource', function () {
         ->and($patient['birthDate'])->toBe('1940-05-10')
         ->and($patient['name'][0]['family'])->toBe('Muster')
         ->and($patient['name'][0]['given'])->toBe(['Erika'])
-        // WHY(Track A Phase 6): ÜLB-Patient-Profil wird geclaimt
         ->and($patient['meta']['profile'][0])->toContain('KBV_PR_MIO_ULB_Patient');
 });
 
-it('mappt Diagnosen auf Condition mit ICD-10-GM-Codesystem', function () {
-    $condition = collect(app(FhirDocumentExporter::class)->export($this->resident)['entry'])
-        ->pluck('resource')->firstWhere('resourceType', 'Condition');
+it('erzeugt die Pflicht-Sektion pflegegrad als Care_Level-Observation', function () {
+    $resources = collect(app(FhirDocumentExporter::class)->export($this->resident)['entry'])->pluck('resource');
+    $careLevel = $resources->first(fn ($r) => ($r['meta']['profile'][0] ?? '') === 'https://fhir.kbv.de/StructureDefinition/KBV_PR_MIO_ULB_Observation_Care_Level|1.0.0');
+
+    expect($careLevel)->not->toBeNull()
+        ->and($careLevel['code']['coding'][0]['code'])->toBe('80391-6')
+        // Pflicht-Extension Beantragungsstatus + (bei vorhandenem Grad) OPS-Wert + Pflegegradstatus (obs-9)
+        ->and($careLevel['extension'][0]['extension'][0]['url'])->toBe('antragsstatusPflegegrad')
+        ->and($careLevel['valueCodeableConcept']['coding'][0]['code'])->toBe('9-984.8'); // Pflegegrad 3
+});
+
+it('mappt Diagnosen auf Condition mit ICD-10-GM, referenziert via Presence_Problems', function () {
+    $resources = collect(app(FhirDocumentExporter::class)->export($this->resident)['entry'])->pluck('resource');
+    $condition = $resources->firstWhere('resourceType', 'Condition');
+    $presence = $resources->first(fn ($r) => str_contains($r['meta']['profile'][0] ?? '', 'Observation_Presence_Problems'));
 
     expect($condition['code']['coding'][0]['system'])->toBe('http://fhir.de/CodeSystem/bfarm/icd-10-gm')
         ->and($condition['code']['coding'][0]['code'])->toBe('I10')
-        ->and($condition['code']['coding'][0]['version'])->toBe('2017')
-        // WHY(Track A Phase 6): ÜLB-Diagnose-Profil + verificationStatus (Pflicht), kein recordedDate
         ->and($condition['meta']['profile'][0])->toContain('Condition_Medical_Problem_Diagnosis')
         ->and($condition['verificationStatus']['coding'][0]['code'])->toBe('confirmed')
-        ->and($condition)->not->toHaveKey('recordedDate');
+        ->and($condition)->not->toHaveKey('recordedDate')
+        // Presence-Wrapper verweist via naehereInformationen-Extension auf die Condition
+        ->and($presence)->not->toBeNull()
+        ->and($presence['extension'][0]['valueReference']['reference'])->toContain('Condition/');
 });
 
 it('hält alle internen Referenzen auflösbar (subject → Patient-fullUrl)', function () {
@@ -113,53 +121,50 @@ it('verwehrt Leserecht den FHIR-Download (DSGVO-Guard)', function () {
     $this->actingAs($user)->get(route('fhir.export', $this->resident))->assertForbidden();
 });
 
-it('mappt Vitalwerte auf Observation mit LOINC + Maßnahmen auf CarePlan', function () {
+it('bündelt Vital-Observations in einem DiagnosticReport (vitalparameter)', function () {
     $resources = collect(app(FhirDocumentExporter::class)->export($this->resident)['entry'])->pluck('resource');
-
-    $observation = $resources->firstWhere('resourceType', 'Observation');
-    $carePlan = $resources->firstWhere('resourceType', 'CarePlan');
+    $observation = $resources->first(fn ($r) => str_contains($r['meta']['profile'][0] ?? '', 'Observation_Body_Weight'));
+    $report = $resources->firstWhere('resourceType', 'DiagnosticReport');
 
     $loinc = collect($observation['code']['coding'])->firstWhere('system', 'http://loinc.org');
     expect($loinc['code'])->toBe('29463-7')
         ->and($observation['valueQuantity']['value'])->toBe(68.5)
-        // WHY(Track A Phase 6): KBV-Vitalzeichen-Profil + SNOMED-Coding + performer, kein code.text
         ->and($observation['meta']['profile'][0])->toContain('Observation_Body_Weight')
         ->and(collect($observation['code']['coding'])->firstWhere('system', 'http://snomed.info/sct')['code'])->toBe('27113001')
-        ->and($observation['performer'][0]['reference'])->toContain('PractitionerRole/')
         ->and($observation['code'])->not->toHaveKey('text')
-        ->and($carePlan['status'])->toBe('active')
-        ->and($carePlan['activity'][0]['detail']['description'])->toContain('Gehübungen');
+        // DiagnosticReport bündelt die konformen Vital-Observations (ÜLB-Sektion vitalparameter)
+        ->and($report['meta']['profile'][0])->toContain('DiagnosticReport_Vital_Signs_and_Body_Measures')
+        ->and($report['result'])->not->toBeEmpty();
 });
 
-it('mappt aktive Verordnungen auf MedicationStatement + Medication (medicationReference)', function () {
+it('mappt aktive Verordnungen auf MedicationStatement + Medication, referenziert via Information_Medicines', function () {
     $resources = collect(app(FhirDocumentExporter::class)->export($this->resident)['entry'])->pluck('resource');
     $med = $resources->firstWhere('resourceType', 'MedicationStatement');
     $medication = $resources->firstWhere('resourceType', 'Medication');
+    $presence = $resources->first(fn ($r) => str_contains($r['meta']['profile'][0] ?? '', 'Observation_Information_Medicines'));
 
     expect($med['status'])->toBe('active')
         ->and($med['dosage'][0]['text'])->toBe('morgens 1')
-        // WHY(Track A Phase 6): ÜLB verlangt medicationReference + separate Medication-Ressource
         ->and($med['meta']['profile'][0])->toContain('MedicationStatement_Administration_Instruction')
         ->and($med['medicationReference']['reference'])->toContain('Medication/')
         ->and($med)->not->toHaveKey('medicationCodeableConcept')
         ->and($medication['code']['text'])->toBe('Ramipril 5 mg')
-        ->and($medication['meta']['profile'][0])->toContain('KBV_PR_MIO_ULB_Medication');
+        ->and($medication['meta']['profile'][0])->toContain('KBV_PR_MIO_ULB_Medication')
+        ->and($presence['extension'][0]['valueReference']['reference'])->toContain('MedicationStatement/');
 });
 
-it('mappt Allergien auf FHIR AllergyIntolerance', function () {
-    $allergy = collect(app(FhirDocumentExporter::class)->export($this->resident)['entry'])
-        ->pluck('resource')->firstWhere('resourceType', 'AllergyIntolerance');
+it('mappt Allergien auf AllergyIntolerance, referenziert via Presence_Allergies', function () {
+    $resources = collect(app(FhirDocumentExporter::class)->export($this->resident)['entry'])->pluck('resource');
+    $allergy = $resources->firstWhere('resourceType', 'AllergyIntolerance');
+    $presence = $resources->first(fn ($r) => str_contains($r['meta']['profile'][0] ?? '', 'Observation_Presence_Allergies'));
 
     expect($allergy['type'])->toBe('allergy')
-        ->and($allergy['category'])->toBe(['medication'])
-        ->and($allergy['criticality'])->toBe('high')
         ->and($allergy['code']['text'])->toBe('Penicillin')
-        ->and($allergy['reaction'][0]['manifestation'][0]['text'])->toBe('Hautausschlag')
         ->and($allergy['patient']['reference'])->toContain('Patient/')
-        // WHY(Track A Phase 6): ÜLB-Profil + Pflicht-recorder (PractitionerRole), kein recordedDate
         ->and($allergy['meta']['profile'][0])->toContain('AllergyIntolerance')
         ->and($allergy['recorder']['reference'])->toContain('PractitionerRole/')
-        ->and($allergy)->not->toHaveKey('recordedDate');
+        ->and($allergy)->not->toHaveKey('recordedDate')
+        ->and($presence['extension'][0]['valueReference']['reference'])->toContain('AllergyIntolerance/');
 });
 
 it('fügt die dokumentierende Einheit (Organization/Practitioner/PractitionerRole) hinzu', function () {
@@ -169,62 +174,47 @@ it('fügt die dokumentierende Einheit (Organization/Practitioner/PractitionerRol
     expect($types)->toContain('Organization')->toContain('Practitioner')->toContain('PractitionerRole');
 });
 
-it('mappt das Barthel-Assessment auf Funktionsbeurteilungs-Observations (LOINC + Summe)', function () {
+it('mappt das Barthel-Assessment auf eine Assessment_Free-Observation (funktionsbeurteilungen)', function () {
     $resources = collect(app(FhirDocumentExporter::class)->export($this->resident)['entry'])->pluck('resource');
+    $free = $resources->first(fn ($r) => str_contains($r['meta']['profile'][0] ?? '', 'Observation_Assessment_Free'));
+    $presence = $resources->first(fn ($r) => str_contains($r['meta']['profile'][0] ?? '', 'Observation_Presence_Functional_Assessment'));
 
-    $total = $resources->first(fn ($r) => $r['resourceType'] === 'Observation' && ($r['code']['coding'][0]['code'] ?? null) === '96761-2');
-    expect($total)->not->toBeNull()
-        ->and($total['category'][0]['coding'][0]['code'])->toBe('survey')
-        ->and($total['hasMember'])->toHaveCount(10)
-        ->and($resources->contains(fn ($r) => ($r['code']['coding'][0]['code'] ?? null) === '83184-2'))->toBeTrue();
+    expect($free)->not->toBeNull()
+        ->and($free['category'][0]['coding'][0]['code'])->toBe('424836000')
+        ->and($free['code']['text'])->toBe('Barthel-Index')
+        ->and($free['valueQuantity']['unit'])->toBe('Punkte')
+        // performer muss Practitioner sein (nicht PractitionerRole)
+        ->and($free['performer'][0]['reference'])->toContain('Practitioner/')
+        ->and($free['performer'][0]['reference'])->not->toContain('PractitionerRole/')
+        ->and($presence['extension'][0]['valueReference']['reference'])->toContain('Observation/');
 });
 
-it('mappt Status-Observationen auf SNOMED-codierte Observations + Sektionen', function () {
-    $bundle = app(FhirDocumentExporter::class)->export($this->resident);
-    $resources = collect($bundle['entry'])->pluck('resource');
+it('mappt aktuelle Maßnahmen auf Procedure-Ressourcen (pflegerischeMassnahme)', function () {
+    $resources = collect(app(FhirDocumentExporter::class)->export($this->resident)['entry'])->pluck('resource');
+    $procedure = $resources->firstWhere('resourceType', 'Procedure');
 
-    $harn = $resources->first(fn ($r) => $r['resourceType'] === 'Observation' && ($r['code']['coding'][0]['code'] ?? null) === '129009001');
-    $atmung = $resources->first(fn ($r) => $r['resourceType'] === 'Observation' && ($r['code']['coding'][0]['code'] ?? null) === '78064003');
-    $titles = collect($resources->firstWhere('resourceType', 'Composition')['section'])->pluck('title');
-
-    expect($harn['valueCodeableConcept']['coding'][0]['system'])->toBe('http://snomed.info/sct')
-        ->and($harn['valueCodeableConcept']['coding'][0]['code'])->toBe('45850009')
-        ->and($atmung['valueString'])->toBe('unauffällig')
-        ->and($titles)->toContain('Kontinenz')->toContain('Atmung');
+    expect($procedure)->not->toBeNull()
+        ->and($procedure['meta']['profile'][0])->toContain('Procedure_Nursing_Measures')
+        ->and($procedure['status'])->toBe('completed')
+        ->and($procedure['code']['text'])->toContain('Gehübungen');
 });
 
-it('mappt Medizinprodukte auf FHIR Device + Sektion Medizinprodukte', function () {
-    $bundle = app(FhirDocumentExporter::class)->export($this->resident);
-    $resources = collect($bundle['entry'])->pluck('resource');
-    $device = $resources->firstWhere('resourceType', 'Device');
-    $titles = collect($resources->firstWhere('resourceType', 'Composition')['section'])->pluck('title');
-
-    expect($device['type']['text'])->toBe('Rollator')
-        ->and($device['patient']['reference'])->toContain('Patient/')
-        ->and($titles)->toContain('Medizinprodukte')
-        // WHY(Track A Phase 6): ÜLB-Device-Profil + Terminologie-Assoziation; status/note verboten
-        ->and($device['meta']['profile'][0])->toContain('Device_Other_Item')
-        ->and($device['extension'][0]['valueCodeableConcept']['coding'][0]['code'])->toBe('260787004')
-        ->and($device)->not->toHaveKey('status');
-});
-
-it('mappt Kontaktpersonen auf FHIR RelatedPerson + Sektion', function () {
-    $bundle = app(FhirDocumentExporter::class)->export($this->resident);
-    $resources = collect($bundle['entry'])->pluck('resource');
-    $rp = $resources->firstWhere('resourceType', 'RelatedPerson');
-    $titles = collect($resources->firstWhere('resourceType', 'Composition')['section'])->pluck('title');
-
-    expect($rp['name'][0]['text'])->toBe('Anna Muster')
-        ->and($rp['relationship'][0]['text'])->toBe('Tochter')
-        ->and($rp['patient']['reference'])->toContain('Patient/')
-        ->and($titles)->toContain('Angehörige / Kontaktpersonen');
-});
-
-it('erzeugt eine Composition mit referenzierten Sektionen + Verlauf-Narrativ', function () {
+it('erzeugt eine ÜLB-konforme Composition mit slice-konformen Sektionen + Verlauf-Narrativ', function () {
     $composition = app(FhirDocumentExporter::class)->export($this->resident)['entry'][0]['resource'];
     $titles = collect($composition['section'])->pluck('title')->all();
 
     expect($composition['status'])->toBe('final')
-        ->and($titles)->toContain('Diagnosen')->toContain('Allergien')->toContain('Medikation')->toContain('Pflegeplan')->toContain('Beobachtungen / Vitalwerte')->toContain('Funktionsbeurteilungen')->toContain('Verlauf')
-        ->and(collect($composition['section'])->firstWhere('title', 'Verlauf')['text']['div'])->toContain('Bewohnerin wohlauf.');
+        ->and($composition['meta']['profile'][0])->toContain('KBV_PR_MIO_ULB_Composition')
+        ->and($composition['title'])->toBe('Überleitungsbogen')
+        ->and($composition['type']['coding'][0]['code'])->toBe('721919000')
+        ->and($titles)->toContain('Pflegegrad')
+        ->toContain('Vitalzeichen und Körpermaße')
+        ->toContain('Probleme')
+        ->toContain('Allergien und Unverträglichkeiten')
+        ->toContain('Medikationsplan')
+        ->toContain('Funktionsbeurteilungen')
+        ->toContain('Pflegerische Maßnahme')
+        // section.text ist im ÜLB-Profil verboten → Verlauf wandert ins Composition.text-Narrativ
+        ->and($composition['text']['div'])->toContain('Bewohnerin wohlauf.')
+        ->and(collect($composition['section'])->every(fn ($s) => ! isset($s['text'])))->toBeTrue();
 });

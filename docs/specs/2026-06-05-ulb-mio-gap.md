@@ -122,30 +122,43 @@ Kontinenz/Ernährung, soziale Felder).
     (separate `KBV_PR_MIO_ULB_Medication`-Ressource statt inline) → neuer MedicationMapper (Code als Freitext;
     PZN/ATC + status sind Profil-verboten/-versioniert, spätere Verfeinerung). MedicationStatement: meta.profile,
     medicationReference, effectivePeriod, dosage. Bundle 0 errors.
-  - ⬜ Schritt 8 (final, GROSSER BLOCK — präzise charakterisiert): **Composition + Bundle**. Empirisch geprüft
-    (Composition+Bundle-meta geclaimt → Fehler analysiert): die ÜLB-Composition referenziert **nicht** die
-    Blatt-Ressourcen direkt. Jede Sektion erwartet eine eigene **Wrapper-Ressource** mit fixem Profil:
-    - `vitalparameter` → **DiagnosticReport** (bündelt die Vital-Observations), nicht Observation direkt
-    - `allergien` → **Presence_Allergies-Observation** (+ AllergyIntolerance als Member), nicht AllergyIntolerance direkt
-    - `pflegerischeMassnahme` → **Procedure**, nicht CarePlan
-    - `medikationsplan`/`funktionsbeurteilungen`/`medizinprodukte`/Kontinenz/Atmung → je eigene Presence-/Wrapper-Observation
-    - `pflegegrad` → Care_Level-Observation **mit Beantragungsstatus-Extension** (obs-9/obs-10-Constraints)
-    - Sektionstitel sind **fix** (z. B. „Vitalzeichen und Körpermaße"), Sektions-Slicing geschlossen.
-    Das ist eine eigene **Sektions-Wrapper-Schicht** (≈10 neue Mapper + DiagnosticReport/Procedure), vergleichbar
-    mit dem gesamten Blatt-Aufwand — **bewusst nicht halbfertig geclaimt** (würde das grüne Gate brechen). Bleibt
-    als nächster großer Block. Die generische Composition (deutsche Titel) bleibt bis dahin als valides FHIR.
+  - ✅ Schritt 8 (FINAL, ERREICHT): **Composition + Bundle voll ÜLB-konform** (`KBV_PR_MIO_ULB_Bundle`,
+    0 errors). **Schlüssel-Erkenntnis:** das Composition-Sektions-Slicing ist **closed** + per `code.coding`
+    diskriminiert — **nur `pflegegrad` ist Pflicht (min=1)**, alle anderen 40 Sektionen optional. Damit wird der
+    vermeintlich „große Block" auf einen erreichbaren Spine + optionale Wrapper reduziert. Jede Sektion verlangt
+    eine **Wrapper-Ressource** mit fixem Profil + fixem `code.coding` + fixem `section.title` (`section.text`
+    verboten → Verlauf ins `Composition.text`-Narrativ). **7 konforme Sektionen verdrahtet:**
+    - `pflegegrad` (Pflicht) → **Care_Level** (Pflicht-Ext Beantragungsstatus; OPS-Wert + Pflegegradstatus bei
+      vorhandenem Grad, obs-9/-11)
+    - `vitalparameter` → **DiagnosticReport** über die konformen Vital-Observations
+    - `probleme`/`allergien`/`medikationsplan`/`funktionsbeurteilungen` → **generischer Presence/Information-
+      Mapper** (`naehereInformationen`-Ext → Condition/AllergyIntolerance/MedicationStatement/Assessment_Free)
+    - `pflegerischeMassnahme` → **Procedure** (`code.text`, ICNP-Coding optional; `status` fix `completed`)
+
+    Neue Mapper: CareLevelMapper, VitalSignsReportMapper, PresenceObservationMapper, ProcedureMapper;
+    AssessmentObservationMapper → Assessment_Free; CompositionMapper neu (closed slicing); DocumentingEntity
+    liefert auch Practitioner-Ref (Assessment_Free.performer nur Practitioner). Document-Reachability: nicht
+    wrappbare Leaves liegen nicht mehr lose im Bundle; ungenutzte Mapper (CarePlan/Device/Status/RelatedPerson)
+    bereinigt. **Optionaler Backlog:** Status-Beobachtungen (Orientierung/Ernährung/Atmung/Kontinenz, je eigenes
+    Profil), Medizinprodukte (Basis-`Device`-Variante statt `Device_Other_Item` + DeviceUseStatement), Angehörige.
   - **Tooling-Hinweis:** `kbv.basis 1.3.0` erzeugt im aktuellen Validator einen Snapshot-Fehler
     (`Same id 'Observation.dataAbsentReason'`) — bekannte KBV/Validator-Inkompatibilität, nicht unsere Daten.
 
-**Dokument-Stand:** 13 Composition-Sektionen (Diagnosen, Allergien, Medikation, Pflegeplan, Vitalwerte,
-Funktionsbeurteilungen, Atmung, Bewusstsein/Orientierung, Kontinenz, Ernährung, Medizinprodukte,
-Angehörige/Kontaktpersonen, Verlauf). HL7-Validator 0 errors gegen R4 + de.basisprofil.r4#1.5.0.
+**Dokument-Stand:** ÜLB-konforme Composition mit 7 slice-konformen Sektionen (pflegegrad, vitalparameter,
+probleme, allergien, medikationsplan, funktionsbeurteilungen, pflegerischeMassnahme). HL7-Validator
+**0 errors** gegen R4 + de.basisprofil.r4#1.5.0 + kbv.mio.ueberleitungsbogen#1.0.0, plus expliziter
+blockierender `-profile KBV_PR_MIO_ULB_Bundle`-Check.
 
-## Nächster mechanischer Schritt zur vollen Konformität
+## Restlicher (optionaler) Sektions-Backlog
 
-Package liegt bereit (`/tmp/ulb` bzw. via `packages.simplifier.net/kbv.mio.ueberleitungsbogen/1.0.0`).
-Sobald genug Sektionen gefüllt sind: ÜLB-IG in den Validator laden, unser Bundle mit ÜLB-`meta.profile`
-prüfen — die Fehlerliste **ist** der Feinschliff-Backlog (Must-Support-Felder, Slices, ValueSet-Bindungen).
+Alle offenen Sektionen sind **optional** (Bundle ist bereits voll konform). Je Sektion ein eigenes
+ÜLB-Profil mit ValueSet-Bindungen:
+- **Status-Beobachtungen:** orientierungPsyche (Cognitive_Awareness/Orientation), ernaehrung
+  (Presence_Information_Nutrition), qualitativeBeschreibungAtmung, Harn-/Stuhlkontinenz (Continence-Profile).
+- **Medizinprodukte:** Basis-`KBV_PR_MIO_ULB_Device` (verlangt `Device.patient` + gebundenes `type.coding`)
+  ← `DeviceUseStatement` ← Presence_Medical_Devices. `Device_Other_Item` ist hierfür inkompatibel.
+- **Angehörige:** ÜLB hat keine eigene Composition-Sektion für RelatedPerson (Adressbuch/Patient.contact).
 
-**Nicht jetzt voll claimen:** würde das grüne CI-Gate brechen, da unsere generischen Ressourcen die
-ÜLB-Must-Support-Constraints noch nicht erfüllen. Erst Daten füllen → dann Profile claimen.
+**Muster für neue Sektionen:** Profil introspizieren (fixe `code.coding`, `section.title`, value-ValueSet) →
+Wrapper-Mapper + Leaf → Kandidat-Bundle gegen `-ig kbv.mio.ueberleitungsbogen#1.0.0` iterieren → Sektion in
+CompositionMapper::SECTIONS + Exporter verdrahten → blockierendes Gate.
