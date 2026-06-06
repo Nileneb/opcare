@@ -2,8 +2,8 @@ name: gematik-validate
 
 # Track-C-Vorbereitung (kostenlos, ohne Anmeldung): validiert opcare-erzeugte gematik-Ressourcen mit dem
 # OFFIZIELLEN gematik Referenzvalidator. Deckt ISiP (Pflege-Interop) + EVP (Versorgungsplan Pflege) +
-# ePA (Medikationsliste). De-riskt die spätere bezahlte Konformitätsprüfung — wir bestehen das offizielle
-# Tool BEVOR wir zahlen.
+# ePA (Medikationsliste) + E-Rezept (Muster 16). De-riskt die spätere bezahlte Konformitätsprüfung —
+# wir bestehen das offizielle Tool BEVOR wir zahlen.
 
 permissions:
   contents: read
@@ -71,6 +71,7 @@ jobs:
           php artisan evp:export --output=evp-pflegegrad.json
           php artisan epa:export medication --output=epa-medication.json
           php artisan epa:export medication-request --output=epa-medication-request.json
+          php artisan erezept:export --output=erezept.json
 
       - name: Cache gematik Referenzvalidator + Plugins
         uses: actions/cache@v4
@@ -105,3 +106,8 @@ jobs:
         run: |
           bash scripts/gematik/validate.sh epa3-medication epa-medication.json
           bash scripts/gematik/validate.sh epa3-medication epa-medication-request.json
+
+      # E-Rezept-Bundle (Muster 16, Modul erp ist im Validator eingebaut). JSON-Daten-Konformität
+      # (--accepted-encodings json); der XML-signierte Realbetrieb ist die Anschluss-Ebene (Track C).
+      - name: E-Rezept-Konformität (Modul erp, fails on errors)
+        run: bash scripts/gematik/validate.sh erp erezept.json --accepted-encodings xml,json

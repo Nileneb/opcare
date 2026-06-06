@@ -38,7 +38,7 @@ use Spatie\Activitylog\Models\Activity;
  */
 class Physician extends BaseModel
 {
-    protected $fillable = ['tenant_id', 'name', 'fachrichtung', 'kontakt'];
+    protected $fillable = ['tenant_id', 'name', 'fachrichtung', 'lanr', 'bsnr', 'kontakt'];
 
     public function residents(): BelongsToMany
     {

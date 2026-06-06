@@ -159,6 +159,7 @@ class Resident extends BaseModel implements HasMedia
         return $this->hasMany(CareEvent::class)->latest('datum');
     }
 
+    /** @return BelongsToMany<Physician, $this> */
     public function physicians(): BelongsToMany
     {
         return $this->belongsToMany(Physician::class, 'resident_physician');

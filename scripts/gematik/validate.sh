@@ -8,8 +8,9 @@ set -euo pipefail
 JAR="${REFVALIDATOR_JAR:?REFVALIDATOR_JAR (Pfad zur referencevalidator-cli.jar) muss gesetzt sein}"
 MODULE="${1:?Modul fehlt (z. B. isip1)}"
 FILE="${2:?Datei fehlt}"
+shift 2 || true   # restliche Argumente sind optionale Validator-Flags (z. B. --accepted-encodings xml,json)
 
-out="$(java -jar "$JAR" "$MODULE" "$FILE" 2>&1)"
+out="$(java -jar "$JAR" "$MODULE" "$@" "$FILE" 2>&1)"
 echo "$out"
 
 if echo "$out" | grep -q "Valid: true"; then

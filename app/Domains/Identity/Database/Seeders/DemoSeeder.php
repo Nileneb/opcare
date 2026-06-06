@@ -133,6 +133,7 @@ class DemoSeeder extends Seeder
             'name' => 'Ramipril 5 mg',
             'wirkstoff' => 'Ramipril',
             'staerke' => '5 mg',
+            'pzn' => '06313728',
             'btm' => false,
         ]);
 
@@ -235,7 +236,7 @@ class DemoSeeder extends Seeder
         }
         $maria->contacts()->create(['name' => 'Anna Schneider', 'beziehung' => 'Tochter', 'telefon' => '0201 1234567', 'benachrichtigen' => true]);
 
-        $arzt = Physician::create(['name' => 'Dr. Walter Hausarzt', 'fachrichtung' => 'Allgemeinmedizin', 'kontakt' => '0201 9876543']);
+        $arzt = Physician::create(['name' => 'Dr. Walter Hausarzt', 'fachrichtung' => 'Allgemeinmedizin', 'lanr' => '838382202', 'bsnr' => '031234567', 'kontakt' => '0201 9876543']);
         $maria->physicians()->attach($arzt);
 
         $kasse = HealthInsurance::create(['name' => 'AOK Rheinland/Hamburg', 'ik_nummer' => '104212505']);
