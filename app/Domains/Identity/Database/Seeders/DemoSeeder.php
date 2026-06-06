@@ -23,6 +23,9 @@ use App\Domains\Catering\Enums\LmivAllergen;
 use App\Domains\Catering\Enums\Mahlzeit;
 use App\Domains\Catering\Models\Essenswunsch;
 use App\Domains\Catering\Models\Gericht;
+use App\Domains\Compliance\Models\Auftragsverarbeitung;
+use App\Domains\Compliance\Models\Verarbeitungstaetigkeit;
+use App\Domains\Compliance\Support\VvtDefaults;
 use App\Domains\Facility\Enums\AssetKategorie;
 use App\Domains\Facility\Enums\MeldungPrioritaet;
 use App\Domains\Facility\Enums\MeldungStatus;
@@ -33,6 +36,10 @@ use App\Domains\Facility\Models\FacilityMeldung;
 use App\Domains\Facility\Models\Medizinprodukt;
 use App\Domains\Facility\Models\MedizinproduktEinweisung;
 use App\Domains\Facility\Models\MedizinproduktVorkommnis;
+use App\Domains\Hygiene\Enums\BefundArt;
+use App\Domains\Hygiene\Enums\Erreger;
+use App\Domains\Hygiene\Models\Hygieneplan;
+use App\Domains\Hygiene\Models\InfektionsBefund;
 use App\Domains\Identity\Models\Tenant;
 use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Support\CurrentTenant;
@@ -68,6 +75,7 @@ use App\Domains\Medication\Models\TradeForm;
 use App\Domains\Medication\Models\VitalReading;
 use App\Domains\Personnel\Enums\Beschaeftigungsart;
 use App\Domains\Personnel\Enums\BetriebsbetreuungArt;
+use App\Domains\Personnel\Enums\FortbildungsThema;
 use App\Domains\Personnel\Enums\Krankenversicherung;
 use App\Domains\Personnel\Enums\Masernschutz;
 use App\Domains\Personnel\Enums\NachweisTyp;
@@ -76,6 +84,7 @@ use App\Domains\Personnel\Enums\Steuerklasse;
 use App\Domains\Personnel\Models\Beauftragtenbestellung;
 use App\Domains\Personnel\Models\Betriebsbetreuung;
 use App\Domains\Personnel\Models\Delegation;
+use App\Domains\Personnel\Models\Fortbildung;
 use App\Domains\Personnel\Models\MitarbeiterKompetenz;
 use App\Domains\Personnel\Models\Schutznachweis;
 use App\Domains\Personnel\Support\BeauftragtenrolleDefaults;
@@ -640,6 +649,53 @@ class DemoSeeder extends Seeder
             'status' => 'informiert', 'informiert_am' => now()->toDateString(), 'erstellt_von_user_id' => $admin->id]);
         BewohnerEreignis::create(['tenant_id' => $tenant->id, 'resident_id' => $wilhelm->id, 'kategorie' => EreignisKategorie::HeilbehandlungEinwilligung->value,
             'titel' => 'Einwilligung Kataraktoperation', 'datum' => now()->addDays(5)->toDateString(), 'status' => 'offen', 'erstellt_von_user_id' => $admin->id]);
+
+        // Datenschutz-Register (Art. 30/28 DSGVO): Standard-VVT + ein Dienstleister mit gültigem AVV, einer ohne.
+        VvtDefaults::ensureFor($tenant->id);
+        Verarbeitungstaetigkeit::where('tenant_id', $tenant->id)->whereIn('schluessel', ['pflegedokumentation', 'medikation', 'personalverwaltung'])
+            ->update(['geprueft_am' => now()->subMonths(2)->toDateString()]); // einige geprüft → grün, Rest ungeprüft → rot
+        $vtDoku = Verarbeitungstaetigkeit::where('tenant_id', $tenant->id)->where('schluessel', 'pflegedokumentation')->first();
+        Auftragsverarbeitung::create(['tenant_id' => $tenant->id, 'verarbeitungstaetigkeit_id' => $vtDoku?->id,
+            'dienstleister' => 'Rechenzentrum Diakonie eG (Hosting)', 'zweck' => 'Hosting der Pflegesoftware in einem zertifizierten RZ',
+            'kategorien_daten' => 'alle in der App verarbeiteten Daten', 'unterauftragnehmer' => true,
+            'vertrag_geschlossen_am' => now()->subMonths(8)->toDateString(), 'pruef_intervall_monate' => 24]); // AVV vorhanden → grün
+        Auftragsverarbeitung::create(['tenant_id' => $tenant->id, 'dienstleister' => 'Externer Abrechnungsdienst',
+            'zweck' => 'Pflegesatz-Abrechnung gegenüber den Kostenträgern', 'kategorien_daten' => 'Stamm- und Abrechnungsdaten',
+            'pruef_intervall_monate' => 24]); // kein AVV → rot
+
+        // Hygiene & Infektionsschutz (§ 23 IfSG): freigegebener Hygieneplan + MRE-/Infektions-Surveillance.
+        Hygieneplan::create(['tenant_id' => $tenant->id, 'titel' => 'Hausweiter Hygieneplan', 'version' => '2.1',
+            'inhalt' => 'Reinigungs-/Desinfektionsplan, Händehygiene, Umgang mit MRE, Ausbruchsmanagement.',
+            'freigegeben_von' => $admin->id, 'freigegeben_am' => now()->subMonths(2)->toDateString(), 'revision_intervall_monate' => 12]); // grün
+        Hygieneplan::create(['tenant_id' => $tenant->id, 'titel' => 'Hygieneplan Küche (HACCP-Ergänzung)', 'version' => '0.9',
+            'revision_intervall_monate' => 12]); // Entwurf → rot
+
+        InfektionsBefund::create(['tenant_id' => $tenant->id, 'resident_id' => $wilhelm->id, 'erreger' => Erreger::Mrsa->value,
+            'art' => BefundArt::Besiedlung->value, 'festgestellt_am' => now()->subMonths(1)->toDateString(),
+            'massnahmen' => 'Nasale Sanierung läuft; Einzelzimmer, Standardhygiene.', 'erfasst_von_user_id' => $sandra->id]); // aktiv, nicht meldepflichtig → amber
+        InfektionsBefund::create(['tenant_id' => $tenant->id, 'resident_id' => $maria->id, 'erreger' => Erreger::Norovirus->value,
+            'art' => BefundArt::NosokomialeInfektion->value, 'festgestellt_am' => now()->subDays(2)->toDateString(),
+            'massnahmen' => 'Isolation, Kohortierung WB 1.', 'meldepflichtig' => true, 'erfasst_von_user_id' => $sandra->id]); // Meldung offen → rot
+        InfektionsBefund::create(['tenant_id' => $tenant->id, 'resident_id' => $kurt->id, 'erreger' => Erreger::Mrgn3->value,
+            'art' => BefundArt::Besiedlung->value, 'festgestellt_am' => now()->subMonths(4)->toDateString(),
+            'aufgehoben_am' => now()->subMonths(1)->toDateString(), 'erfasst_von_user_id' => $sandra->id]); // aufgehoben → grün
+
+        // Fortbildungsplan (QPR QB6): Pflicht-Matrix mit gemischter Ampel + eine geplante Fortbildung.
+        Fortbildung::create(['tenant_id' => $tenant->id, 'user_id' => $sandra->id, 'thema' => FortbildungsThema::Hygiene->value,
+            'titel' => 'Händehygiene & MRE (Auffrischung)', 'anbieter' => 'RKI-Fortbildung', 'absolviert_am' => now()->subMonths(3)->toDateString(),
+            'umfang_stunden' => 4, 'pflicht' => true, 'intervall_monate' => 12]); // grün
+        Fortbildung::create(['tenant_id' => $tenant->id, 'user_id' => $sandra->id, 'thema' => FortbildungsThema::Datenschutz->value,
+            'titel' => 'Datenschutz & Schweigepflicht', 'absolviert_am' => now()->subMonths(14)->toDateString(),
+            'umfang_stunden' => 2, 'pflicht' => true, 'intervall_monate' => 12]); // überfällig → rot
+        Fortbildung::create(['tenant_id' => $tenant->id, 'user_id' => $tom->id, 'thema' => FortbildungsThema::Brandschutzunterweisung->value,
+            'titel' => 'Jährliche Brandschutzunterweisung', 'absolviert_am' => now()->subMonths(2)->toDateString(),
+            'umfang_stunden' => 2, 'pflicht' => true, 'intervall_monate' => 12]); // grün
+        Fortbildung::create(['tenant_id' => $tenant->id, 'user_id' => $tom->id, 'thema' => FortbildungsThema::Reanimation->value,
+            'titel' => 'Reanimationstraining (BLS/AED)', 'anbieter' => 'DRK', 'geplant_am' => now()->addWeeks(2)->toDateString(),
+            'pflicht' => true, 'intervall_monate' => 12]); // geplant → grau
+        Fortbildung::create(['tenant_id' => $tenant->id, 'user_id' => $sandra->id, 'thema' => FortbildungsThema::Demenz->value,
+            'titel' => 'Umgang mit herausforderndem Verhalten', 'absolviert_am' => now()->subMonths(5)->toDateString(),
+            'umfang_stunden' => 8, 'pflicht' => false]); // fachlich, absolviert → grün
 
         // Zweites Heim — Haus Birkenhof (2 Bewohner, kein SIS für Minimal-Demo)
         $birkenhof = Tenant::create(['name' => 'Haus Birkenhof', 'slug' => 'birkenhof']);

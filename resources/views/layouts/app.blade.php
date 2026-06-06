@@ -45,6 +45,9 @@
                 <a href="{{ route('quality.qm') }}" @class(['is-active' => request()->routeIs('quality.qm')])>QM-Checkliste</a>
                 <a href="{{ route('qdvs.export') }}" @class(['is-active' => request()->routeIs('qdvs.export')])>QDVS-Export</a>
                 <a href="{{ route('arbeitsschutz.nachweise') }}" @class(['is-active' => request()->routeIs('arbeitsschutz.nachweise')])>Arbeitsschutz</a>
+                <a href="{{ route('personnel.fortbildung') }}" @class(['is-active' => request()->routeIs('personnel.fortbildung')])>Fortbildung</a>
+                <a href="{{ route('hygiene') }}" @class(['is-active' => request()->routeIs('hygiene')])>Hygiene/MRE</a>
+                <a href="{{ route('datenschutz') }}" @class(['is-active' => request()->routeIs('datenschutz')])>Datenschutz</a>
                 <a href="{{ route('personnel.kompetenzen') }}" @class(['is-active' => request()->routeIs('personnel.kompetenzen')])>Skill-Baum</a>
                 <a href="{{ route('personnel.berechtigungen') }}" @class(['is-active' => request()->routeIs('personnel.berechtigungen')])>Berechtigungen</a>
                 <a href="{{ route('personnel.beauftragte') }}" @class(['is-active' => request()->routeIs('personnel.beauftragte')])>Beauftragte</a>

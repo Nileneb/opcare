@@ -64,7 +64,10 @@ ausdrücklich auch für **Pflegeeinrichtungen** (§ 2 Abs. 4). Pflichten:
 Skill-Baum; STK/MTK als Nachweis-mit-Frist. MPSB als Beauftragten-Rolle (ergänzen). **Reine Foto-Archivierung
 ist kein Medizinprodukt** (MDR) — Grenze siehe [[Vektor-DB-Grenze]]/Recherche.
 
-## 3. Datenschutz — Verzeichnis von Verarbeitungstätigkeiten (VVT) + Auftragsverarbeitung (AVV)
+## 3. Datenschutz — Verzeichnis von Verarbeitungstätigkeiten (VVT) + Auftragsverarbeitung (AVV) — ✅ umgesetzt 2026-06-06
+
+> Umgesetzt: Datenschutz-Register (Domain `Compliance`) — VVT-Katalog mit Prüf-Frist-Ampel, AVV-Register und
+> vorlagefähiger Art-30-Export. Details: [datenschutz-vvt-avv.md](datenschutz-vvt-avv.md).
 
 **Rechtsgrundlage:** **Art. 30 DSGVO** (Verzeichnis von Verarbeitungstätigkeiten des Verantwortlichen) +
 **Art. 28 DSGVO** (Auftragsverarbeitung, schriftlicher AVV mit Mindestinhalt) + **§ 22 BDSG** (Gesundheitsdaten
@@ -109,7 +112,10 @@ Unfallverhütung unterstützen; Einsatzzeiten/Betreuungsformen nach DGUV V2. Bet
 Betreuungszeiten, Besuchsprotokolle) — schon als **Beauftragten-Rolle** im Register vorhanden; eigene Stammdaten
 + Verknüpfung mit den [[Arbeitsschutz Nachweise]] (Strang C) ergänzen (Ideen-Backlog #7).
 
-## 6. Hygiene / MRE-Surveillance
+## 6. Hygiene / MRE-Surveillance — ✅ umgesetzt 2026-06-06
+
+> Umgesetzt: Hygieneplan (Dokument-mit-Freigabe + Revisions-Ampel) und MRE-/Infektions-Surveillance je Bewohner
+> mit Meldepflicht-Verfolgung (Domain `Hygiene`). Details: [hygiene-mre.md](hygiene-mre.md).
 
 **Rechtsgrundlage:** **§ 23 IfSG** ([gesetze-im-internet.de/ifsg](https://www.gesetze-im-internet.de/ifsg/)) —
 Pflicht zu **Hygieneplan**, Aufzeichnung **nosokomialer Infektionen + Erreger mit Resistenzen** und Bewertung
@@ -121,7 +127,10 @@ Abs. 5/8 IfSG (z. B. Brandenburg MedHygV 2016
 (append-only Surveillance-Liste), Hygienebeauftragte/-kommission (Beauftragten-Register). Frist-/Schulungs-
 Nachweise über Nachweis-mit-Frist. Audit-Lücke „Hygiene/MRE".
 
-## 7. Fortbildungspflicht (Skill-Baum-Erweiterung)
+## 7. Fortbildungspflicht (Skill-Baum-Erweiterung) — ✅ umgesetzt 2026-06-06
+
+> Umgesetzt: Fortbildungsplan mit Pflicht-Themen-Matrix und Auffrischungs-Ampel (Domain `Personnel`). Details:
+> [fortbildungsplan.md](fortbildungsplan.md).
 
 **Rechtsgrundlage:** Fortbildungspflicht aus **Landesheimrecht/WTG** + **§ 132a SGB V**-Rahmenverträge + QPR;
 Pflegefachkräfte: regelmäßige Fortbildung als Qualitätskriterium. **Datenmodell-Implikation:** `Fortbildung`

@@ -6,7 +6,7 @@ Qualitätssicherung (QDVS/DAS-Pflege)** und **FHIR / ÜLB-MIO** (Pflegeüberleit
 des eingestellten Java-Projekts **[Offene-Pflege.de (OPDE)](#herkunft)** — dessen Domänenwissen dient als
 Vorlage, der Code ist von Grund auf neu.
 
-> **Status:** Funktionsfähig und aktiv in Entwicklung. **464 Tests grün**, CI durchgehend grün
+> **Status:** Funktionsfähig und aktiv in Entwicklung. **482 Tests grün**, CI durchgehend grün
 > (Tests · Linter · Security-Audit · FHIR-Validierung). Open Source (AGPL-3.0), **kein Rechtsgate**,
 > solange keine Echt-Patientendaten verarbeitet werden.
 >
@@ -83,7 +83,7 @@ Vorlage, der Code ist von Grund auf neu.
 | Backend | **Laravel 13**, **PHP 8.3+** |
 | Frontend | Blade + **Livewire 4** + Alpine.js |
 | Datenbank | **SQLite** (Dev/CI) · **PostgreSQL** (Prod) |
-| Tests | **Pest 4** (464 Tests) |
+| Tests | **Pest 4** (482 Tests) |
 | Lint/Style | **Laravel Pint** |
 | DTOs / RBAC / Audit | `spatie/laravel-data` · `spatie/laravel-permission` · `spatie/laravel-activitylog` |
 | Deployment | **Docker Compose** (self-contained: eine `.env`, `docker compose up --build`) |
@@ -102,10 +102,12 @@ Domänen-orientierte Struktur unter `app/Domains/`. Layering als Einbahnstraße:
 | **Assessment** | Instrument-Engine (Braden/Sturz/BESD/Barthel), Scoring, Risiko-Bänder, Eskalation |
 | **Medication** | Verordnungen, Stellplan, Bestände, Gaben, Vitalwerte |
 | **Quality** | Vorkommnisse/CareEvents, QS-Indikatoren, KPIs, **QM-Norm-Checkliste**, **Beschwerde-/Gewaltschutz-Management** (Weiterleitung anonym/namentlich), **Gremien/Heimbeirat** (HeimmwV/§ 11 ASiG) |
+| **Compliance** | **Datenschutz-Register**: Verzeichnis von Verarbeitungstätigkeiten (Art. 30 DSGVO) mit Prüf-Frist-Ampel + Auftragsverarbeitungen (Art. 28) + Art-30-Export |
+| **Hygiene** | **Hygieneplan** (Dokument-mit-Freigabe + Revisions-Ampel) + **MRE-/Infektions-Surveillance** je Bewohner mit Meldepflicht-Verfolgung (§ 23/§§ 6/7 IfSG) |
 | **Qdvs** | DAS-Plausibilitäts-Regel-Engine + QDVS-Export |
 | **Fhir** | FHIR-R4-Mapper + Document-Bundle-Export (ÜLB-MIO-Richtung) |
 | **Scheduling** | Dienstplan, Schichten, Kalender, **ArbZG-Compliance-Engine** (Regelwerk + § 14) + **Arbeitszeiterfassung** (BAG/EuGH) |
-| **Personnel** | Personalakte (Personalfragebogen, verschlüsselt) 1:1 am Benutzer, gekoppelt an die Rollenverwaltung; Arbeitsschutz-Nachweise + **Betriebsarzt/Sifa-Betreuung** (ASiG/DGUV V2), Beauftragten-Register |
+| **Personnel** | Personalakte (Personalfragebogen, verschlüsselt) 1:1 am Benutzer, gekoppelt an die Rollenverwaltung; Arbeitsschutz-Nachweise + **Betriebsarzt/Sifa-Betreuung** (ASiG/DGUV V2), Beauftragten-Register, **Fortbildungsplan** (QPR QB6, Pflicht-Themen-Matrix) |
 | **Facility** | Haustechnik/Instandhaltung (DIN 31051): Mängelmeldungen + Wartungsplan mit Prüffristen; Medizinprodukte-Bestandsverzeichnis + Medizinproduktebuch (MPBetreibV) |
 | **Catering** | Küche/Verpflegung (LMIV): Diät-/Allergen-Sicht der Bewohner + Speiseplan mit Allergenwarnung |
 | **SocialCare** | Soziale Betreuung (§ 43b SGB XI): Angebote + Teilnahme-Nachweis je Bewohner |
@@ -161,7 +163,7 @@ php artisan serve
 ## Entwicklung
 
 ```bash
-php artisan test                 # bzw. vendor/bin/pest   (464 Tests)
+php artisan test                 # bzw. vendor/bin/pest   (482 Tests)
 vendor/bin/pint                  # Code-Style
 php artisan fhir:export --output=bundle.json   # FHIR-Document-Bundle erzeugen
 ```

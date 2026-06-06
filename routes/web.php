@@ -19,9 +19,11 @@ use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Catering\Kueche;
+use App\Livewire\Compliance\Datenschutz;
 use App\Livewire\Facility;
 use App\Livewire\Facility\Haustechnik;
 use App\Livewire\Facility\Medizinprodukte;
+use App\Livewire\Hygiene\Hygiene;
 use App\Livewire\Masterdata\Portal;
 use App\Livewire\Masterdata\Vertretungen;
 use App\Livewire\Medication\BtmNachweis;
@@ -34,6 +36,7 @@ use App\Livewire\Overview;
 use App\Livewire\Personnel\Arbeitsschutz;
 use App\Livewire\Personnel\Beauftragtenregister;
 use App\Livewire\Personnel\Berechtigungen;
+use App\Livewire\Personnel\Fortbildungsplan;
 use App\Livewire\Personnel\Personalakte;
 use App\Livewire\Personnel\SkillBaum;
 use App\Livewire\Pflegeplanung;
@@ -103,6 +106,9 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class, Restrict
     Route::get('/qualitaet/fem', FemUebersicht::class)->name('quality.fem');
     Route::get('/qualitaet/beschwerden', Beschwerden::class)->name('quality.beschwerden');
     Route::get('/qualitaet/gremien', Gremien::class)->name('quality.gremien');
+    Route::get('/qualitaet/hygiene', Hygiene::class)->name('hygiene');
+    Route::get('/datenschutz', Datenschutz::class)->name('datenschutz');
+    Route::get('/personal/fortbildung', Fortbildungsplan::class)->name('personnel.fortbildung');
 
     // Querschnitts-Sprachfunktionen für jedes Textfeld (inline, synchron).
     Route::post('/speech/transcribe', [SpeechController::class, 'transcribe'])->name('speech.transcribe');

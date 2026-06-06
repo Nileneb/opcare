@@ -1,6 +1,6 @@
 # Offene & ungeklärte Punkte (Stand 2026-06-06, Session-Handoff)
 
-Stand: 464 Tests grün, PHPStan 0, Pint clean. Diese Liste sammelt, was vor/nach einem Neustart offen ist.
+Stand: 482 Tests grün, PHPStan 0, Pint clean. Diese Liste sammelt, was vor/nach einem Neustart offen ist.
 Querbezug: [Ideen-Backlog](ideen-backlog-2026-06.md), [Norm-Recherche](recherche-normen-erweiterung-2026-06.md),
 **[Gesetzes-Recherche zu den offenen Punkten](recherche-offene-punkte-2026-06.md)** (Rechtsgrundlage + Datenmodell je Punkt).
 
@@ -55,12 +55,17 @@ Querbezug: [Ideen-Backlog](ideen-backlog-2026-06.md), [Norm-Recherche](recherche
   Pflichterfüllung dokumentiert). Briefwahl = Ereignis-Kategorie *Posteingang*. Siehe
   [betreuungsrecht-vertretung.md](betreuungsrecht-vertretung.md).
 
+- ✅ **Datenschutz-VVT/AVV** (Art. 30/28 DSGVO) · **Hygiene/MRE** (§ 23 IfSG) · **Fortbildungsplan** (QPR QB6) —
+  **umgesetzt 2026-06-06**: Datenschutz-Register (VVT mit Prüf-Frist-Ampel + AVV + Art-30-Export, Domain
+  `Compliance`), Hygiene & MRE-Surveillance (Hygieneplan mit Revisions-Ampel + Erreger-/Infektions-Liste je
+  Bewohner mit Meldepflicht-Verfolgung § 6/7 IfSG, Domain `Hygiene`) und Fortbildungsplan (Pflicht-Themen-Matrix
+  mit Auffrischungs-Ampel, `Personnel`). Siehe [datenschutz-vvt-avv.md](datenschutz-vvt-avv.md),
+  [hygiene-mre.md](hygiene-mre.md), [fortbildungsplan.md](fortbildungsplan.md).
+
 Noch offen:
-1. **Datenschutz-VVT/AVV** (Art. 30/28 DSGVO, Recherche §3) · **Hygiene/MRE** (§ 23 IfSG, Recherche §6) ·
-   **Fortbildungsplan** (Recherche §7).
-2. **Bundesland-Overrides** (föderales Heimrecht, Recherche §8) · **freie Buchung im Hauptbuch** (Recherche §10) ·
+1. **Bundesland-Overrides** (föderales Heimrecht, Recherche §8) · **freie Buchung im Hauptbuch** (Recherche §10) ·
    **Energielevel-Ampel** (Recherche §9) · **Übergangs-/Spitzendienste** (Idee #4).
-3. **AI-Services** (eigene Session): Ollama + whisperX-mcp als Container mit Build-Pre-Flight-Healthcheck,
+2. **AI-Services** (eigene Session): Ollama + whisperX-mcp als Container mit Build-Pre-Flight-Healthcheck,
    **VLM-Beleg-Capture** und **Budget-Setzungen**. Voll spezifiziert in [ai-services-plan.md](ai-services-plan.md).
 
 ## E. Technische/Infra-Notizen
