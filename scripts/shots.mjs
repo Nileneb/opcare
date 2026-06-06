@@ -25,6 +25,8 @@ const pages = [
     ['bewohner-detail', '/bewohner/1', true],
     ['medikation', '/bewohner/1/medikation', true],
     ['controlling', '/controlling', true],
+    ['dienstplan', '/dienstplan', true],
+    ['arbeitsrecht', '/arbeitsrecht', true],
     ['qdvs', '/qdvs', true],
     ['einrichtung', '/einrichtung', true],
     ['sis-board', '/pflegeplanung', true],

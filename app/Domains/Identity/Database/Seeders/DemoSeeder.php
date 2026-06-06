@@ -36,7 +36,11 @@ use App\Domains\Medication\Models\VitalReading;
 use App\Domains\Quality\Enums\EventSeverity;
 use App\Domains\Quality\Enums\QualityIndicator;
 use App\Domains\Quality\Models\CareEvent;
+use App\Domains\Scheduling\Compliance\ArbeitszeitgesetzDefaults;
 use App\Domains\Scheduling\Database\Seeders\ShiftSeeder;
+use App\Domains\Scheduling\Models\ComplianceJustification;
+use App\Domains\Scheduling\Models\Shift;
+use App\Domains\Scheduling\Models\ShiftAssignment;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
@@ -265,6 +269,28 @@ class DemoSeeder extends Seeder
             'severity' => EventSeverity::Schwer,
             'details' => ['lokalisation' => 'Ferse rechts', 'grad' => 3],
             'reported_by' => $admin->id,
+        ]);
+
+        // Dienstplan-Demo: Pflegekräfte + Dienste der laufenden Woche, inkl. ArbZG-Befunden (ein offener
+        // § 5-Verstoß, ein per § 14 begründeter, ein Sonntags-Hinweis) — füllt das Konformitätspanel.
+        ArbeitszeitgesetzDefaults::ensureFor($tenant->id);
+        $sandra = User::create(['name' => 'Sandra Vogt', 'email' => 'sandra@opcare.local', 'password' => Hash::make('password'), 'tenant_id' => $tenant->id]);
+        $tom = User::create(['name' => 'Tom Berger', 'email' => 'tom@opcare.local', 'password' => Hash::make('password'), 'tenant_id' => $tenant->id]);
+        $frueh = Shift::query()->where('name', 'Frühdienst')->first();
+        $spaet = Shift::query()->where('name', 'Spätdienst')->first();
+        $mon = now()->startOfWeek();
+        $plan = [
+            [$sandra, $frueh, 0], [$sandra, $frueh, 1], [$sandra, $spaet, 2], [$sandra, $frueh, 3], // § 5 Mi→Do (begründet)
+            [$tom, $spaet, 0], [$tom, $frueh, 1], [$tom, $frueh, 4], [$tom, $frueh, 6],             // § 5 Mo→Di (offen) + So-Hinweis
+        ];
+        foreach ($plan as [$mitarbeiter, $schicht, $offset]) {
+            ShiftAssignment::create(['tenant_id' => $tenant->id, 'user_id' => $mitarbeiter->id, 'shift_id' => $schicht->id, 'dienst_am' => $mon->copy()->addDays($offset)->toDateString()]);
+        }
+        ComplianceJustification::create([
+            'tenant_id' => $tenant->id, 'user_id' => $sandra->id, 'rule_key' => 'ruhezeit',
+            'datum' => $mon->copy()->addDays(3)->toDateString(),
+            'grund' => 'Nachfolgekraft kurzfristig erkrankt — Bewohner durften nicht unbeaufsichtigt bleiben (§ 14 ArbZG).',
+            'begruendet_von' => $admin->id,
         ]);
 
         // Zweites Heim — Haus Birkenhof (2 Bewohner, kein SIS für Minimal-Demo)

@@ -28,6 +28,7 @@ use App\Livewire\Quality\Controlling;
 use App\Livewire\Quality\QualityReport;
 use App\Livewire\Residents;
 use App\Livewire\ResidentShow;
+use App\Livewire\Scheduling\Arbeitsrecht;
 use App\Livewire\Scheduling\Dienstplan;
 use App\Livewire\Scheduling\Kalender;
 use App\Livewire\Speech;
@@ -70,6 +71,7 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class])->group(
     Route::post('/speech/optimize', [SpeechController::class, 'optimize'])->name('speech.optimize');
     Route::get('/qdvs', QdvsExport::class)->name('qdvs.export');
     Route::get('/dienstplan', Dienstplan::class)->name('dienstplan');
+    Route::get('/arbeitsrecht', Arbeitsrecht::class)->name('arbeitsrecht');
     Route::get('/kalender', Kalender::class)->name('kalender');
     Route::get('/bewohner/{resident}/assessment/{instrument}', AssessmentDurchfuehren::class)->name('assessment.durchfuehren');
     Route::get('/bewohner/{resident}/assessments', AssessmentVerlauf::class)->name('assessment.verlauf');

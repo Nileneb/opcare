@@ -40,6 +40,7 @@
         @can('manage', \App\Domains\Scheduling\Models\Shift::class)
             <nav class="app-nav app-nav-dienstplan">
                 <a href="{{ route('dienstplan') }}" @class(['is-active' => request()->routeIs('dienstplan')])>Dienstplan</a>
+                <a href="{{ route('arbeitsrecht') }}" @class(['is-active' => request()->routeIs('arbeitsrecht')])>Arbeitsrecht</a>
             </nav>
         @endcan
         <nav class="app-nav app-nav-kalender">
