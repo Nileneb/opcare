@@ -7,7 +7,7 @@ use App\Domains\Identity\Support\CurrentTenant;
 use App\Domains\Masterdata\Models\Resident;
 
 beforeEach(function () {
-    $this->tenant = Tenant::create(['name' => 'Haus am See', 'slug' => 'haus', 'ik_nummer' => '260123456']);
+    $this->tenant = Tenant::create(['name' => 'Haus am See', 'slug' => 'haus', 'ik_nummer' => '260123456', 'strasse' => 'Seestr.', 'hausnummer' => '7', 'plz' => '42489', 'ort' => 'Wülfrath']);
     app(CurrentTenant::class)->set($this->tenant);
 });
 
@@ -48,5 +48,17 @@ it('mappt den Mandanten auf eine IsipOrganization (Pflegeeinrichtung)', function
         ->and($o['identifier'][0]['value'])->toBe('260123456')
         ->and($o['name'])->toBe('Haus am See')
         // Einrichtungsart Pflegeheim (SNOMED)
-        ->and($o['type'][0]['coding'][0]['code'])->toBe('42665001');
+        ->and($o['type'][0]['coding'][0]['code'])->toBe('42665001')
+        // Einrichtungs-Adresse (ZETA-/KIM-Absender-Vorbereitung)
+        ->and($o['address'][0]['line'][0])->toBe('Seestr. 7')
+        ->and($o['address'][0]['postalCode'])->toBe('42489')
+        ->and($o['address'][0]['city'])->toBe('Wülfrath');
+});
+
+it('lässt die Adresse weg, wenn keine Einrichtungs-Adresse hinterlegt ist', function () {
+    $bare = Tenant::create(['name' => 'Ohne Adresse', 'slug' => 'ohne', 'ik_nummer' => '260999999']);
+
+    $o = (new IsipOrganizationMapper)->map($bare);
+
+    expect($o)->not->toHaveKey('address');
 });

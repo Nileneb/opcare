@@ -37,7 +37,7 @@ sind, wird diese Liste von oben nach unten abgearbeitet („Schalter umlegen") �
 
 - ✅ **Bewohner-Postadresse** — `residents.strasse/hausnummer/plz/ort`, im Bewohner-Anlageformular erfassbar.
 - ✅ **Praxis-Adresse** — `physicians.strasse/hausnummer/plz/ort`.
-- offen (optional): **Einrichtungs-Adresse** am Tenant (aktuell nicht von einem Gate gefordert).
+- ✅ **Einrichtungs-Adresse** — `tenants.strasse/hausnummer/plz/ort`; fließt in `IsipOrganization.address` (validiert) und ist die Institutions-Postadresse für die ZETA-Schicht (TI 2.0) / KIM-Absender.
 - Reale Dateneingabe → bis befüllt greift der Platzhalter-Fallback (§2) nur bei leeren Feldern.
 
 ## 4. Konfigurations-Schalter (Prod-Härtung, vom Betreiber zu setzen)

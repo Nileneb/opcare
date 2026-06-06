@@ -48,7 +48,11 @@ class DemoSeeder extends Seeder
     {
         Role::findOrCreate('super-admin');
 
-        $tenant = Tenant::create(['name' => 'Bergische Diakonie — Wohnbereich Aprath', 'slug' => 'aprath']);
+        $tenant = Tenant::create([
+            'name' => 'Bergische Diakonie — Wohnbereich Aprath', 'slug' => 'aprath',
+            'ik_nummer' => '260326822',
+            'strasse' => 'Aprather Weg', 'hausnummer' => '20', 'plz' => '42489', 'ort' => 'Wülfrath',
+        ]);
         app(CurrentTenant::class)->set($tenant);
         $this->call(MedicationReferenceSeeder::class);
         $this->call(ShiftSeeder::class);

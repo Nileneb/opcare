@@ -23,7 +23,7 @@ class IsipOrganizationMapper
     {
         $ik = $t->ik_nummer ?: '000000000';
 
-        return [
+        $org = [
             'resourceType' => 'Organization',
             'id' => self::id($t),
             'meta' => ['profile' => [self::PROFILE]],
@@ -39,5 +39,17 @@ class IsipOrganizationMapper
             ]]]],
             'name' => $t->name,
         ];
+
+        if ($t->strasse && $t->plz && $t->ort) {
+            $org['address'] = [[
+                'type' => 'both',
+                'line' => [trim($t->strasse.' '.($t->hausnummer ?? ''))],
+                'city' => $t->ort,
+                'postalCode' => $t->plz,
+                'country' => 'DE',
+            ]];
+        }
+
+        return $org;
     }
 }

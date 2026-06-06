@@ -18,6 +18,10 @@ use Illuminate\Support\Carbon;
  * @property string|null $ik_nummer
  * @property array<array-key, mixed>|null $settings
  * @property bool $aktiv
+ * @property string|null $strasse
+ * @property string|null $hausnummer
+ * @property string|null $plz
+ * @property string|null $ort
  * @property-read Collection<int, User> $users
  * @property-read int|null $users_count
  *
@@ -27,11 +31,15 @@ use Illuminate\Support\Carbon;
  * @method static Builder<static>|Tenant query()
  * @method static Builder<static>|Tenant whereAktiv($value)
  * @method static Builder<static>|Tenant whereCreatedAt($value)
+ * @method static Builder<static>|Tenant whereHausnummer($value)
  * @method static Builder<static>|Tenant whereId($value)
  * @method static Builder<static>|Tenant whereIkNummer($value)
  * @method static Builder<static>|Tenant whereName($value)
+ * @method static Builder<static>|Tenant whereOrt($value)
+ * @method static Builder<static>|Tenant wherePlz($value)
  * @method static Builder<static>|Tenant whereSettings($value)
  * @method static Builder<static>|Tenant whereSlug($value)
+ * @method static Builder<static>|Tenant whereStrasse($value)
  * @method static Builder<static>|Tenant whereTraeger($value)
  * @method static Builder<static>|Tenant whereUpdatedAt($value)
  *
@@ -39,7 +47,7 @@ use Illuminate\Support\Carbon;
  */
 class Tenant extends Model
 {
-    protected $fillable = ['name', 'traeger', 'slug', 'ik_nummer', 'settings', 'aktiv'];
+    protected $fillable = ['name', 'traeger', 'slug', 'ik_nummer', 'settings', 'aktiv', 'strasse', 'hausnummer', 'plz', 'ort'];
 
     protected $casts = [
         'settings' => 'array',
