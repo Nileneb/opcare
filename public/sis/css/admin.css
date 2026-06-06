@@ -181,3 +181,10 @@ table.plan th { font-size: 0.78em; color: var(--color-fg-muted); font-weight: va
 .qm-item:first-of-type { border-top: none; }
 .qm-anf { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; font-size: 0.94em; }
 .qm-item textarea { width: 100%; }
+
+/* ===== Küche / Verpflegung (LMIV) ===== */
+.kueche-mz { margin-bottom: 8px; }
+.kueche-mz h4 { margin: 12px 0 4px; font-size: 0.95em; color: var(--color-fg-muted); }
+.kueche-warn { margin: 4px 0 6px; padding: 8px 10px; background: #F8E3DD; border: 1px solid #EEC3B7; border-radius: var(--radius-md); font-size: 0.88em; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.kueche-allergene { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 2px 12px; }
+.kueche-chk { font-weight: 400; font-size: 0.9em; display: flex; align-items: center; gap: 6px; }

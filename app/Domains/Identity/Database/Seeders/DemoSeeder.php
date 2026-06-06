@@ -8,6 +8,9 @@ use App\Domains\Assessment\Database\Seeders\InstrumentSeeder;
 use App\Domains\Assessment\Models\Instrument;
 use App\Domains\CarePlanning\Models\CareMeasure;
 use App\Domains\CarePlanning\Models\SisAssessment;
+use App\Domains\Catering\Enums\LmivAllergen;
+use App\Domains\Catering\Enums\Mahlzeit;
+use App\Domains\Catering\Models\Gericht;
 use App\Domains\Facility\Enums\AssetKategorie;
 use App\Domains\Facility\Enums\MeldungPrioritaet;
 use App\Domains\Facility\Enums\MeldungStatus;
@@ -344,6 +347,14 @@ class DemoSeeder extends Seeder
         FacilityMeldung::create(['titel' => 'Heizung Zimmer 7 wird nicht warm', 'beschreibung' => 'Thermostat reagiert nicht.', 'standort' => 'Zimmer 7', 'prioritaet' => MeldungPrioritaet::Hoch, 'gemeldet_von' => $admin->id]);
         FacilityMeldung::create(['titel' => 'Türschließer Haupteingang quietscht', 'standort' => 'Eingang EG', 'prioritaet' => MeldungPrioritaet::Niedrig, 'status' => MeldungStatus::InArbeit, 'gemeldet_von' => $sandra->id]);
         FacilityMeldung::create(['titel' => 'Wasserhahn Küche tropft', 'asset_id' => null, 'standort' => 'Küche', 'prioritaet' => MeldungPrioritaet::Mittel, 'status' => MeldungStatus::Erledigt, 'erledigt_am' => now()->subDays(2)->toDateString(), 'erledigt_notiz' => 'Dichtung getauscht.', 'gemeldet_von' => $admin->id]);
+
+        // Küche/Verpflegung (LMIV): Köchin + Lebensmittelallergie + Speiseplan mit Allergen-Warnung.
+        $koechin = User::create(['name' => 'Rita Hoffmann', 'email' => 'kueche@opcare.local', 'password' => Hash::make('password'), 'tenant_id' => $tenant->id]);
+        $koechin->assignRole('kueche');
+        $maria->allergies()->create(['substanz' => 'Erdnüsse', 'typ' => 'allergie', 'kategorie' => 'nahrung', 'kritikalitaet' => 'hoch', 'reaktion' => 'anaphylaktisch', 'erfasst_am' => now()->subYear()->toDateString()]);
+        Gericht::create(['datum' => now()->toDateString(), 'mahlzeit' => Mahlzeit::Mittag, 'bezeichnung' => 'Erdnuss-Hähnchen mit Reis', 'allergene' => [LmivAllergen::Erdnuesse->value, LmivAllergen::Soja->value]]);
+        Gericht::create(['datum' => now()->toDateString(), 'mahlzeit' => Mahlzeit::Mittag, 'bezeichnung' => 'Gemüseeintopf (vegan)', 'allergene' => [LmivAllergen::Sellerie->value]]);
+        Gericht::create(['datum' => now()->toDateString(), 'mahlzeit' => Mahlzeit::Abend, 'bezeichnung' => 'Käsebrot mit Salat', 'allergene' => [LmivAllergen::Milch->value, LmivAllergen::Gluten->value]]);
 
         // Zweites Heim — Haus Birkenhof (2 Bewohner, kein SIS für Minimal-Demo)
         $birkenhof = Tenant::create(['name' => 'Haus Birkenhof', 'slug' => 'birkenhof']);
