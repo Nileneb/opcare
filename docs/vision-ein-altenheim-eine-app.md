@@ -105,3 +105,23 @@ sichtbar machen. Immer gleich. „Abschreiben" ist hier Best Practice.
 
 > Jede Stufe folgt demselben Muster: **Norm als Daten, Domäne isoliert, rollenbasiert sichtbar, im CI grün.**
 > So wächst „Ein Altenheim, eine App" inkrementell — ohne je das Fundament anzufassen.
+
+## Recherche-Backlog (2026-06-06): vertiefte Norm-Erweiterung
+
+Tiefenrecherche zu den noch unvollständigen Bereichen → [recherche-normen-erweiterung-2026-06.md](recherche-normen-erweiterung-2026-06.md)
+(quellengestützt, adversarial geprüft). Sechs Stränge mit konkreten Spezifikationen für die spätere Umsetzung:
+
+1. **Arbeitsschutz** (materiell, über ArbZG hinaus) — Gefährdungsbeurteilung inkl. psych. Belastung, Vorsorgekartei
+   (ArbMedVV), Unterweisungs-Fristen, BEM (§167 SGB IX), Mutterschutz im Dienstplan, Gefahrstoffverzeichnis, Brandschutz-/Ersthelfer-Schicht-Check.
+2. **Gesundheitsförderung** — BGM/BGF (§20b SGB V, steuerfrei) + **§5 SGB XI Bewohner-Prävention** (von der Pflegekasse mitfinanziert → Erlösquelle).
+3. **Personalbemessung §113c (PeBeM)** — Betreuungsschlüssel im Dienstplan: PAW-Tabelle (PG-Mix × Qualifikation → VZÄ),
+   Soll-vs-Ist-Ampel je Schicht; alles bundesland-/trägerspezifisch überschreibbar.
+4. **Positive Schichtregeln** — zweite Engine nach ArbZG: Vorwärtsrotation, Freiblöcke, Wochenend-Gerechtigkeit,
+   Quick-Return-Vermeidung (12 datengetriebene Default-Regeln, §6 ArbZG / BAuA / BGHM).
+5. **Datei-/Foto-Upload (MinIO)** — Enabler für viele Audit-Punkte: Bucket-pro-Tenant, Presigned URLs, Einwilligungs-/Löschkonzept
+   (Art. 9 DSGVO, §22 KUG, §630f BGB-Fristen).
+6. **Vollständigkeits-Audit** — Top-10-Lücken: BtM-Nachweis (BtMVV), FEM-Genehmigung (§1831 BGB), Qualitätsindikatoren-Export (§113b),
+   Medizinprodukte (MPBetreibV), Datenschutz operativ (VVT/AVV), Barbetragsverwaltung (§27b SGB XII), Beschwerde/Gewaltschutz, Hygiene/MRE, Evakuierungsklassen, Heimbeirat/WBVG.
+
+**Vier wiederkehrende Bau-Muster** (einmal bauen, vielfach nutzen): *Nachweis-mit-Frist* · *Dokument-mit-Version+Freigabe* ·
+*Genehmigungs-/Melde-Workflow mit Behörden-Frist* · *datengetriebene Wert-/Regel-Kataloge*.
