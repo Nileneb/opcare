@@ -53,4 +53,41 @@
             </div>
         </div>
     @endforeach
+
+    <h2 style="margin-top:28px">Betreuungsschlüssel (§ 113c SGB XI)</h2>
+    <p class="muted" style="margin-bottom:12px">Personalanhaltswerte v{{ $pawVersion }} (bundeseinheitlich, Code-Konstante).
+        Hier die einrichtungsspezifischen Stellschrauben — Tarif-Wochenstunden, Fachkraftquote, Nachtdienst-Schlüssel
+        (landesrechtlich) und der PAW-Multiplikator (private Häuser mit mehr Personal &gt; 1,0).</p>
+    <div class="card">
+        <div class="form-row-2">
+            <div class="field"><label>Tarif-Wochenstunden (1 VZÄ)</label><input type="number" step="0.5" wire:model="sc_wochenstunden" />@error('sc_wochenstunden')<span class="err">{{ $message }}</span>@enderror</div>
+            <div class="field"><label>Fachkraftquote (Anteil, z. B. 0,5)</label><input type="number" step="0.01" wire:model="sc_fachkraftquote" />@error('sc_fachkraftquote')<span class="err">{{ $message }}</span>@enderror</div>
+        </div>
+        <div class="form-row-2">
+            <div class="field"><label>Nachtdienst: Bewohner je Fachkraft (landesrechtlich)</label><input type="number" wire:model="sc_nachtdienst" />@error('sc_nachtdienst')<span class="err">{{ $message }}</span>@enderror</div>
+            <div class="field"><label>PAW-Multiplikator</label><input type="number" step="0.05" wire:model="sc_multiplikator" />@error('sc_multiplikator')<span class="err">{{ $message }}</span>@enderror</div>
+        </div>
+        <button class="btn btn-primary btn-sm" wire:click="staffingSpeichern">Speichern</button>
+    </div>
+
+    <h2 style="margin-top:28px">Ergonomie-Empfehlungen (Schichtgestaltung)</h2>
+    <p class="muted" style="margin-bottom:12px">Arbeitswissenschaftliche Empfehlungen (§ 6 ArbZG, BAuA/BGHM/DGAUM) —
+        der harten ArbZG-Prüfung nachgelagert. An-/abschaltbar, Schwellwerte anpassbar.</p>
+    @foreach ($qualityRules as $rule)
+        <div class="card">
+            <div class="card-head"><h3>{{ $rule->label }}</h3>
+                <label style="font-weight:400"><input type="checkbox" wire:model="qedits.{{ $rule->id }}.aktiv" /> aktiv</label>
+            </div>
+            <p class="muted" style="font-size:.85em">{{ $rule->quelle }}</p>
+            <div class="form-row-3">
+                <div class="field"><label>Schwere</label>
+                    <select wire:model="qedits.{{ $rule->id }}.severity"><option value="warnung">Warnung</option><option value="hinweis">Hinweis</option></select>
+                </div>
+                @foreach ($rule->params as $name => $val)
+                    <div class="field"><label>{{ $name }}</label><input type="number" step="0.5" wire:model="qedits.{{ $rule->id }}.params.{{ $name }}" /></div>
+                @endforeach
+            </div>
+            <button class="btn btn-primary btn-sm" wire:click="qSpeichern({{ $rule->id }})">Speichern</button>
+        </div>
+    @endforeach
 </div>

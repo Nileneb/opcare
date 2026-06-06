@@ -20,6 +20,34 @@
         @endif
     </div>
 
+    <div class="card">
+        <div class="card-head"><h3>Betreuungsschlüssel (§ 113c SGB XI)</h3>
+            <span class="badge gray" title="Personalbemessung aus dem Pflegegrad-Mix (PeBeM)">PeBeM</span>
+        </div>
+        <div class="form-row-3" style="gap:18px">
+            <div>
+                <p class="kicker">Pflegegrad-Mix (aktiv)</p>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                    @foreach ($staffing->pgCounts as $pg => $n)<span class="badge gray">PG{{ $pg }}: {{ $n }}</span>@endforeach
+                </div>
+                <p class="muted" style="margin-top:6px;font-size:.85em">Soll: {{ number_format($staffing->sollVzaeGesamt, 2, ',', '.') }} VZÄ gesamt · {{ number_format($staffing->sollVzaeFachkraft, 2, ',', '.') }} VZÄ Fachkraft</p>
+            </div>
+            <div>
+                <p class="kicker">Gesamtbesetzung (Wochenstunden)</p>
+                <b style="font-size:1.3em">{{ number_format($staffing->istWochenstundenGesamt, 0, ',', '.') }}</b> / {{ number_format($staffing->sollWochenstundenGesamt, 0, ',', '.') }} h
+                <span class="badge {{ $staffing->ampelGesamt() === 'gruen' ? 'green' : ($staffing->ampelGesamt() === 'gelb' ? 'amber' : 'red') }}">{{ $staffing->deckungGesamt() }} %</span>
+            </div>
+            <div>
+                <p class="kicker">davon Fachkraft</p>
+                <b style="font-size:1.3em">{{ number_format($staffing->istWochenstundenFachkraft, 0, ',', '.') }}</b> / {{ number_format($staffing->sollWochenstundenFachkraft, 0, ',', '.') }} h
+                <span class="badge {{ $staffing->ampelFachkraft() === 'gruen' ? 'green' : ($staffing->ampelFachkraft() === 'gelb' ? 'amber' : 'red') }}">{{ $staffing->deckungFachkraft() }} %</span>
+            </div>
+        </div>
+        <p class="muted" style="margin-top:10px;font-size:.85em">Soll = Pflegegrad-Mix × Personalanhaltswerte (§ 113c, bundeseinheitlich) × Multiplikator,
+            umgerechnet auf Wochenstunden. Tarif-Wochenstunden, Fachkraftquote und Multiplikator sind unter
+            <a href="{{ route('arbeitsrecht') }}" wire:navigate>Regeln</a> je Einrichtung einstellbar.</p>
+    </div>
+
     <div class="card" style="overflow-x:auto">
         <table class="plan">
             <thead>
@@ -113,5 +141,28 @@
         <p class="muted" style="margin-top:12px;font-size:.85em">Schwellwerte &amp; Schwere sind unter
             <a href="{{ route('arbeitsrecht') }}" wire:navigate>§ Arbeitsrecht-Regeln</a> editierbar. § 4 (Pausen) wird
             mangels Pausen-Erfassung als „nicht prüfbar" geführt; die Wochenprüfung betrachtet die angezeigte Woche.</p>
+    </div>
+
+    <div class="card">
+        <div class="card-head"><h3>Ergonomie-Empfehlungen (Schichtgestaltung)</h3>
+            <span class="badge gray" title="Arbeitswissenschaftliche Empfehlungen — § 6 ArbZG / BAuA / BGHM">freiwillig</span>
+        </div>
+        @forelse ($qualityByUser as $userId => $findings)
+            <div class="plan-findings">
+                <b>{{ $findings[0]->userName }}</b>
+                @foreach ($findings as $qf)
+                    <div class="plan-finding">
+                        <span class="badge {{ $qf->severity->badge() }}">{{ $qf->severity->label() }}</span>
+                        <span><b>{{ $qf->label }}:</b> {{ $qf->message }}</span>
+                        <span class="muted" style="margin-left:auto;font-size:.85em" title="{{ $qf->quelle }}">ⓘ</span>
+                    </div>
+                @endforeach
+            </div>
+        @empty
+            <p class="empty">Keine Ergonomie-Hinweise — die Schichtfolge entspricht den Empfehlungen.</p>
+        @endforelse
+        <p class="muted" style="margin-top:12px;font-size:.85em">Bewusst <b>Empfehlungen</b> (Warnung/Hinweis), der harten
+            ArbZG-Prüfung nachgelagert (§ 6 ArbZG: gesicherte arbeitswissenschaftliche Erkenntnisse). Regeln &amp;
+            Schwellwerte sind unter <a href="{{ route('arbeitsrecht') }}" wire:navigate>Regeln</a> je Einrichtung an-/abschaltbar.</p>
     </div>
 </div>

@@ -6,7 +6,10 @@ use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Support\CurrentTenant;
 use App\Domains\Scheduling\Actions\AssignShift;
 use App\Domains\Scheduling\Compliance\ArbeitszeitgesetzDefaults;
+use App\Domains\Scheduling\Compliance\Betreuungsschluessel;
 use App\Domains\Scheduling\Compliance\ComplianceReporter;
+use App\Domains\Scheduling\Compliance\ScheduleQualityAnalyzer;
+use App\Domains\Scheduling\Compliance\ScheduleQualityDefaults;
 use App\Domains\Scheduling\Compliance\WorkingHoursAnalyzer;
 use App\Domains\Scheduling\Data\ShiftAssignmentData;
 use App\Domains\Scheduling\Models\ComplianceJustification;
@@ -166,10 +169,29 @@ class Dienstplan extends Component
             $wuensche[$dw->user_id][$dw->datum->toDateString()] = $dw;
         }
 
+        $users = User::where('tenant_id', $tenantId)->with('employeeProfile')->orderBy('name')->get();
+
+        // Betreuungsschlüssel (§ 113c SGB XI): Soll aus dem Pflegegrad-Mix vs. geplante Ist-Wochenstunden.
+        $fachkraftIds = $users->filter(fn (User $u) => $u->employeeProfile?->qualifikation?->istFachkraft() ?? false)->pluck('id')->all();
+        $istGesamt = array_sum($geplant);
+        $istFachkraft = collect($geplant)->filter(fn ($h, $uid) => in_array($uid, $fachkraftIds, true))->sum();
+        $staffing = app(Betreuungsschluessel::class)->analysiere($tenantId, (float) $istGesamt, (float) $istFachkraft);
+
+        // Ergonomische Schichtregeln (BAuA/BGHM) — Empfehlungen, der ArbZG-Hartprüfung nachgelagert.
+        $qualityRules = ScheduleQualityDefaults::ensureFor($tenantId);
+        $qualityFindings = app(ScheduleQualityAnalyzer::class)->findings($assignments, $qualityRules, array_column($days, 'datum'));
+        $qualityByUser = [];
+        foreach ($qualityFindings as $qf) {
+            $qualityByUser[$qf->userId][] = $qf;
+        }
+
         return view('livewire.scheduling.dienstplan', [
+            'staffing' => $staffing,
+            'qualityByUser' => $qualityByUser,
+            'qualityCount' => count($qualityFindings),
             'days' => $days,
             'weekLabel' => $start->isoFormat('DD.MM.').'–'.$start->addDays(6)->isoFormat('DD.MM.YYYY'),
-            'users' => User::where('tenant_id', $tenantId)->with('employeeProfile')->orderBy('name')->get(),
+            'users' => $users,
             'shifts' => Shift::where('aktiv', true)->orderBy('beginn')->get(),
             'grid' => $grid,
             'wuensche' => $wuensche,

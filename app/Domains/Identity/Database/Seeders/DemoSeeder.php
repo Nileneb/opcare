@@ -59,6 +59,8 @@ use App\Domains\Quality\Enums\QualityIndicator;
 use App\Domains\Quality\Models\CareEvent;
 use App\Domains\Quality\Support\QmKatalogDefaults;
 use App\Domains\Scheduling\Compliance\ArbeitszeitgesetzDefaults;
+use App\Domains\Scheduling\Compliance\PersonalbemessungDefaults;
+use App\Domains\Scheduling\Compliance\ScheduleQualityDefaults;
 use App\Domains\Scheduling\Database\Seeders\ShiftSeeder;
 use App\Domains\Scheduling\Enums\WunschTyp;
 use App\Domains\Scheduling\Models\ComplianceJustification;
@@ -410,6 +412,10 @@ class DemoSeeder extends Seeder
         app(Wareneingang::class)->handle($filter, 5, 6.50, now()->subDays(2)->toDateString(), 'Haustechnik-Service'); // unter Mindestbestand
         app(Warenverbrauch::class)->handle($mehl->fresh(), 12, now()->subDay()->toDateString(), 'Backtag Wohnbereich 1');
         app(Warenverbrauch::class)->handle($handschuhe->fresh(), 35, now()->toDateString(), 'Tagesbedarf Pflege');
+
+        // Betreuungsschlüssel (§ 113c) + ergonomische Schichtregeln: Defaults je Einrichtung anlegen.
+        PersonalbemessungDefaults::ensureConfig($tenant->id);
+        ScheduleQualityDefaults::ensureFor($tenant->id);
 
         // Dokumente & Fotos: Demo-Befund am Bewohner (medizinisch → 10-Jahres-Aufbewahrung § 630f BGB).
         $maria->addMediaFromString("Demo-Arztbrief\nBefund: stabil.\n")
