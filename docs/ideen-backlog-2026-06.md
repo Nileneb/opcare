@@ -32,6 +32,8 @@ QM-Instrument (Beschwerdemanagement § 114 SGB XI — deckt sich mit Audit-Lück
 - Verknüpfung mit Buchhaltung (eigenes Treuhand-Konto, getrennt vom Einrichtungsvermögen).
 - Mit Idee #1: Angehörige sehen den Kontostand + können Einzahlungen avisieren.
 **Recht:** GoB, Treuhand getrennt führen, prüfbar durch Heimaufsicht. **Aufwand:** mittel (Buchhaltung als Basis).
+**Budget-Setzungen (User 2026-06-06):** je Treuhandkonto Budgets (Kategorie/Zeitraum) mit Warn-/Sperr-Ampel —
+generisches Muster, auch für Wirtschaftsbudgets der Buchhaltung. Spezifiziert in [ai-services-plan.md §3](ai-services-plan.md).
 
 ## 4. Dienstplan: Übergangs-/Spitzendienste
 

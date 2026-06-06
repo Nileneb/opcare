@@ -42,6 +42,9 @@ Querbezug: [Ideen-Backlog](ideen-backlog-2026-06.md), [Norm-Recherche](recherche
 6. Audit-Top-10 Restposten: **Qualitätsindikatoren-Export (§113b)**, **MPBetreibV-Bestandsverzeichnis**,
    **Datenschutz-VVT/AVV**, **Beschwerde-/Gewaltschutz**, **Hygiene-Modul/MRE**, **Brandschutz/Evakuierungsklassen**.
 7. **Übergangs-/Spitzendienste** + tageszeitabhängige Soll-Besetzung im Generator (Idee #4).
+8. **AI-Services** (eigene Session): Ollama + whisperX-mcp als Container mit Build-Pre-Flight-Healthcheck,
+   **VLM-Beleg-Capture** (Foto→Analyse→Einsortier-Vorschlag→berechtigte Bestätigung) und **Budget-Setzungen**
+   (Taschengeldkasse). Voll spezifiziert in [ai-services-plan.md](ai-services-plan.md).
 
 ## E. Technische/Infra-Notizen
 - **Memory-Server (mcp.linn.games)** war in dieser Session durchgängig down (Timeout/500). Prefetch/Feedback nicht
