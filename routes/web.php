@@ -35,6 +35,7 @@ use App\Livewire\ResidentShow;
 use App\Livewire\Scheduling\Arbeitsrecht;
 use App\Livewire\Scheduling\Dienstplan;
 use App\Livewire\Scheduling\Kalender;
+use App\Livewire\Scheduling\Zeiterfassung;
 use App\Livewire\Speech;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -81,6 +82,7 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class])->group(
     Route::get('/kalender', Kalender::class)->name('kalender');
     Route::get('/haustechnik', Haustechnik::class)->name('haustechnik');
     Route::get('/kueche', Kueche::class)->name('kueche');
+    Route::get('/zeiterfassung', Zeiterfassung::class)->name('zeiterfassung');
     Route::get('/bewohner/{resident}/assessment/{instrument}', AssessmentDurchfuehren::class)->name('assessment.durchfuehren');
     Route::get('/bewohner/{resident}/assessments', AssessmentVerlauf::class)->name('assessment.verlauf');
     Route::get('/qdvs/{export}/download', function (App\Domains\Qdvs\Models\QdvsExport $export) {

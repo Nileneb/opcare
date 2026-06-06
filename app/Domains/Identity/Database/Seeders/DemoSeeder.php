@@ -56,6 +56,7 @@ use App\Domains\Scheduling\Database\Seeders\ShiftSeeder;
 use App\Domains\Scheduling\Models\ComplianceJustification;
 use App\Domains\Scheduling\Models\Shift;
 use App\Domains\Scheduling\Models\ShiftAssignment;
+use App\Domains\Scheduling\Models\Zeitbuchung;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
@@ -355,6 +356,12 @@ class DemoSeeder extends Seeder
         Gericht::create(['datum' => now()->toDateString(), 'mahlzeit' => Mahlzeit::Mittag, 'bezeichnung' => 'Erdnuss-Hähnchen mit Reis', 'allergene' => [LmivAllergen::Erdnuesse->value, LmivAllergen::Soja->value]]);
         Gericht::create(['datum' => now()->toDateString(), 'mahlzeit' => Mahlzeit::Mittag, 'bezeichnung' => 'Gemüseeintopf (vegan)', 'allergene' => [LmivAllergen::Sellerie->value]]);
         Gericht::create(['datum' => now()->toDateString(), 'mahlzeit' => Mahlzeit::Abend, 'bezeichnung' => 'Käsebrot mit Salat', 'allergene' => [LmivAllergen::Milch->value, LmivAllergen::Gluten->value]]);
+
+        // Arbeitszeit-Ist (BAG/EuGH): erfasste Zeiten der laufenden Woche für Sandra/Tom (Soll-Ist-Demo).
+        $woStart = now()->startOfWeek();
+        foreach ([[$sandra, 0, '06:00', '14:30'], [$sandra, 1, '06:00', '14:15'], [$tom, 0, '13:30', '22:00']] as [$mitarbeiter, $offset, $beginn, $ende]) {
+            Zeitbuchung::create(['user_id' => $mitarbeiter->id, 'datum' => $woStart->copy()->addDays($offset)->toDateString(), 'beginn' => $beginn, 'ende' => $ende, 'pause_minuten' => 30]);
+        }
 
         // Zweites Heim — Haus Birkenhof (2 Bewohner, kein SIS für Minimal-Demo)
         $birkenhof = Tenant::create(['name' => 'Haus Birkenhof', 'slug' => 'birkenhof']);
