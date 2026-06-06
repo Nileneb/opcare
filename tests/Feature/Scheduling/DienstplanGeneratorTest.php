@@ -4,6 +4,7 @@ use App\Domains\Identity\Models\Tenant;
 use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Support\CurrentTenant;
 use App\Domains\Personnel\Enums\Qualifikation;
+use App\Domains\Scheduling\Compliance\PersonalbemessungDefaults;
 use App\Domains\Scheduling\Enums\ShiftKind;
 use App\Domains\Scheduling\Enums\WunschTyp;
 use App\Domains\Scheduling\Models\Dienstwunsch;
@@ -69,6 +70,35 @@ it('ist beim erneuten Lauf idempotent (auch am Sonntag, Datetime-Grenze)', funct
 
     expect(ShiftAssignment::where('tenant_id', $this->tenant->id)->count())->toBe($erste)
         ->and(ShiftAssignment::whereDate('dienst_am', CarbonImmutable::parse($this->week)->addDays(6))->count())->toBe(1);
+});
+
+it('belegt den Fachkraft-Pflichtplatz je Schicht mit einer Fachkraft', function () {
+    PersonalbemessungDefaults::ensureConfig($this->tenant->id)->update(['fachkraftquote_min' => 0.5]);
+    $this->frueh->update(['soll_besetzung' => 2]); // fk_req = ceil(2*0,5) = 1
+
+    app(DienstplanGenerator::class)->generate($this->tenant->id, $this->week);
+
+    $fkIds = $this->mitarbeitende->filter(fn ($u) => $u->employeeProfile->qualifikation === Qualifikation::Pflegefachkraft)->pluck('id');
+    $proTag = ShiftAssignment::where('tenant_id', $this->tenant->id)->get()->groupBy(fn ($a) => $a->dienst_am->toDateString());
+    // jeder voll besetzte Tag (2) enthält mind. eine Fachkraft
+    foreach ($proTag as $tag) {
+        if ($tag->count() >= 2) {
+            expect($tag->pluck('user_id')->intersect($fkIds))->not->toBeEmpty();
+        }
+    }
+});
+
+it('lässt den Fachkraft-Pflichtplatz offen, wenn keine Fachkraft verfügbar ist', function () {
+    // alle zu Hilfskräften machen → keine Fachkraft im Haus
+    $this->mitarbeitende->each(fn ($u) => $u->employeeProfile->update(['qualifikation' => Qualifikation::Pflegehilfskraft]));
+    PersonalbemessungDefaults::ensureConfig($this->tenant->id)->update(['fachkraftquote_min' => 0.5]);
+    $this->frueh->update(['soll_besetzung' => 2]);
+
+    $result = app(DienstplanGenerator::class)->generate($this->tenant->id, $this->week);
+
+    expect(collect($result->offeneSlots)->filter(fn ($s) => str_contains($s, 'Fachkraft nötig')))->not->toBeEmpty()
+        ->and(ShiftAssignment::where('tenant_id', $this->tenant->id)->get()
+            ->groupBy(fn ($a) => $a->dienst_am->toDateString())->every(fn ($t) => $t->count() <= 1))->toBeTrue();
 });
 
 it('meldet offene Slots bei Unterdeckung transparent', function () {

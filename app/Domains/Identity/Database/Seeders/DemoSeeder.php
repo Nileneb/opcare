@@ -70,12 +70,14 @@ use App\Domains\Scheduling\Compliance\ArbeitszeitgesetzDefaults;
 use App\Domains\Scheduling\Compliance\PersonalbemessungDefaults;
 use App\Domains\Scheduling\Compliance\ScheduleQualityDefaults;
 use App\Domains\Scheduling\Database\Seeders\ShiftSeeder;
+use App\Domains\Scheduling\Enums\AbwesenheitTyp;
 use App\Domains\Scheduling\Enums\WunschTyp;
 use App\Domains\Scheduling\Models\ComplianceJustification;
 use App\Domains\Scheduling\Models\Dienstwunsch;
 use App\Domains\Scheduling\Models\Shift;
 use App\Domains\Scheduling\Models\ShiftAssignment;
 use App\Domains\Scheduling\Models\Zeitbuchung;
+use App\Domains\Scheduling\Support\ShiftCoverageService;
 use App\Domains\SocialCare\Enums\BetreuungsArt;
 use App\Domains\SocialCare\Enums\BetreuungsTyp;
 use App\Domains\SocialCare\Enums\Handlungsfeld;
@@ -470,6 +472,10 @@ class DemoSeeder extends Seeder
             $sturz->teilnahmen()->create(['tenant_id' => $tenant->id, 'resident_id' => $bewohner->id,
                 'datum' => now()->subDays(3)->toDateString(), 'dauer_minuten' => 45, 'beobachtung' => 'gute Beteiligung']);
         }
+
+        // Krankmeldung + Tauschbörse: Tom meldet sich für morgen krank → seine Dienste werden als Vertretung offen.
+        app(ShiftCoverageService::class)->krankmelden(
+            $tom, AbwesenheitTyp::Krank, now()->addDay()->toDateString(), now()->addDays(2)->toDateString(), 'grippaler Infekt', $admin->id);
 
         // BtM-Nachweis (§ 13 BtMVV): Konto + Zugang + Gabe für eine:n Bewohner:in.
         $btmBewohner = $aktive->first();

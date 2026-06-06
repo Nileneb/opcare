@@ -29,6 +29,7 @@ const pages = [
     ['praevention', '/praevention', true],
     ['qm-checkliste', '/qualitaet/qm-checkliste', true],
     ['dienstplan', '/dienstplan', true],
+    ['tauschboerse', '/tauschboerse', true],
     ['arbeitsrecht', '/arbeitsrecht', true],
     ['zeiterfassung', '/zeiterfassung', true],
     ['haustechnik', '/haustechnik', true],

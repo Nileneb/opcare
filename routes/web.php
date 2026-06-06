@@ -40,6 +40,7 @@ use App\Livewire\ResidentShow;
 use App\Livewire\Scheduling\Arbeitsrecht;
 use App\Livewire\Scheduling\Dienstplan;
 use App\Livewire\Scheduling\Kalender;
+use App\Livewire\Scheduling\Tauschboerse;
 use App\Livewire\Scheduling\Wunschdienstplan;
 use App\Livewire\Scheduling\Zeiterfassung;
 use App\Livewire\SocialCare\Betreuung;
@@ -97,6 +98,7 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class])->group(
     Route::get('/kueche', Kueche::class)->name('kueche');
     Route::get('/zeiterfassung', Zeiterfassung::class)->name('zeiterfassung');
     Route::get('/wunschdienstplan', Wunschdienstplan::class)->name('wunschdienstplan');
+    Route::get('/tauschboerse', Tauschboerse::class)->name('tauschboerse');
     Route::get('/buchhaltung', Buchhaltung::class)->name('buchhaltung');
     Route::get('/dokumente/{media}', MediaDownloadController::class)->name('media.download')->middleware('signed');
     Route::get('/bewohner/{resident}/assessment/{instrument}', AssessmentDurchfuehren::class)->name('assessment.durchfuehren');

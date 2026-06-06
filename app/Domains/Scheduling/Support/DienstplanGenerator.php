@@ -4,10 +4,12 @@ namespace App\Domains\Scheduling\Support;
 
 use App\Domains\Identity\Models\User;
 use App\Domains\Scheduling\Compliance\ArbeitszeitgesetzDefaults;
+use App\Domains\Scheduling\Compliance\PersonalbemessungDefaults;
 use App\Domains\Scheduling\Compliance\ScheduleQualityDefaults;
 use App\Domains\Scheduling\Compliance\WorkingHoursAnalyzer;
 use App\Domains\Scheduling\Enums\ShiftKind;
 use App\Domains\Scheduling\Enums\WunschTyp;
+use App\Domains\Scheduling\Models\Abwesenheit;
 use App\Domains\Scheduling\Models\Dienstwunsch;
 use App\Domains\Scheduling\Models\Shift;
 use App\Domains\Scheduling\Models\ShiftAssignment;
@@ -48,6 +50,9 @@ class DienstplanGenerator
         $maxFolgeNacht = (int) ($qrules->get('max-folge-nachtdienste')?->param('max_naechte', 3) ?? 3);
         $quickRuhe = (float) ($qrules->get('quick-return')?->param('min_ruhe_stunden', 16) ?? 16);
 
+        // Mindest-Fachkraftquote je Schicht (§ 113c/Landesheimrecht) — hart erzwungen.
+        $fachkraftquote = PersonalbemessungDefaults::ensureConfig($tenantId)->fachkraftquote_min;
+
         // Vorhandene manuelle Zuweisungen zählen als Belegung; alte Vorschläge dieser Woche werden ersetzt.
         ShiftAssignment::where('tenant_id', $tenantId)->where('dienst_am', '>=', $von)->where('dienst_am', '<', $bisExklusiv)->where('auto_generiert', true)->delete();
         $existing = ShiftAssignment::with('shift')->where('tenant_id', $tenantId)->where('dienst_am', '>=', $von)->where('dienst_am', '<', $bisExklusiv)->get();
@@ -56,6 +61,17 @@ class DienstplanGenerator
         $wuensche = [];
         foreach (Dienstwunsch::where('tenant_id', $tenantId)->where('datum', '>=', $von)->where('datum', '<', $bisExklusiv)->get() as $w) {
             $wuensche[$w->user_id][$w->datum->toDateString()] = $w->typ;
+        }
+
+        // Abwesenheiten (Krank/Urlaub): an gedeckten Tagen ist die Person nicht planbar.
+        $abwesend = [];
+        $bisLetzter = $dates[6];
+        foreach (Abwesenheit::where('tenant_id', $tenantId)->where('von', '<=', $bisLetzter)->where('bis', '>=', $von)->get() as $abw) {
+            foreach ($dates as $datum) {
+                if ($abw->deckt($datum)) {
+                    $abwesend[$abw->user_id][$datum] = true;
+                }
+            }
         }
 
         // Mitarbeiter-Status
@@ -83,11 +99,26 @@ class DienstplanGenerator
         }
 
         // Bedarfs-Slots: je Tag × Schicht × Soll-Besetzung. Schwer-zu-besetzen zuerst (Nacht, Wochenende).
+        // Je (Tag,Schicht) wird die geforderte Fachkraftzahl und der bereits belegte Stand mitgeführt, damit
+        // die Mindest-Fachkraftquote hart eingehalten wird.
         $slots = [];
+        $shiftInfo = [];
         foreach ($dates as $d) {
             foreach ($shifts as $shift) {
-                $belegt = collect($existing)->filter(fn ($a) => $a->dienst_am->toDateString() === $d && $a->shift_id === $shift->id)->count();
-                for ($i = $belegt; $i < (int) $shift->soll_besetzung; $i++) {
+                $key = $d.'|'.$shift->id;
+                $belegt = collect($existing)->filter(fn ($a) => $a->dienst_am->toDateString() === $d && $a->shift_id === $shift->id);
+                $shiftInfo[$key] = [
+                    'total' => (int) $shift->soll_besetzung,
+                    // Quote per floor (keine „halbe Fachkraft" auf Einzelschichten erzwingen); Nachtdienst aber
+                    // immer mind. 1 Fachkraft (Landesheimrecht).
+                    'fk_req' => max(
+                        (int) floor((int) $shift->soll_besetzung * $fachkraftquote),
+                        $shift->kind === ShiftKind::Nacht ? 1 : 0,
+                    ),
+                    'filled' => $belegt->count(),
+                    'fk' => $belegt->filter(fn ($a) => $state[$a->user_id]['fachkraft'] ?? false)->count(),
+                ];
+                for ($i = $belegt->count(); $i < (int) $shift->soll_besetzung; $i++) {
                     $slots[] = ['datum' => $d, 'shift' => $shift];
                 }
             }
@@ -111,14 +142,28 @@ class DienstplanGenerator
         foreach ($slots as $slot) {
             $d = $slot['datum'];
             $shift = $slot['shift'];
+            $key = $d.'|'.$shift->id;
             $stunden = WorkingHoursAnalyzer::stunden($shift->beginn, $shift->ende);
             $fachkraftDa = $this->hatFachkraft($d, $shift->id, $existing, $created, $state);
+
+            // Restplätze dieser Schicht und noch fehlende Fachkräfte → Fachkraft hart erzwingen,
+            // wenn sonst die Quote nicht mehr erreichbar wäre.
+            $info = $shiftInfo[$key];
+            $restplaetze = $info['total'] - $info['filled'];
+            $fkFehlt = $info['fk_req'] - $info['fk'];
+            $nurFachkraft = $fkFehlt >= $restplaetze;
 
             $best = null;
             $bestScore = -INF;
             foreach ($state as $uid => $s) {
                 if (isset($s['tage'][$d])) {
                     continue; // schon an diesem Tag eingeteilt
+                }
+                if ($abwesend[$uid][$d] ?? false) {
+                    continue; // krank/Urlaub
+                }
+                if ($nurFachkraft && ! $s['fachkraft']) {
+                    continue; // Mindest-Fachkraftquote der Schicht
                 }
                 $wunsch = $wuensche[$uid][$d] ?? null;
                 if ($wunsch === WunschTyp::Frei || $wunsch === WunschTyp::NichtVerfuegbar) {
@@ -139,12 +184,16 @@ class DienstplanGenerator
             }
 
             if ($best === null) {
-                $offen[] = CarbonImmutable::parse($d)->isoFormat('dd DD.MM.').' · '.$shift->name;
+                $offen[] = CarbonImmutable::parse($d)->isoFormat('dd DD.MM.').' · '.$shift->name.($nurFachkraft ? ' (Fachkraft nötig)' : '');
 
                 continue;
             }
 
             $created[] = ['datum' => $d, 'shift_id' => $shift->id, 'shift' => $shift, 'user_id' => $best];
+            $shiftInfo[$key]['filled']++;
+            if ($state[$best]['fachkraft']) {
+                $shiftInfo[$key]['fk']++;
+            }
             $state[$best]['tage'][$d] = $shift;
             $state[$best]['hours'] += $stunden;
             if ($this->istWochenende($d)) {
