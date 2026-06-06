@@ -31,8 +31,10 @@ Vorlage, der Code ist von Grund auf neu.
 - **FHIR-Export** — FHIR-R4-Pflegeüberleitungs-**Document-Bundle**, validiert im CI mit dem **amtlichen
   HL7-FHIR-Validator** (0 errors) — Richtung **ÜLB-MIO** (`kbv.mio.ueberleitungsbogen`). Siehe
   [FHIR-Konformität](#fhir--ülb-mio-konformität).
-- **Sicherheit** — Row-Level-Mandantentrennung (`tenant_id` + Global Scope), RBAC (Rollen je Mandant),
-  Audit-Log, IDOR-Härtung, DSGVO-Guards auf Export-Routen.
+- **Sicherheit** — **MFA (TOTP, Pflicht für alle)**, Row-Level-Mandantentrennung (`tenant_id` + Global
+  Scope), RBAC (Rollen je Mandant), Audit-Log, IDOR-Härtung, **At-Rest-Verschlüsselung** sensibler
+  Gesundheits-Freitextdaten, **Security-Header** (CSP/HSTS/…), DSGVO-Guards auf Export-Routen. CI-Gates:
+  Dependency-CVE-Audit + **SAST (Semgrep)**. Konzept: [`docs/security/sicherheitskonzept.md`](docs/security/sicherheitskonzept.md).
 
 ## Tech-Stack
 

@@ -113,6 +113,22 @@ it('liefert das Bundle über die Download-Route an Leitungsrollen', function () 
         ->assertHeader('Content-Type', 'application/fhir+json; charset=utf-8');
 });
 
+it('verhindert FHIR-Export fremder Mandanten (IDOR → 404 via tenant-scope)', function () {
+    Role::findOrCreate('pflegefachkraft');
+
+    // Bewohner in einem fremden Mandanten anlegen
+    $fremd = Tenant::create(['name' => 'Fremdheim', 'slug' => 'fremdheim']);
+    app(CurrentTenant::class)->set($fremd);
+    $fremderBewohner = Resident::factory()->create(['tenant_id' => $fremd->id]);
+
+    // Pflegefachkraft aus dem ursprünglichen Mandanten versucht den fremden Bewohner zu exportieren
+    app(CurrentTenant::class)->set($this->resident->tenant);
+    $user = User::factory()->create(['tenant_id' => $this->resident->tenant_id]);
+    $user->assignRole('pflegefachkraft');
+
+    $this->actingAs($user)->get(route('fhir.export', $fremderBewohner))->assertNotFound();
+});
+
 it('verwehrt Leserecht den FHIR-Download (DSGVO-Guard)', function () {
     Role::findOrCreate('leserecht');
     $user = User::factory()->create(['tenant_id' => $this->resident->tenant_id]);
