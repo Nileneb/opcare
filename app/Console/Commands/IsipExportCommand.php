@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Domains\Fhir\Isip\IsipEncounterMapper;
+use App\Domains\Fhir\Isip\IsipOrganizationMapper;
 use App\Domains\Fhir\Isip\IsipPatientMapper;
 use App\Domains\Identity\Models\Tenant;
 use App\Domains\Identity\Support\CurrentTenant;
@@ -9,30 +11,32 @@ use App\Domains\Masterdata\Models\Resident;
 use Illuminate\Console\Command;
 
 /**
- * Exportiert einen Bewohner als gematik-ISiP-`ISiPPflegeempfaenger`-Ressource (Pflege-Interop-Norm).
+ * Exportiert eine gematik-ISiP-Ressource (Pflege-Interop-Norm) eines Bewohners/Mandanten.
  * Konformität wird im CI gegen den offiziellen gematik Referenzvalidator (Modul isip1) geprüft.
  */
 class IsipExportCommand extends Command
 {
-    protected $signature = 'isip:export {resident? : Bewohner-ID (Default: erster Bewohner)} {--output= : Datei statt stdout}';
+    protected $signature = 'isip:export {resource=patient : patient|encounter|organization} {--output= : Datei statt stdout}';
 
-    protected $description = 'Exportiert einen Bewohner als gematik-ISiP ISiPPflegeempfaenger (Pflege-Interop)';
+    protected $description = 'Exportiert eine gematik-ISiP-Ressource (Pflegeempfaenger/Pflegeepisode/Organization)';
 
-    public function handle(IsipPatientMapper $mapper): int
+    public function handle(): int
     {
-        $id = $this->argument('resident')
-            ?? Resident::withoutGlobalScopes()->orderBy('id')->value('id');
-        $resident = $id ? Resident::withoutGlobalScopes()->find($id) : null;
-
+        $resident = Resident::withoutGlobalScopes()->orderBy('id')->first();
         if (! $resident) {
             $this->error('Kein Bewohner gefunden.');
 
             return self::FAILURE;
         }
+        app(CurrentTenant::class)->set($tenant = Tenant::findOrFail($resident->tenant_id));
 
-        app(CurrentTenant::class)->set(Tenant::findOrFail($resident->tenant_id));
+        $resource = match ($this->argument('resource')) {
+            'encounter' => (new IsipEncounterMapper)->map($resident),
+            'organization' => (new IsipOrganizationMapper)->map($tenant),
+            default => (new IsipPatientMapper)->map($resident),
+        };
 
-        $json = json_encode($mapper->map($resident), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $json = json_encode($resource, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         if ($path = $this->option('output')) {
             file_put_contents($path, $json);
