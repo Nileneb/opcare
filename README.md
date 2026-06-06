@@ -27,7 +27,8 @@ Vorlage, der Code ist von Grund auf neu.
 - **Dienstplan & Arbeitszeit-Compliance** — Wochen-Dienstplan mit arbeitsrechtlicher **Live-Prüfung
   (ArbZG)**: editierbares, einrichtungseigenes Regelwerk (§ 3/4/5/9–11/14, je mit Link zum amtlichen
   Gesetzestext) + dokumentierte **§ 14-Begründungen** für zwingende Abweichungen (z. B. ausbleibende
-  Nachfolgekraft). Soll-Ist-Stunden gegen das Vertrags-Pensum.
+  Nachfolgekraft). Soll-Ist-Stunden gegen das Vertrags-Pensum. **Wunschdienstplan**: Mitarbeitende geben
+  Dienstwünsche ab (Vorschlagscharakter), die dem PDL beim Erstellen direkt im Raster eingeblendet werden.
 - **Arbeitszeiterfassung (BAG/EuGH)** — Mitarbeitende **stempeln Kommen/Gehen** (oder erfassen manuell);
   Wochen-**Ist gegen das geplante Dienstplan-Soll**, die Leitung sieht das gesamte Team.
 - **Mitarbeiterverwaltung** — vollständige **Personalakte** (Personalfragebogen: Person, Steuer/ELStAM,
@@ -43,7 +44,13 @@ Vorlage, der Code ist von Grund auf neu.
   (überfällige Prüfungen rot; DGUV V3 / MPBetreibV / BetrSichV / TrinkwV).
 - **Küche & Verpflegung (LMIV)** — die Küche sieht die **Lebensmittelallergien + Kostformen** der Bewohner
   (aus den vorhandenen Pflegedaten) und pflegt den **Speiseplan mit Allergenkennzeichnung** (14 EU-Allergene);
-  je Gericht werden **betroffene Bewohner gewarnt**.
+  je Gericht werden **betroffene Bewohner gewarnt**. **Essenswünsche** (Vorliebe/Abneigung) sind jederzeit
+  sichtbar; je Bewohner wird eine **Menüwahl pro Mahlzeit** festgehalten.
+- **Buchhaltung & Warenwirtschaft (HGB/PBV)** — **doppelte Buchführung** (Soll/Haben, Saldo je Kontoart)
+  mit Standard-Kontenrahmen je Einrichtung, **verzahnt mit der Lagerwirtschaft der Abteilungen**:
+  Wareneingang bucht *Soll Warenbestand · Haben Verbindlichkeiten*, Verbrauch *Soll Abteilungs-Aufwand ·
+  Haben Warenbestand* — jeder Materialfluss schlägt automatisch in der Finanzbuchhaltung durch; Unterbestand
+  wird markiert. Siehe [`docs/buchhaltung-warenwirtschaft.md`](docs/buchhaltung-warenwirtschaft.md).
 - **Soziale Betreuung (§ 43b SGB XI)** — Betreuungs-/Aktivierungsangebote planen, **Teilnahme je Bewohner
   dokumentieren** und den **Betreuungs-Nachweis** (Einheiten + Minuten/Monat) je Bewohner führen.
 - **QDVS / DAS-Pflege** — datengetriebene **Plausibilitäts-Regel-Engine** (440 DAS-Regeln, Pattern-Matcher
@@ -89,6 +96,7 @@ Domänen-orientierte Struktur unter `app/Domains/`. Layering als Einbahnstraße:
 | **Facility** | Haustechnik/Instandhaltung (DIN 31051): Mängelmeldungen + Wartungsplan mit Prüffristen |
 | **Catering** | Küche/Verpflegung (LMIV): Diät-/Allergen-Sicht der Bewohner + Speiseplan mit Allergenwarnung |
 | **SocialCare** | Soziale Betreuung (§ 43b SGB XI): Angebote + Teilnahme-Nachweis je Bewohner |
+| **Accounting** | Doppelte Buchführung (Soll/Haben) + Warenwirtschaft je Abteilung (Lager→Aufwand, automatische Buchung) |
 | **Speech** | Audio-Handling, Transkription, LLM→SIS®-Strukturierung (Human-in-the-Loop) |
 
 ## FHIR / ÜLB-MIO-Konformität

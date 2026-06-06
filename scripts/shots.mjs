@@ -32,6 +32,7 @@ const pages = [
     ['zeiterfassung', '/zeiterfassung', true],
     ['haustechnik', '/haustechnik', true],
     ['kueche', '/kueche', true],
+    ['buchhaltung', '/buchhaltung', true],
     ['mitarbeitende', '/admin/benutzer', true],
     ['qdvs', '/qdvs', true],
     ['einrichtung', '/einrichtung', true],

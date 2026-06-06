@@ -2,6 +2,11 @@
 
 namespace App\Domains\Identity\Database\Seeders;
 
+use App\Domains\Accounting\Actions\Wareneingang;
+use App\Domains\Accounting\Actions\Warenverbrauch;
+use App\Domains\Accounting\Enums\Abteilung;
+use App\Domains\Accounting\Models\Artikel;
+use App\Domains\Accounting\Support\AccountingDefaults;
 use App\Domains\Assessment\Actions\ConductAssessment;
 use App\Domains\Assessment\Data\AssessmentInputData;
 use App\Domains\Assessment\Database\Seeders\InstrumentSeeder;
@@ -391,6 +396,20 @@ class DemoSeeder extends Seeder
         foreach ($aktive->take(2) as $bewohner) {
             $gedaechtnis->teilnahmen()->create(['resident_id' => $bewohner->id]);
         }
+
+        // Buchhaltung & Warenwirtschaft: Buchhalter:in, Standardkontenrahmen, Lagerartikel je Abteilung,
+        // ein gebuchter Wareneingang + Verbrauch (verknüpft Lager → Aufwandskonto der Abteilung).
+        $buchhalterin = User::create(['name' => 'Anke Roth', 'email' => 'buchhaltung@opcare.local', 'password' => Hash::make('password'), 'tenant_id' => $tenant->id]);
+        $buchhalterin->assignRole('buchhaltung');
+        AccountingDefaults::ensureFor($tenant->id);
+        $mehl = Artikel::create(['tenant_id' => $tenant->id, 'name' => 'Weizenmehl Type 405', 'einheit' => 'kg', 'abteilung' => Abteilung::Kueche, 'bestand' => 0, 'mindestbestand' => 20, 'einkaufspreis' => 0.95]);
+        $handschuhe = Artikel::create(['tenant_id' => $tenant->id, 'name' => 'Einmalhandschuhe (Box)', 'einheit' => 'Box', 'abteilung' => Abteilung::Pflege, 'bestand' => 0, 'mindestbestand' => 30, 'einkaufspreis' => 4.20]);
+        $filter = Artikel::create(['tenant_id' => $tenant->id, 'name' => 'Lüftungsfilter G4', 'einheit' => 'Stück', 'abteilung' => Abteilung::Haustechnik, 'bestand' => 0, 'mindestbestand' => 10, 'einkaufspreis' => 6.50]);
+        app(Wareneingang::class)->handle($mehl, 50, 0.95, now()->subDays(3)->toDateString(), 'Großhandel Bergisch');
+        app(Wareneingang::class)->handle($handschuhe, 60, 4.20, now()->subDays(3)->toDateString(), 'Medizinbedarf GmbH');
+        app(Wareneingang::class)->handle($filter, 5, 6.50, now()->subDays(2)->toDateString(), 'Haustechnik-Service'); // unter Mindestbestand
+        app(Warenverbrauch::class)->handle($mehl->fresh(), 12, now()->subDay()->toDateString(), 'Backtag Wohnbereich 1');
+        app(Warenverbrauch::class)->handle($handschuhe->fresh(), 35, now()->toDateString(), 'Tagesbedarf Pflege');
 
         // Zweites Heim — Haus Birkenhof (2 Bewohner, kein SIS für Minimal-Demo)
         $birkenhof = Tenant::create(['name' => 'Haus Birkenhof', 'slug' => 'birkenhof']);

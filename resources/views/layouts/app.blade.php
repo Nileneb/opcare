@@ -61,6 +61,11 @@
                 <a href="{{ route('medikation.stammdaten') }}" @class(['is-active' => request()->routeIs('medikation.stammdaten')])>Medikationsstamm</a>
             </nav>
         @endif
+        @if (auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'buchhaltung']))
+            <nav class="app-nav app-nav-finanzen">
+                <a href="{{ route('buchhaltung') }}" @class(['is-active' => request()->routeIs('buchhaltung')])>Buchhaltung</a>
+            </nav>
+        @endif
         @if (auth()->user()?->hasAnyRole(['admin', 'super-admin']))
             <nav class="app-nav app-nav-admin">
                 <a href="{{ route('admin.tenants') }}" @class(['is-active' => request()->routeIs('admin.tenants')])>Einrichtungen</a>

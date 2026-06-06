@@ -55,6 +55,7 @@ sichtbar machen. Immer gleich. „Abschreiben" ist hier Best Practice.
 | **Hauswirtschaft / Küche** | LMHV/HACCP, DIN 10506, LMIV (VO 1169/2011, Allergene), DGE-Qualitätsstandard | Catering | ✅ Diät-/Allergen-Sicht + Speiseplan mit Allergenwarnung |
 | **Haustechnik / FM** | DIN 31051 (Instandhaltung), DGUV V3, TrinkwV (Legionellen), Brandschutz | Facility | ✅ Mängelmeldungen + Wartungsplan (Prüffristen) |
 | **Soziale Betreuung** | § 43b SGB XI, Biografiearbeit | SocialCare | ✅ Angebote + Teilnahme-Nachweis je Bewohner |
+| **Verwaltung / Finanzen** | HGB §§ 238 ff. (doppelte Buchführung), PBV (Pflege-Buchführungsverordnung), § 85 SGB XI | Accounting | ✅ Soll-Haben-Buchführung + Warenwirtschaft (Lager→Aufwand je Abteilung) |
 | **Verwaltung / Heimaufsicht** | Landesheim-/WTG, Heimmitwirkungs-VO, Pflegesatz § 85 SGB XI | (neu) Administration | 🔴 |
 | **Geschäftsführung / Controlling** | Wirtschaftlichkeit, Vergütungsvereinbarung, Jahresberichte | Quality/Controlling-Ausbau | 🟡 KPIs da |
 
@@ -69,6 +70,9 @@ sichtbar machen. Immer gleich. „Abschreiben" ist hier Best Practice.
 | **Reparatur-Tickets** | Mängelmeldung → Instandhaltung (DIN 31051) | Facility: Bewohner/Personal melden → Technik-Queue |
 | **Allergen-Sicht Küche** | LMIV-Allergenkennzeichnung | Catering liest `ResidentAllergy` (rollenbasiert) |
 | **Jahresreports GF** | Pflegestatistik, Belegung, Qualität | Controlling-Export (rollenbasiert) |
+| **Warenwirtschaft ↔ Buchhaltung** ✅ | HGB-Buchführung, PBV | Accounting: Wareneingang/Verbrauch je Abteilung bucht automatisch Soll/Haben |
+| **Dienstwunsch-Abgabe** ✅ | Mitbestimmung/Planung (Vorschlagscharakter) | Scheduling: Mitarbeiterwünsche werden dem PDL beim Dienstplan eingeblendet |
+| **Essenswünsche + Menüwahl** ✅ | Wahlrecht Bewohner, DGE-Verpflegung | Catering: Bewohnerwünsche jederzeit sichtbar, Menüwahl je Mahlzeit |
 
 ## Staged Roadmap (jede Stufe voll verdrahtet, kein totes Feature)
 
@@ -85,8 +89,19 @@ sichtbar machen. Immer gleich. „Abschreiben" ist hier Best Practice.
    QM-Punkt `hw_allergene` operativ.
 4. ✅ **Arbeitszeit-Ist-Erfassung** *(erledigt 2026-06-06)* — Kommen/Gehen stempeln + manuelle Erfassung;
    Wochen-Ist gegen das geplante Dienstplan-Soll, Team-Übersicht für die Leitung (EuGH/BAG-Erfassungspflicht).
-5. **Messaging-Querschnitt** — interne Nachrichten/Video.
-6. **Lohn-/Steuerexport** — DEÜV/ELSTER-Adapter auf der Personalakte.
+5. ✅ **Wunschdienstplan** *(erledigt 2026-06-06)* — Mitarbeitende geben je Woche Dienstwünsche ab
+   (Frei/Arbeiten/Nicht verfügbar, reiner Vorschlagscharakter); der PDL sieht sie als Badge direkt im
+   Dienstplan-Raster beim Erstellen. Kein Genehmigungs-Workflow — bewusst nur Entscheidungshilfe.
+6. ✅ **Essenswünsche + Menüwahl** *(erledigt 2026-06-06)* — die Küche sieht allgemeine Bewohnerwünsche
+   (Vorliebe/Abneigung) jederzeit und stellt einen Speiseplan mit mehreren Gerichten je Mahlzeit vor;
+   je Bewohner wird eine Menüwahl pro Mahlzeit festgehalten. Ergänzt den Catering-Speiseplan.
+7. ✅ **Buchhaltung + Warenwirtschaft** *(erledigt 2026-06-06)* — doppelte Buchführung (Soll/Haben, Saldo
+   je Kontoart) mit Standard-Kontenrahmen je Einrichtung; die Lagerwirtschaft der Abteilungen ist verdrahtet:
+   **Wareneingang** bucht Soll Warenbestand an Haben Verbindlichkeiten, **Verbrauch** Soll Abteilungs-Aufwand
+   an Haben Warenbestand — so schlägt jeder Materialfluss automatisch in der Finanzbuchhaltung durch.
+   Unterbestand wird je Artikel markiert. Siehe [Buchhaltung & Warenwirtschaft](buchhaltung-warenwirtschaft.md).
+8. **Messaging-Querschnitt** — interne Nachrichten/Video.
+9. **Lohn-/Steuerexport** — DEÜV/ELSTER-Adapter auf der Personalakte.
 
 > Jede Stufe folgt demselben Muster: **Norm als Daten, Domäne isoliert, rollenbasiert sichtbar, im CI grün.**
 > So wächst „Ein Altenheim, eine App" inkrementell — ohne je das Fundament anzufassen.
