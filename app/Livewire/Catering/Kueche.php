@@ -2,18 +2,23 @@
 
 namespace App\Livewire\Catering;
 
+use App\Domains\Catering\Enums\EssenswunschArt;
 use App\Domains\Catering\Enums\LmivAllergen;
 use App\Domains\Catering\Enums\Mahlzeit;
+use App\Domains\Catering\Models\Essenswunsch;
 use App\Domains\Catering\Models\Gericht;
+use App\Domains\Catering\Models\Menuewahl;
 use App\Domains\Catering\Services\CateringService;
+use App\Domains\Identity\Support\CurrentTenant;
+use App\Domains\Masterdata\Models\Resident;
 use Carbon\CarbonImmutable;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 /**
- * Küche/Hauswirtschaft: sieht die küchenrelevanten Diäten (Lebensmittelallergien + Kostformen) aus den
- * vorhandenen Pflegedaten und pflegt den Speiseplan mit LMIV-Allergenkennzeichnung. Je Gericht werden
- * betroffene Bewohner als Hinweis ausgewiesen (unscharfer Abgleich, keine Garantie).
+ * Küche/Hauswirtschaft: küchenrelevante Diäten + allgemeine Essenswünsche der Bewohner (jederzeit sichtbar),
+ * Speiseplan mit LMIV-Allergenkennzeichnung (mehrere Gerichte je Mahlzeit zur Auswahl) und die Menüwahl je
+ * Bewohner (eine Wahl pro Mahlzeit). Je Gericht werden betroffene Bewohner als Allergen-Hinweis ausgewiesen.
  */
 #[Layout('layouts.app')]
 class Kueche extends Component
@@ -26,6 +31,17 @@ class Kueche extends Component
 
     /** @var array<int, string> */
     public array $g_allergene = [];
+
+    public ?int $ew_resident = null;
+
+    public string $ew_art = 'abneigung';
+
+    public string $ew_text = '';
+
+    public ?int $wahlGericht = null;
+
+    /** @var array<int, int> */
+    public array $waehler = [];
 
     public function mount(): void
     {
@@ -43,6 +59,7 @@ class Kueche extends Component
     public function tag(int $delta): void
     {
         $this->datum = CarbonImmutable::parse($this->datum)->addDays($delta)->toDateString();
+        $this->reset('wahlGericht', 'waehler');
     }
 
     public function gerichtAnlegen(): void
@@ -67,12 +84,58 @@ class Kueche extends Component
     {
         abort_unless($this->darfSehen(), 403);
         Gericht::findOrFail($id)->delete();
+        $this->reset('wahlGericht', 'waehler');
+    }
+
+    public function essenswunschAnlegen(): void
+    {
+        abort_unless($this->darfSehen(), 403);
+        $data = $this->validate([
+            'ew_resident' => ['required', 'integer', 'exists:residents,id'],
+            'ew_art' => ['required', 'in:'.implode(',', array_map(fn ($a) => $a->value, EssenswunschArt::cases()))],
+            'ew_text' => ['required', 'string', 'max:160'],
+        ]);
+        Essenswunsch::create([
+            'tenant_id' => app(CurrentTenant::class)->id(),
+            'resident_id' => $data['ew_resident'], 'art' => $data['ew_art'], 'text' => $data['ew_text'],
+        ]);
+        $this->reset('ew_text');
+        session()->flash('status', 'Essenswunsch hinterlegt.');
+    }
+
+    public function essenswunschEntfernen(int $id): void
+    {
+        abort_unless($this->darfSehen(), 403);
+        Essenswunsch::findOrFail($id)->delete();
+    }
+
+    public function wahlOeffnen(int $gerichtId): void
+    {
+        $gericht = Gericht::with('menuewahlen')->findOrFail($gerichtId);
+        $this->wahlGericht = $gerichtId;
+        $this->waehler = $gericht->menuewahlen->pluck('resident_id')->all();
+    }
+
+    public function wahlSpeichern(): void
+    {
+        abort_unless($this->darfSehen(), 403);
+        $gericht = Gericht::findOrFail($this->wahlGericht);
+        // eine Wahl je Mahlzeit: Geschwister-Gerichte desselben Tages + derselben Mahlzeit.
+        $mealGerichte = Gericht::whereDate('datum', $gericht->datum)->where('mahlzeit', $gericht->mahlzeit->value)->pluck('id');
+        $gericht->menuewahlen()->delete();
+        foreach (array_unique($this->waehler) as $residentId) {
+            Menuewahl::whereIn('gericht_id', $mealGerichte)->where('resident_id', (int) $residentId)->delete();
+            $gericht->menuewahlen()->create(['resident_id' => (int) $residentId]);
+        }
+        $this->reset('wahlGericht', 'waehler');
+        session()->flash('status', 'Menüwahl gespeichert.');
     }
 
     public function render(CateringService $service)
     {
         $bewohner = $service->diaetBewohner();
-        $gerichte = Gericht::whereDate('datum', $this->datum)->get()
+        $alleBewohner = Resident::where('tenant_id', app(CurrentTenant::class)->id())->where('status', 'aktiv')->orderBy('name')->get();
+        $gerichte = Gericht::with('menuewahlen.resident')->whereDate('datum', $this->datum)->get()
             ->sortBy(fn (Gericht $g) => $g->mahlzeit->sort())->values();
 
         $betroffenePro = [];
@@ -83,11 +146,14 @@ class Kueche extends Component
         return view('livewire.catering.kueche', [
             'service' => $service,
             'bewohner' => $bewohner,
+            'alleBewohner' => $alleBewohner,
             'gerichte' => $gerichte,
             'betroffenePro' => $betroffenePro,
+            'essenswuensche' => Essenswunsch::with('resident')->orderBy('resident_id')->get(),
             'datumLabel' => CarbonImmutable::parse($this->datum)->isoFormat('dddd, DD.MM.YYYY'),
             'mahlzeiten' => Mahlzeit::cases(),
             'allergene' => LmivAllergen::cases(),
+            'essensArten' => EssenswunschArt::cases(),
         ]);
     }
 }

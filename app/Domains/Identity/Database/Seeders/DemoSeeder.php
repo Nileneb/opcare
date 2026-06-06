@@ -8,8 +8,10 @@ use App\Domains\Assessment\Database\Seeders\InstrumentSeeder;
 use App\Domains\Assessment\Models\Instrument;
 use App\Domains\CarePlanning\Models\CareMeasure;
 use App\Domains\CarePlanning\Models\SisAssessment;
+use App\Domains\Catering\Enums\EssenswunschArt;
 use App\Domains\Catering\Enums\LmivAllergen;
 use App\Domains\Catering\Enums\Mahlzeit;
+use App\Domains\Catering\Models\Essenswunsch;
 use App\Domains\Catering\Models\Gericht;
 use App\Domains\Facility\Enums\AssetKategorie;
 use App\Domains\Facility\Enums\MeldungPrioritaet;
@@ -364,8 +366,12 @@ class DemoSeeder extends Seeder
         $koechin->assignRole('kueche');
         $maria->allergies()->create(['substanz' => 'Erdnüsse', 'typ' => 'allergie', 'kategorie' => 'nahrung', 'kritikalitaet' => 'hoch', 'reaktion' => 'anaphylaktisch', 'erfasst_am' => now()->subYear()->toDateString()]);
         Gericht::create(['datum' => now()->toDateString(), 'mahlzeit' => Mahlzeit::Mittag, 'bezeichnung' => 'Erdnuss-Hähnchen mit Reis', 'allergene' => [LmivAllergen::Erdnuesse->value, LmivAllergen::Soja->value]]);
-        Gericht::create(['datum' => now()->toDateString(), 'mahlzeit' => Mahlzeit::Mittag, 'bezeichnung' => 'Gemüseeintopf (vegan)', 'allergene' => [LmivAllergen::Sellerie->value]]);
+        $eintopf = Gericht::create(['datum' => now()->toDateString(), 'mahlzeit' => Mahlzeit::Mittag, 'bezeichnung' => 'Gemüseeintopf (vegan)', 'allergene' => [LmivAllergen::Sellerie->value]]);
         Gericht::create(['datum' => now()->toDateString(), 'mahlzeit' => Mahlzeit::Abend, 'bezeichnung' => 'Käsebrot mit Salat', 'allergene' => [LmivAllergen::Milch->value, LmivAllergen::Gluten->value]]);
+        // Essenswünsche (Küche sieht sie jederzeit) + Menüwahl (Maria wählt wegen Erdnuss-Allergie den Eintopf).
+        Essenswunsch::create(['tenant_id' => $tenant->id, 'resident_id' => $maria->id, 'art' => EssenswunschArt::Abneigung, 'text' => 'kein Fisch']);
+        Essenswunsch::create(['tenant_id' => $tenant->id, 'resident_id' => $maria->id, 'art' => EssenswunschArt::Vorliebe, 'text' => 'gern kleine Portionen']);
+        $eintopf->menuewahlen()->create(['tenant_id' => $tenant->id, 'resident_id' => $maria->id]);
 
         // Arbeitszeit-Ist (BAG/EuGH): erfasste Zeiten der laufenden Woche für Sandra/Tom (Soll-Ist-Demo).
         $woStart = now()->startOfWeek();

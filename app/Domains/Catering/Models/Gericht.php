@@ -7,6 +7,7 @@ use App\Domains\Catering\Enums\Mahlzeit;
 use App\Domains\Identity\Models\Tenant;
 use App\Support\Models\BaseModel;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Spatie\Activitylog\Models\Activity;
 
@@ -23,6 +24,8 @@ use Spatie\Activitylog\Models\Activity;
  * @property Carbon|null $updated_at
  * @property-read Collection<int, Activity> $activitiesAsSubject
  * @property-read int|null $activities_as_subject_count
+ * @property-read Collection<int, Menuewahl> $menuewahlen
+ * @property-read int|null $menuewahlen_count
  * @property-read Tenant $tenant
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Gericht newModelQuery()
@@ -50,6 +53,11 @@ class Gericht extends BaseModel
         'mahlzeit' => Mahlzeit::class,
         'allergene' => 'array',
     ];
+
+    public function menuewahlen(): HasMany
+    {
+        return $this->hasMany(Menuewahl::class);
+    }
 
     /** @return array<int, LmivAllergen> */
     public function allergeneEnum(): array
