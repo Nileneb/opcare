@@ -14,6 +14,7 @@ use App\Domains\Identity\Support\CurrentTenant;
 use App\Domains\Masterdata\Models\Building;
 use App\Domains\Masterdata\Models\Floor;
 use App\Domains\Masterdata\Models\IcdCode;
+use App\Domains\Masterdata\Models\Physician;
 use App\Domains\Masterdata\Models\Resident;
 use App\Domains\Masterdata\Models\ResidentDiagnosis;
 use App\Domains\Masterdata\Models\Room;
@@ -232,6 +233,9 @@ class DemoSeeder extends Seeder
             $maria->devices()->create(['bezeichnung' => $bez, 'kategorie' => $kat, 'hinweis' => $hinweis, 'seit' => now()->subMonths(6)->toDateString()]);
         }
         $maria->contacts()->create(['name' => 'Anna Schneider', 'beziehung' => 'Tochter', 'telefon' => '0201 1234567', 'benachrichtigen' => true]);
+
+        $arzt = Physician::create(['name' => 'Dr. Walter Hausarzt', 'fachrichtung' => 'Allgemeinmedizin', 'kontakt' => '0201 9876543']);
+        $maria->physicians()->attach($arzt);
 
         $wilhelm = Resident::query()->where('name', 'Wilhelm Müller')->firstOrFail();
         CareEvent::create([

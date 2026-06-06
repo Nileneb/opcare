@@ -66,6 +66,8 @@ jobs:
           php artisan isip:export patient --output=isip-patient.json
           php artisan isip:export encounter --output=isip-encounter.json
           php artisan isip:export organization --output=isip-organization.json
+          php artisan isip:export angehoeriger --output=isip-angehoeriger.json
+          php artisan isip:export person --output=isip-person.json
           php artisan evp:export --output=evp-pflegegrad.json
           php artisan epa:export --output=epa-medication.json
 
@@ -92,6 +94,8 @@ jobs:
           bash scripts/gematik/validate.sh isip1 isip-patient.json
           bash scripts/gematik/validate.sh isip1 isip-encounter.json
           bash scripts/gematik/validate.sh isip1 isip-organization.json
+          bash scripts/gematik/validate.sh isip1 isip-angehoeriger.json
+          bash scripts/gematik/validate.sh isip1 isip-person.json
 
       - name: EVP-Konformität (Modul evp, fails on errors)
         run: bash scripts/gematik/validate.sh evp evp-pflegegrad.json

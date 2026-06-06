@@ -5,9 +5,13 @@ namespace App\Console\Commands;
 use App\Domains\Fhir\Isip\IsipEncounterMapper;
 use App\Domains\Fhir\Isip\IsipOrganizationMapper;
 use App\Domains\Fhir\Isip\IsipPatientMapper;
+use App\Domains\Fhir\Isip\IsipPractitionerMapper;
+use App\Domains\Fhir\Isip\IsipRelatedPersonMapper;
 use App\Domains\Identity\Models\Tenant;
 use App\Domains\Identity\Support\CurrentTenant;
+use App\Domains\Masterdata\Models\Physician;
 use App\Domains\Masterdata\Models\Resident;
+use App\Domains\Masterdata\Models\ResidentContact;
 use Illuminate\Console\Command;
 
 /**
@@ -16,9 +20,9 @@ use Illuminate\Console\Command;
  */
 class IsipExportCommand extends Command
 {
-    protected $signature = 'isip:export {resource=patient : patient|encounter|organization} {--output= : Datei statt stdout}';
+    protected $signature = 'isip:export {resource=patient : patient|encounter|organization|angehoeriger|person} {--output= : Datei statt stdout}';
 
-    protected $description = 'Exportiert eine gematik-ISiP-Ressource (Pflegeempfaenger/Pflegeepisode/Organization)';
+    protected $description = 'Exportiert eine gematik-ISiP-Ressource (komplettes Basismodul)';
 
     public function handle(): int
     {
@@ -33,6 +37,8 @@ class IsipExportCommand extends Command
         $resource = match ($this->argument('resource')) {
             'encounter' => (new IsipEncounterMapper)->map($resident),
             'organization' => (new IsipOrganizationMapper)->map($tenant),
+            'angehoeriger' => (new IsipRelatedPersonMapper)->map(ResidentContact::withoutGlobalScopes()->orderBy('id')->firstOrFail()),
+            'person' => (new IsipPractitionerMapper)->map(Physician::withoutGlobalScopes()->orderBy('id')->firstOrFail()),
             default => (new IsipPatientMapper)->map($resident),
         };
 
