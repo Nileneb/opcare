@@ -16,8 +16,10 @@ use App\Domains\Fhir\Mappers\ObservationMapper;
 use App\Domains\Fhir\Mappers\PatientMapper;
 use App\Domains\Fhir\Mappers\PresenceObservationMapper;
 use App\Domains\Fhir\Mappers\ProcedureMapper;
+use App\Domains\Fhir\Mappers\StatusObservationMapper;
 use App\Domains\Fhir\Mappers\VitalSignsReportMapper;
 use App\Domains\Masterdata\Models\Resident;
+use App\Domains\Masterdata\Support\StatusObservationCatalog;
 use App\Domains\Medication\Models\Prescription;
 use App\Domains\Medication\Models\VitalReading;
 use Illuminate\Support\Carbon;
@@ -45,12 +47,13 @@ class FhirDocumentExporter
         private readonly VitalSignsReportMapper $vitalSignsReportMapper,
         private readonly PresenceObservationMapper $presenceMapper,
         private readonly ProcedureMapper $procedureMapper,
+        private readonly StatusObservationMapper $statusObservationMapper,
     ) {}
 
     /** @return array<string, mixed> */
     public function export(Resident $resident): array
     {
-        $resident->loadMissing('diagnoses.icdCode', 'allergies', 'devices', 'tenant');
+        $resident->loadMissing('diagnoses.icdCode', 'allergies', 'devices', 'contacts', 'statusObservations', 'tenant');
         $base = rtrim(config('app.url'), '/').'/fhir/';
         $patientRef = $base.'Patient/'.PatientMapper::id($resident);
         $date = Carbon::now()->toIso8601String();
@@ -163,6 +166,28 @@ class FhirDocumentExporter
             $pRef = $base.'Observation/'.$presence['id'];
             $entry[] = ['fullUrl' => $pRef, 'resource' => $presence];
             $sections[] = ['slice' => 'funktionsbeurteilungen', 'entries' => [$pRef]];
+        }
+
+        // Status-Beobachtungen: je Typ die jüngste Erfassung → konformes ÜLB-Status-Observation-Profil
+        // (Bewusstsein/Orientierung, Harn-/Stuhlkontinenz, Atmung). Jede Sektion ist im Composition-Profil max=1.
+        foreach ($resident->statusObservations->sortByDesc('erfasst_am')->groupBy('typ') as $entries) {
+            $built = $this->statusObservationMapper->build($entries->first(), $patientRef, $authorRef, $date);
+            if ($built === null) {
+                continue;
+            }
+            $ref = $base.'Observation/'.$built['id'];
+            $entry[] = ['fullUrl' => $ref, 'resource' => $built['resource']];
+            $sections[] = ['slice' => $built['slice'], 'entries' => [$ref]];
+        }
+
+        // Ernährung: aggregierte Presence-Sektion, sobald Kostform/Ernährungsform erfasst ist (Detail im Narrativ).
+        $hasNutrition = $resident->statusObservations
+            ->contains(fn ($o) => (StatusObservationCatalog::get($o->typ)['nutrition'] ?? false) === true);
+        if ($hasNutrition) {
+            $nutrition = $this->statusObservationMapper->nutritionPresence($resident->id, $patientRef, $authorRef, $date);
+            $nutRef = $base.'Observation/'.$nutrition['id'];
+            $entry[] = ['fullUrl' => $nutRef, 'resource' => $nutrition['resource']];
+            $sections[] = ['slice' => $nutrition['slice'], 'entries' => [$nutRef]];
         }
 
         // pflegerischeMassnahme: aktuelle Maßnahmen → je eine Procedure (direkt referenziert)

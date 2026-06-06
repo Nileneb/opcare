@@ -35,6 +35,26 @@ class CompositionMapper
             ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '1184586001', 'display' => 'Medical device document section (record artifact)'],
             'Medizinprodukte',
         ],
+        'orientierungPsyche' => [
+            ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '43173001+312012004', 'display' => 'Orientation , function (observable entity) + Cognitive function : awareness (observable entity)'],
+            'Orientierung / Psyche',
+        ],
+        'ernaehrung' => [
+            ['system' => 'http://loinc.org', 'version' => '2.72', 'code' => '34801-1', 'display' => 'Nutrition and dietetics Note'],
+            'Ernährung',
+        ],
+        'qualitativeBeschreibungAtmung' => [
+            ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '78064003:370132008=26716007', 'display' => 'Respiratory function (observable entity) : Scale type (attribute) = Qualitative (qualifier value)'],
+            'Qualitative Beschreibung der Atmung',
+        ],
+        'harnkontinenzDifferenzierteEinschaetzung' => [
+            ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '129009001', 'display' => 'Bladder control, function (observable entity)'],
+            'Harnkontinenz differenzierte Einschätzung',
+        ],
+        'stuhlkontinenzDifferenzierteEinschaetzung' => [
+            ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '16490003', 'display' => 'Anorectal continence, function (observable entity)'],
+            'Stuhlkontinenz differenzierte Einschätzung',
+        ],
         'medikationsplan' => [
             ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '736378000', 'display' => 'Medication management plan (record artifact)'],
             'Medikationsplan',

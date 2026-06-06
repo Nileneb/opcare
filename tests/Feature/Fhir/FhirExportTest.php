@@ -234,6 +234,43 @@ it('mappt aktuelle Maßnahmen auf Procedure-Ressourcen (pflegerischeMassnahme)',
         ->and($procedure['code']['text'])->toContain('Gehübungen');
 });
 
+it('mappt Status-Beobachtungen auf ihre ÜLB-Profile (Bewusstsein/Kontinenz/Atmung) + Ernährungs-Presence', function () {
+    foreach ([['bewusstsein', '271591004', null], ['harnkontinenz', '450841000', null], ['stuhlkontinenz', '24029004', null], ['atmung', null, 'unauffällig, keine Atemnot'], ['kostform', '160670007', null]] as [$typ, $code, $text]) {
+        $this->resident->statusObservations()->create(['typ' => $typ, 'wert_code' => $code, 'wert_text' => $text, 'erfasst_am' => '2026-06-01']);
+    }
+    $bundle = app(FhirDocumentExporter::class)->export($this->resident);
+    $resources = collect($bundle['entry'])->pluck('resource');
+    $profileOf = fn (string $needle) => $resources->first(fn ($r) => isset($r['meta']['profile'][0]) && str_contains($r['meta']['profile'][0], $needle));
+
+    $bewusstsein = $profileOf('Observation_Cognitive_Awareness');
+    expect($bewusstsein)->not->toBeNull()
+        ->and($bewusstsein['code']['coding'][0]['code'])->toBe('312012004')
+        ->and($bewusstsein['valueCodeableConcept']['coding'][0]['code'])->toBe('271591004')
+        ->and($bewusstsein['valueCodeableConcept']['coding'][0]['display'])->toBe('Fully conscious (finding)');
+
+    expect($profileOf('Observation_Urinary_Continence_Differentiated_Assessment')['valueCodeableConcept']['coding'][0]['code'])->toBe('450841000')
+        ->and($profileOf('Observation_Fecal_Continence_Differentiated_Assessment')['valueCodeableConcept']['coding'][0]['code'])->toBe('24029004')
+        ->and($profileOf('Observation_Qualitative_Description_Breathing')['valueString'])->toBe('unauffällig, keine Atemnot')
+        ->and($profileOf('Observation_Presence_Information_Nutrition'))->not->toBeNull();
+
+    $titles = collect($bundle['entry'][0]['resource']['section'])->pluck('title')->all();
+    expect($titles)->toContain('Orientierung / Psyche')
+        ->toContain('Harnkontinenz differenzierte Einschätzung')
+        ->toContain('Stuhlkontinenz differenzierte Einschätzung')
+        ->toContain('Qualitative Beschreibung der Atmung')
+        ->toContain('Ernährung');
+});
+
+it('exportiert pro Status-Typ nur die jüngste Erfassung (Sektion max=1)', function () {
+    $this->resident->statusObservations()->create(['typ' => 'bewusstsein', 'wert_code' => '371632003', 'erfasst_am' => '2026-01-01']);
+    $this->resident->statusObservations()->create(['typ' => 'bewusstsein', 'wert_code' => '271591004', 'erfasst_am' => '2026-06-01']);
+    $resources = collect(app(FhirDocumentExporter::class)->export($this->resident)['entry'])->pluck('resource');
+    $bewusstsein = $resources->filter(fn ($r) => isset($r['meta']['profile'][0]) && str_contains($r['meta']['profile'][0], 'Observation_Cognitive_Awareness'));
+
+    expect($bewusstsein)->toHaveCount(1)
+        ->and($bewusstsein->first()['valueCodeableConcept']['coding'][0]['code'])->toBe('271591004');
+});
+
 it('erzeugt eine ÜLB-konforme Composition mit slice-konformen Sektionen + Verlauf-Narrativ', function () {
     $composition = app(FhirDocumentExporter::class)->export($this->resident)['entry'][0]['resource'];
     $titles = collect($composition['section'])->pluck('title')->all();
