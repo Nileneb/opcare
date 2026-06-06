@@ -18,4 +18,8 @@ return [
         'model' => env('OLLAMA_MODEL', 'qwen3.5:latest'),
         'timeout' => (int) env('OLLAMA_TIMEOUT', 120),
     ],
+    // VLM-Beleg-Capture: vision-fähiges Ollama-Modell (nutzt dieselbe OLLAMA_URL/-timeout).
+    'capture' => [
+        'model' => env('CAPTURE_VLM_MODEL', 'qwen2.5vl:latest'),
+    ],
 ];

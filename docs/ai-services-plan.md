@@ -97,7 +97,16 @@ vorgegebene **Erreichbarkeit-zuerst-Orchestrierung**:
 
 ---
 
-## 2. VLM-Beleg-Capture — nur Backend-Logik (kein Frontend)
+## 2. VLM-Beleg-Capture — ✅ umgesetzt 2026-06-06
+
+> Umgesetzt als Domäne `Capture` (`BelegAnalyse` HasMedia + `EinsortierungsVorschlag`), `OllamaBelegAnalyzer`
+> (`/api/generate` images, strenger Prompt) + `FakeBelegAnalyzer` (SPEECH_FAKE), Orchestrator `BelegCapture`
+> (Vorschlag → bestätigte Buchung über `Buchen`). **Mit** minimalem Livewire-Eintrittspunkt `Belegerfassung`
+> (Route `belegerfassung`, Finanz-Nav) statt „kein Frontend" — damit das Feature einen echten Eintrittspunkt hat.
+> **Gating-Abweichung vom Entwurf:** der Schreibvorgang ist eine Finanzbuchung → Rollen-Gate (admin/buchhaltung)
+> statt `Befugnis` (das pflegerische Vorbehalte modelliert). Siehe [vlm-beleg-capture.md](vlm-beleg-capture.md).
+
+### Ursprünglicher Entwurf
 
 **Ziel (User):** Die VLM-Funktionalität aus dem `beleg-capture`-Repo über ein **Ollama-VLM** (vision-fähiges
 Modell, z. B. ein qwen-vl/llava-Derivat über `/api/generate` mit `images`) einbauen. **Nur die Logik:**

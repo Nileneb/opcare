@@ -17,6 +17,9 @@ use App\Domains\Assessment\Actions\ConductAssessment;
 use App\Domains\Assessment\Data\AssessmentInputData;
 use App\Domains\Assessment\Database\Seeders\InstrumentSeeder;
 use App\Domains\Assessment\Models\Instrument;
+use App\Domains\Capture\Enums\VorschlagStatus;
+use App\Domains\Capture\Enums\ZielTyp;
+use App\Domains\Capture\Models\BelegAnalyse;
 use App\Domains\CarePlanning\Models\CareMeasure;
 use App\Domains\CarePlanning\Models\SisAssessment;
 use App\Domains\Catering\Enums\EssenswunschArt;
@@ -493,6 +496,16 @@ class DemoSeeder extends Seeder
             AccountingDefaults::konto(AccountingDefaults::KASSE)->id,
             AccountingDefaults::konto(AccountingDefaults::BANK)->id,
             300.0, 'Bargeld-Aufnahme für die Handkasse', now()->subDays(2)->toDateString(), 'KB-2026-014');
+
+        // VLM-Beleg-Capture: eine offene Beleg-Analyse mit Einsortierungs-Vorschlag (zur Bestätigung).
+        $belegAnalyse = BelegAnalyse::create([
+            'tenant_id' => $tenant->id, 'modell' => 'fake', 'konfidenz' => 0.92, 'erstellt_von' => $buchhalterin->id,
+            'roh_json' => ['belegtyp' => 'quittung', 'datum' => now()->subDay()->toDateString(), 'betrag' => 24.90, 'lieferant' => 'Demo-Drogeriemarkt'],
+        ]);
+        $belegAnalyse->vorschlaege()->create([
+            'tenant_id' => $tenant->id, 'ziel_typ' => ZielTyp::BuchhaltungBeleg, 'status' => VorschlagStatus::Vorgeschlagen, 'konfidenz' => 0.92,
+            'ziel_felder' => ['betrag' => 24.90, 'datum' => now()->subDay()->toDateString(), 'lieferant' => 'Demo-Drogeriemarkt', 'belegtyp' => 'quittung'],
+        ]);
 
         // Team-Energiebarometer (freiwillig, § 26 BDSG): aktueller Wert je Mitarbeitendem, gemischter Hausschnitt.
         foreach ([[$sandra, Energiestufe::Erschoepft], [$tom, Energiestufe::Mittel], [$betreuerin, Energiestufe::Energiegeladen], [$koechin, Energiestufe::Mittel]] as [$ma, $stufe]) {

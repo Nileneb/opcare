@@ -37,6 +37,7 @@ const pages = [
     ['medizinprodukte', '/medizinprodukte', true],
     ['kueche', '/kueche', true],
     ['buchhaltung', '/buchhaltung', true],
+    ['belegerfassung', '/beleg-capture', true],
     ['taschengeld', '/taschengeld', true],
     ['skill-baum', '/personal/kompetenzen', true],
     ['berechtigungen', '/personal/berechtigungen', true],

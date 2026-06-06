@@ -19,6 +19,7 @@ use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Auth\ResetPassword;
+use App\Livewire\Capture\Belegerfassung;
 use App\Livewire\Catering\Kueche;
 use App\Livewire\Compliance\Datenschutz;
 use App\Livewire\Facility;
@@ -130,6 +131,7 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class, Restrict
     Route::get('/wunschdienstplan', Wunschdienstplan::class)->name('wunschdienstplan');
     Route::get('/tauschboerse', Tauschboerse::class)->name('tauschboerse');
     Route::get('/buchhaltung', Buchhaltung::class)->name('buchhaltung');
+    Route::get('/beleg-capture', Belegerfassung::class)->name('belegerfassung');
     Route::get('/taschengeld', Taschengeldkasse::class)->name('taschengeld');
     Route::get('/dokumente/{media}', MediaDownloadController::class)->name('media.download')->middleware('signed');
     Route::get('/bewohner/{resident}/assessment/{instrument}', AssessmentDurchfuehren::class)->name('assessment.durchfuehren');
