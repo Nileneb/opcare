@@ -21,7 +21,7 @@ use App\Domains\Medication\Models\VitalReading;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
-    $t = Tenant::create(['name' => 'A', 'slug' => 'a']);
+    $t = Tenant::create(['name' => 'A', 'slug' => 'a', 'ik_nummer' => '260326822', 'strasse' => 'Aprather Weg', 'hausnummer' => '20', 'plz' => '42489', 'ort' => 'Wülfrath']);
     app(CurrentTenant::class)->set($t);
     $user = User::factory()->create(['tenant_id' => $t->id]);
     $this->resident = Resident::factory()->create(['geschlecht' => 'w', 'geburtsdatum' => '1940-05-10', 'name' => 'Erika Muster', 'pflegegrad' => 3]);
@@ -184,10 +184,29 @@ it('mappt Allergien auf AllergyIntolerance, referenziert via Presence_Allergies'
 });
 
 it('fügt die dokumentierende Einheit (Organization/Practitioner/PractitionerRole) hinzu', function () {
-    $types = collect(app(FhirDocumentExporter::class)->export($this->resident)['entry'])
-        ->pluck('resource.resourceType');
+    $resources = collect(app(FhirDocumentExporter::class)->export($this->resident)['entry'])->pluck('resource');
 
-    expect($types)->toContain('Organization')->toContain('Practitioner')->toContain('PractitionerRole');
+    expect($resources->pluck('resourceType'))->toContain('Organization')->toContain('Practitioner')->toContain('PractitionerRole');
+
+    // Einrichtungs-Stammdaten (IK + Adresse) aus dem Tenant fließen in die ÜLB-Organization
+    $org = $resources->firstWhere('resourceType', 'Organization');
+    expect($org['identifier'][0]['value'])->toBe('260326822')
+        ->and($org['identifier'][0]['system'])->toBe('http://fhir.de/sid/arge-ik/iknr')
+        ->and($org['address'][0]['line'][0])->toBe('Aprather Weg 20')
+        ->and($org['address'][0]['postalCode'])->toBe('42489')
+        ->and($org['address'][0]['city'])->toBe('Wülfrath')
+        ->and($org['address'][0]['_line'][0]['extension'][1]['valueString'])->toBe('Aprather Weg');
+});
+
+it('lässt IK + Adresse in der ÜLB-Organization weg, wenn der Tenant sie nicht hat', function () {
+    $bare = Tenant::create(['name' => 'Ohne', 'slug' => 'ohne-org']);
+    app(CurrentTenant::class)->set($bare);
+    $r = Resident::factory()->create(['tenant_id' => $bare->id]);
+
+    $org = collect(app(FhirDocumentExporter::class)->export($r)['entry'])
+        ->pluck('resource')->firstWhere('resourceType', 'Organization');
+
+    expect($org)->not->toHaveKey('identifier')->not->toHaveKey('address');
 });
 
 it('mappt das Barthel-Assessment auf eine Assessment_Free-Observation (funktionsbeurteilungen)', function () {

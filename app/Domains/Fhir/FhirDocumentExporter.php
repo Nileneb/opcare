@@ -60,7 +60,7 @@ class FhirDocumentExporter
 
         // Dokumentierende Einheit (Organization/Practitioner/PractitionerRole) — einmal je Bundle,
         // als Pflicht-author/performer wiederverwendet (KBV-MIO-Anforderung).
-        $documenting = $this->documentingEntityMapper->build((string) $resident->tenant->name, $base);
+        $documenting = $this->documentingEntityMapper->build($resident->tenant, $base);
         $entry = [...$entry, ...$documenting['entries']];
         $authorRef = $documenting['recorderReference'];
         $practitionerRef = $documenting['practitionerReference'];

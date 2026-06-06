@@ -2,6 +2,7 @@
 
 namespace App\Domains\Fhir\Erezept;
 
+use App\Domains\Fhir\Support\GermanAddress;
 use App\Domains\Masterdata\Models\Physician;
 use App\Domains\Masterdata\Models\ResidentInsurance;
 use App\Domains\Medication\Models\Prescription;
@@ -239,11 +240,6 @@ class ErezeptBundleMapper
     }
 
     /**
-     * Platzhalter-Adresse (Einrichtung/Praxis) mit Pflicht-Strukturextensions (Straße + Hausnummer).
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    /**
      * Baut eine FHIR-Adresse aus echten Stammdaten; fehlende Felder fallen auf Platzhalter zurück
      * (E-Rezept erzwingt eine Adresse — s. docs/INBETRIEBNAHME.md §3, Adress-Stammdaten).
      *
@@ -251,20 +247,14 @@ class ErezeptBundleMapper
      */
     private function address(?string $strasse, ?string $hausnummer, ?string $plz, ?string $ort): array
     {
-        $strasse = $strasse ?: 'Musterstr.';
-        $hausnummer = $hausnummer ?: '1';
-
-        return [[
-            'type' => 'both',
-            'line' => [trim($strasse.' '.$hausnummer)],
-            '_line' => [['extension' => [
-                ['url' => 'http://hl7.org/fhir/StructureDefinition/iso21090-ADXP-houseNumber', 'valueString' => $hausnummer],
-                ['url' => 'http://hl7.org/fhir/StructureDefinition/iso21090-ADXP-streetName', 'valueString' => $strasse],
-            ]]],
-            'city' => $ort ?: 'Musterstadt',
-            'postalCode' => $plz ?: '12345',
-            'country' => 'D',
-        ]];
+        // E-Rezept erzwingt eine vollständige Adresse → Platzhalter füllen leere Felder, bevor der
+        // geteilte KBV-Adress-Builder (GermanAddress) sie strukturiert.
+        return GermanAddress::kbv(
+            $strasse ?: 'Musterstr.',
+            $hausnummer ?: '1',
+            $plz ?: '12345',
+            $ort ?: 'Musterstadt',
+        ) ?? [];
     }
 
     /**
