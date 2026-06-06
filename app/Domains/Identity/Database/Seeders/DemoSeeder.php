@@ -33,6 +33,11 @@ use App\Domains\Medication\Enums\VitalType;
 use App\Domains\Medication\Models\MedProduct;
 use App\Domains\Medication\Models\TradeForm;
 use App\Domains\Medication\Models\VitalReading;
+use App\Domains\Personnel\Enums\Beschaeftigungsart;
+use App\Domains\Personnel\Enums\Krankenversicherung;
+use App\Domains\Personnel\Enums\Masernschutz;
+use App\Domains\Personnel\Enums\Qualifikation;
+use App\Domains\Personnel\Enums\Steuerklasse;
 use App\Domains\Quality\Enums\EventSeverity;
 use App\Domains\Quality\Enums\QualityIndicator;
 use App\Domains\Quality\Models\CareEvent;
@@ -276,6 +281,17 @@ class DemoSeeder extends Seeder
         ArbeitszeitgesetzDefaults::ensureFor($tenant->id);
         $sandra = User::create(['name' => 'Sandra Vogt', 'email' => 'sandra@opcare.local', 'password' => Hash::make('password'), 'tenant_id' => $tenant->id]);
         $tom = User::create(['name' => 'Tom Berger', 'email' => 'tom@opcare.local', 'password' => Hash::make('password'), 'tenant_id' => $tenant->id]);
+        $sandra->employeeProfile()->create([
+            'vorname' => 'Sandra', 'nachname' => 'Vogt', 'qualifikation' => Qualifikation::Pflegefachkraft,
+            'beschaeftigungsart' => Beschaeftigungsart::Vollzeit, 'wochenstunden' => 38.5, 'position' => 'Pflegefachkraft Wohnbereich 1',
+            'eintritt_am' => now()->subYears(3)->toDateString(), 'masernschutz' => Masernschutz::Geimpft,
+            'steuerklasse' => Steuerklasse::I, 'krankenversicherung' => Krankenversicherung::GesetzlichPflicht, 'krankenkasse' => 'AOK Rheinland/Hamburg',
+        ]);
+        $tom->employeeProfile()->create([
+            'vorname' => 'Tom', 'nachname' => 'Berger', 'qualifikation' => Qualifikation::Pflegehilfskraft,
+            'beschaeftigungsart' => Beschaeftigungsart::Teilzeit, 'wochenstunden' => 25, 'position' => 'Pflegehilfskraft',
+            'eintritt_am' => now()->subMonths(8)->toDateString(), 'masernschutz' => Masernschutz::Geimpft,
+        ]);
         $frueh = Shift::query()->where('name', 'Frühdienst')->first();
         $spaet = Shift::query()->where('name', 'Spätdienst')->first();
         $mon = now()->startOfWeek();

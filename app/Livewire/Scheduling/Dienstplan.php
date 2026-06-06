@@ -7,6 +7,7 @@ use App\Domains\Identity\Support\CurrentTenant;
 use App\Domains\Scheduling\Actions\AssignShift;
 use App\Domains\Scheduling\Compliance\ArbeitszeitgesetzDefaults;
 use App\Domains\Scheduling\Compliance\ComplianceReporter;
+use App\Domains\Scheduling\Compliance\WorkingHoursAnalyzer;
 use App\Domains\Scheduling\Data\ShiftAssignmentData;
 use App\Domains\Scheduling\Models\ComplianceJustification;
 use App\Domains\Scheduling\Models\Shift;
@@ -135,8 +136,12 @@ class Dienstplan extends Component
 
         $assignments = ShiftAssignment::with(['user', 'shift'])->whereBetween('dienst_am', [$von, $bis])->get();
         $grid = [];
+        $geplant = [];
         foreach ($assignments as $a) {
             $grid[$a->user_id][Carbon::parse($a->dienst_am)->toDateString()][] = $a;
+            if ($a->shift) {
+                $geplant[$a->user_id] = ($geplant[$a->user_id] ?? 0) + WorkingHoursAnalyzer::stunden($a->shift->beginn, $a->shift->ende);
+            }
         }
 
         $rules = ArbeitszeitgesetzDefaults::ensureFor($tenantId);
@@ -157,9 +162,10 @@ class Dienstplan extends Component
         return view('livewire.scheduling.dienstplan', [
             'days' => $days,
             'weekLabel' => $start->isoFormat('DD.MM.').'–'.$start->addDays(6)->isoFormat('DD.MM.YYYY'),
-            'users' => User::where('tenant_id', $tenantId)->orderBy('name')->get(),
+            'users' => User::where('tenant_id', $tenantId)->with('employeeProfile')->orderBy('name')->get(),
             'shifts' => Shift::where('aktiv', true)->orderBy('beginn')->get(),
             'grid' => $grid,
+            'geplant' => $geplant,
             'findingsByUser' => $findingsByUser,
             'marks' => $marks,
             'offeneVerstoesse' => collect($findings)->filter(fn ($f) => $f->offenerVerstoss())->count(),

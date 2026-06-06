@@ -35,7 +35,16 @@
             <tbody>
                 @forelse ($users as $user)
                     <tr>
-                        <td class="plan-name">{{ $user->name }}</td>
+                        @php
+                            $soll = $user->employeeProfile?->wochenstunden;
+                            $ist = $geplant[$user->id] ?? 0;
+                            $fmt = fn ($n) => rtrim(rtrim(number_format($n, 1, ',', ''), '0'), ',');
+                            $sollLabel = $fmt($ist).' h'.($soll ? ' / '.$fmt($soll).' h Pensum' : '');
+                            $over = $soll && $ist > $soll;
+                        @endphp
+                        <td class="plan-name">{{ $user->name }}
+                            <span class="plan-soll {{ $over ? 'plan-soll-over' : '' }}">{{ $sollLabel }}</span>
+                        </td>
                         @foreach ($days as $day)
                             <td @class(['plan-cell', 'plan-sun' => $day['sonntag'], 'plan-warn' => isset($marks[$user->id][$day['datum']])])>
                                 @foreach ($grid[$user->id][$day['datum']] ?? [] as $e)

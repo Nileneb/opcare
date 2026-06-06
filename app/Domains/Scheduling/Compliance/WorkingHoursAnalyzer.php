@@ -135,11 +135,18 @@ class WorkingHoursAnalyzer
             $end = $end->addDay(); // Nachtdienst über Mitternacht
         }
 
-        return [
-            'start' => $start,
-            'end' => $end,
-            'hours' => round($start->diffInMinutes($end) / 60, 2),
-            'date' => $date,
-        ];
+        return ['start' => $start, 'end' => $end, 'hours' => self::stunden($a->shift->beginn, $a->shift->ende), 'date' => $date];
+    }
+
+    /** Dauer einer Schicht in Stunden — Nachtdienste über Mitternacht werden korrekt gezählt. */
+    public static function stunden(string $beginn, string $ende): float
+    {
+        $start = CarbonImmutable::parse('2000-01-01 '.$beginn);
+        $end = CarbonImmutable::parse('2000-01-01 '.$ende);
+        if ($end <= $start) {
+            $end = $end->addDay();
+        }
+
+        return round($start->diffInMinutes($end) / 60, 2);
     }
 }

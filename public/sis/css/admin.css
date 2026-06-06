@@ -171,3 +171,5 @@ table.plan th { font-size: 0.78em; color: var(--color-fg-muted); font-weight: va
 /* ===== Personalakte: responsives Feld-Grid ===== */
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 4px 16px; }
 @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+.plan-soll { display: block; font-size: 0.74em; font-weight: 400; color: var(--color-fg-muted); margin-top: 2px; }
+.plan-soll-over { color: #8C2A18; font-weight: var(--fw-semibold); }
