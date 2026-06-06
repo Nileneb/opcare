@@ -25,9 +25,21 @@
 
     @if (session('status'))<div class="flash">{{ session('status') }}</div>@endif
 
+    <nav class="section-nav" aria-label="Abschnitte">
+        <a href="#stammdaten" wire:ignore>Stammdaten</a>
+        <a href="#status" wire:ignore>Einschätzungen</a>
+        <a href="#medizinprodukte" wire:ignore>Medizinprodukte</a>
+        <a href="#angehoerige" wire:ignore>Angehörige</a>
+        <a href="#versorgung" wire:ignore>Versorgung</a>
+        <a href="#sis" wire:ignore>SIS®</a>
+        <a href="#massnahmen" wire:ignore>Maßnahmen</a>
+        <a href="#berichte" wire:ignore>Berichte</a>
+        <a href="#vorkommnisse" wire:ignore>Vorkommnisse</a>
+    </nav>
+
     {{-- ===================== STAMMDATEN ===================== --}}
     <div class="grid-2">
-        <div class="card">
+        <div class="card scroll-target" id="stammdaten">
             <div class="card-head"><h3>Diagnosen (ICD-10)</h3></div>
             @forelse ($resident->diagnoses as $d)
                 <div class="chip"><b>{{ $d->icdCode->code }}</b> {{ $d->icdCode->bezeichnung }} <span class="badge {{ $d->art === 'primär' ? 'green' : 'gray' }}" style="margin-left:auto">{{ $d->art }}</span></div>
@@ -96,12 +108,15 @@
             @endcan
         </div>
 
-        <div class="card">
-            <div class="card-head"><h3>Pflegerische Einschätzungen</h3></div>
+        <div class="card scroll-target" id="status">
+            <div class="card-head"><h3>Pflegerische Einschätzungen</h3>
+                <span class="badge ulb" title="Fließt in den ÜLB-FHIR-Export (Status-Beobachtungen)">→ ÜLB-Export</span>
+            </div>
             @forelse ($resident->statusObservations->sortByDesc('erfasst_am') as $o)
                 <div class="chip">
                     <b>{{ $statusCatalog[$o->typ]['label'] ?? $o->typ }}</b>
                     <span>{{ $o->wert_code ? ($statusCatalog[$o->typ]['options'][$o->wert_code] ?? $o->wert_code) : $o->wert_text }}</span>
+                    @if (! empty($statusCatalog[$o->typ]['section']))<span class="badge gray">{{ $statusCatalog[$o->typ]['section'] }}</span>@endif
                     <span style="color:var(--c-muted)">{{ optional($o->erfasst_am)->format('d.m.Y') }}</span>
                     <button type="button" class="btn btn-ghost btn-sm" style="margin-left:auto" wire:click="removeStatusObservation({{ $o->id }})" wire:confirm="Eintrag entfernen?" title="Entfernen">✕</button>
                 </div>
@@ -130,8 +145,10 @@
             @endcan
         </div>
 
-        <div class="card">
-            <div class="card-head"><h3>Medizinprodukte & Hilfsmittel</h3></div>
+        <div class="card scroll-target" id="medizinprodukte">
+            <div class="card-head"><h3>Medizinprodukte & Hilfsmittel</h3>
+                <span class="badge ulb" title="Fließt in den ÜLB-FHIR-Export (Sektion Medizinprodukte)">→ ÜLB-Export</span>
+            </div>
             @forelse ($resident->devices as $d)
                 <div class="chip">
                     <b>{{ $d->bezeichnung }}</b>
@@ -154,8 +171,10 @@
             @endcan
         </div>
 
-        <div class="card">
-            <div class="card-head"><h3>Angehörige & Kontaktpersonen</h3></div>
+        <div class="card scroll-target" id="angehoerige">
+            <div class="card-head"><h3>Angehörige & Kontaktpersonen</h3>
+                <span class="badge ulb" title="Fließt in den ÜLB-FHIR-Export (Patienten-Adressbuch)">→ ÜLB-Export</span>
+            </div>
             @forelse ($resident->contacts as $c)
                 <div class="chip">
                     <b>{{ $c->name }}</b>
@@ -178,7 +197,7 @@
             @endcan
         </div>
 
-        <div class="card">
+        <div class="card scroll-target" id="versorgung">
             <div class="card-head"><h3>Krankenkassen</h3></div>
             @forelse ($resident->insurances as $i)
                 <div class="chip"><b>{{ $i->healthInsurance->name }}</b> {{ $i->versichertennr }} @if ($i->ist_primaer)<span class="badge green" style="margin-left:auto">primär</span>@endif</div>
@@ -229,7 +248,7 @@
     </div>
 
     {{-- ===================== SIS ===================== --}}
-    <div class="card">
+    <div class="card scroll-target" id="sis">
         <div class="card-head"><h3>SIS®-Informationssammlung</h3></div>
         @php $sis = $resident->sisAssessments->first(); @endphp
         @if ($sis)
@@ -265,7 +284,7 @@
 
     {{-- ===================== MASSNAHMEN ===================== --}}
     <div class="grid-2">
-        <div class="card">
+        <div class="card scroll-target" id="massnahmen">
             <div class="card-head"><h3>Maßnahmenplan</h3></div>
             @forelse ($resident->careMeasures as $m)
                 <div class="chip"><div><b>{{ $m->themenfeld->label() }}</b><br>{{ $m->beschreibung }}@if ($m->ziel)<br><span class="muted">Ziel: {{ $m->ziel }}</span>@endif</div></div>
@@ -313,7 +332,7 @@
     </div>
 
     {{-- ===================== BERICHTE ===================== --}}
-    <div class="card">
+    <div class="card scroll-target" id="berichte">
         <div class="card-head"><h3>Berichteblatt</h3></div>
         <form wire:submit="addReport">
             <div class="form-row-3">
@@ -326,7 +345,7 @@
     </div>
 
     {{-- ===================== VORKOMMNISSE / QS-INDIKATOREN ===================== --}}
-    <div class="card">
+    <div class="card scroll-target" id="vorkommnisse">
         <div class="card-head"><h3>Vorkommnisse &amp; QS-Indikatoren</h3></div>
         @forelse ($resident->careEvents as $ev)
             <div class="chip">

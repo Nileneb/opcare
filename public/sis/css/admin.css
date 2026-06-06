@@ -121,3 +121,21 @@ table.data tr.clickable:hover td { background: var(--color-bg); }
 }
 .voice-status { display: block; min-height: 1.1em; margin-top: 3px; }
 @media (prefers-reduced-motion: reduce) { .voice-btn.is-rec { animation: none; } }
+
+/* ===== Bewohner-Detail: Sprung-Navigation + ÜLB-Export-Affordanz ===== */
+.section-nav {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; gap: 6px; flex-wrap: wrap;
+  padding: 9px 0; margin-bottom: var(--space-5);
+  background: var(--color-bg); border-bottom: 1px solid var(--color-border);
+}
+.section-nav a {
+  font-size: 0.8em; font-weight: var(--fw-semibold);
+  color: var(--color-fg-muted); text-decoration: none;
+  padding: 5px 11px; border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border); background: var(--color-surface);
+  transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.section-nav a:hover { color: var(--color-fg); border-color: var(--color-border-strong); }
+.scroll-target { scroll-margin-top: 64px; }
+.badge.ulb { background: #E7F0FA; color: #1C4E7C; border-color: #C4DBF0; }

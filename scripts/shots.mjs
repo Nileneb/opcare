@@ -2,6 +2,15 @@
 // Nutzung:  node scripts/shots.mjs [baseURL]
 //   baseURL default http://localhost:8099  (dev: php artisan serve --port=8099)
 // Login: admin@opcare.local / password (Demo-Seed). Ausgabe: storage/app/shots/*.png
+//
+// MFA-Pflicht (Track B): das verpflichtende TOTP-Gate umgehen wir per Recovery-Code statt zeitabhängigem
+// TOTP. Vorbereitung (einmal je Seed): den Demo-Admin 2FA-confirmt setzen + feste Recovery-Codes hinterlegen
+//   php artisan tinker --execute='$u=App\Domains\Identity\Models\User::where("email","admin@opcare.local")->first();
+//     $u->forceFill(["two_factor_secret"=>app(App\Domains\Identity\Support\TwoFactorAuthenticator::class)->generateSecret(),
+//       "two_factor_recovery_codes"=>["SHOTS-1","SHOTS-2"],"two_factor_confirmed_at"=>now()])->save();'
+// Dann:  MFA_RECOVERY=SHOTS-1 node scripts/shots.mjs <baseURL>   (jeder Code ist Einmal-Gebrauch)
+// Eigene DB/URL ohne .env zu berühren: .env.shots anlegen + APP_ENV=shots php artisan serve (ServeCommand
+// reicht nur APP_ENV durch, nicht DB_DATABASE).
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
 
@@ -34,6 +43,17 @@ await Promise.all([
     page.click('button[type=submit]'),
 ]);
 await page.waitForTimeout(800);
+
+// MFA-Pflicht (Track B): ist ein 2FA-confirmter Demo-User vorbereitet, lösen wir die Challenge mit einem
+// Recovery-Code (env MFA_RECOVERY). So bleiben die Screenshots hinter dem verpflichtenden TOTP-Gate möglich.
+if (page.url().includes('/two-factor/challenge') && process.env.MFA_RECOVERY) {
+    await page.fill('#code', process.env.MFA_RECOVERY);
+    await Promise.all([
+        page.waitForURL((u) => !u.pathname.includes('/two-factor'), { timeout: 15000 }).catch(() => {}),
+        page.click('button[type=submit]'),
+    ]);
+    await page.waitForTimeout(800);
+}
 
 for (const [name, path, auth] of pages) {
     try {

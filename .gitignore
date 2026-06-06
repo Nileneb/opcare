@@ -30,3 +30,4 @@ Thumbs.db
 /database/*.sqlite
 /storage/app/shots
 /build
+.env.shots
