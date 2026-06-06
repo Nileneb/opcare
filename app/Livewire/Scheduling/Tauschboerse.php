@@ -98,13 +98,23 @@ class Tauschboerse extends Component
             ->orderBy('dienst_am')->get();
         $offeneIds = ShiftSwapRequest::where('status', 'offen')->pluck('shift_assignment_id')->all();
 
-        $offene = ShiftSwapRequest::with(['assignment.shift', 'anfrager'])->where('tenant_id', $tenantId)->where('status', 'offen')
+        $offene = ShiftSwapRequest::with(['assignment.shift', 'anfrager.employeeProfile'])->where('tenant_id', $tenantId)->where('status', 'offen')
             ->get()->filter(fn ($r) => $r->assignment && $r->assignment->dienst_am->toDateString() >= $heute);
+
+        $offeneFremd = $offene->filter(fn ($r) => $r->requested_by !== $uid)->values();
+        // Eignung der aktuellen Person je offener Anfrage (null = darf übernehmen, sonst Grund).
+        $hindernisse = [];
+        $me = auth()->user();
+        $coverage = app(ShiftCoverageService::class);
+        foreach ($offeneFremd as $r) {
+            $hindernisse[$r->id] = $coverage->uebernahmeHindernis($r, $me);
+        }
 
         return view('livewire.scheduling.tauschboerse', [
             'meineDienste' => $meineDienste,
             'offeneIds' => $offeneIds,
-            'offeneFremd' => $offene->filter(fn ($r) => $r->requested_by !== $uid)->values(),
+            'offeneFremd' => $offeneFremd,
+            'hindernisse' => $hindernisse,
             'meineAnfragen' => $offene->filter(fn ($r) => $r->requested_by === $uid)->values(),
             'meineAbwesenheiten' => Abwesenheit::where('user_id', $uid)->where('bis', '>=', $heute)->orderBy('von')->get(),
             'abwesenheitsTypen' => AbwesenheitTyp::cases(),

@@ -12,6 +12,7 @@ use App\Domains\Scheduling\Models\ShiftSwapRequest;
 use App\Domains\Scheduling\Support\DienstplanGenerator;
 use App\Domains\Scheduling\Support\ShiftCoverageService;
 use Carbon\CarbonImmutable;
+use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
     $this->tenant = Tenant::create(['name' => 'A', 'slug' => 'a']);
@@ -44,6 +45,43 @@ it('lehnt die Übernahme ab, wenn die Person am selben Tag schon eingeteilt ist'
     $req = app(ShiftCoverageService::class)->tauschAnbieten($this->assignment, null);
 
     expect(fn () => app(ShiftCoverageService::class)->uebernehmen($req, $this->b))->toThrow(InvalidArgumentException::class);
+});
+
+it('verlangt für eine Fachkraft-Vertretung eine Fachkraft (Qualifikations-Matching)', function () {
+    $this->a->employeeProfile()->create(['tenant_id' => $this->tenant->id, 'qualifikation' => Qualifikation::Pflegefachkraft, 'wochenstunden' => 38.5]);
+    $this->b->employeeProfile()->create(['tenant_id' => $this->tenant->id, 'qualifikation' => Qualifikation::Pflegehilfskraft, 'wochenstunden' => 30]);
+    $req = app(ShiftCoverageService::class)->tauschAnbieten($this->assignment, null); // A (Fachkraft) gibt ab
+
+    // Hilfskraft B darf nicht übernehmen
+    expect(app(ShiftCoverageService::class)->uebernahmeHindernis($req->fresh(), $this->b))->toContain('Fachkraft');
+    expect(fn () => app(ShiftCoverageService::class)->uebernehmen($req->fresh(), $this->b))->toThrow(InvalidArgumentException::class);
+
+    // eine zweite Fachkraft darf
+    $c = User::factory()->create(['tenant_id' => $this->tenant->id]);
+    $c->employeeProfile()->create(['tenant_id' => $this->tenant->id, 'qualifikation' => Qualifikation::Pflegefachkraft, 'wochenstunden' => 38.5]);
+    app(ShiftCoverageService::class)->uebernehmen($req->fresh(), $c);
+    expect($this->assignment->fresh()->user_id)->toBe($c->id);
+});
+
+it('benachrichtigt die Leitung bei einer Krankmeldung mit offenen Diensten', function () {
+    Role::findOrCreate('pflegefachkraft');
+    $pdl = User::factory()->create(['tenant_id' => $this->tenant->id]);
+    $pdl->assignRole('pflegefachkraft');
+
+    app(ShiftCoverageService::class)->krankmelden($this->a, AbwesenheitTyp::Krank, $this->tag, $this->tag, null, $this->a->id);
+
+    expect($pdl->fresh()->unreadNotifications()->count())->toBe(1)
+        ->and($pdl->fresh()->unreadNotifications()->first()->data['typ'])->toBe('vertretung');
+});
+
+it('benachrichtigt nicht bei Urlaub ohne offene Dienste', function () {
+    Role::findOrCreate('pflegefachkraft');
+    $pdl = User::factory()->create(['tenant_id' => $this->tenant->id]);
+    $pdl->assignRole('pflegefachkraft');
+
+    app(ShiftCoverageService::class)->krankmelden($this->a, AbwesenheitTyp::Urlaub, $this->tag, $this->tag, null, $this->a->id);
+
+    expect($pdl->fresh()->unreadNotifications()->count())->toBe(0);
 });
 
 it('plant abwesende Mitarbeitende nicht ein (Generator)', function () {

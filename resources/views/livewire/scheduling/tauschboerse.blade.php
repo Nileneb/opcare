@@ -67,7 +67,11 @@
                     <b>{{ $r->assignment->dienst_am->isoFormat('dd DD.MM.') }}</b> {{ $r->assignment->shift?->name }}
                     <span class="badge {{ $r->typ === 'krankheit' ? 'red' : 'amber' }}">{{ $r->typ === 'krankheit' ? 'Krankheits-Vertretung' : 'Tausch' }}</span>
                     <span class="muted">von {{ $r->anfrager?->name }}</span>
-                    <button class="btn btn-primary btn-sm" style="margin-left:auto" wire:click="uebernehmen({{ $r->id }})">Übernehmen</button>
+                    @if (($hindernisse[$r->id] ?? null) === null)
+                        <button class="btn btn-primary btn-sm" style="margin-left:auto" wire:click="uebernehmen({{ $r->id }})">Übernehmen</button>
+                    @else
+                        <span class="badge gray" style="margin-left:auto" title="{{ $hindernisse[$r->id] }}">nicht übernehmbar</span>
+                    @endif
                 </div>
             @empty
                 <p class="empty">Keine offenen Anfragen.</p>

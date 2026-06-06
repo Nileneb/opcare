@@ -78,6 +78,7 @@
             </nav>
         @endif
         <div class="app-user">
+            @auth @livewire('notification-bell') @endauth
             @livewire('admin.tenant-switcher')
             <a href="{{ route('profile') }}" class="who" wire:navigate style="text-decoration:none;color:inherit">
                 <b>{{ $u?->name ?? 'Gast' }}</b>

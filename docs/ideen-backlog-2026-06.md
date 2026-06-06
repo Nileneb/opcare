@@ -64,7 +64,44 @@ auf Rot (links), bekommt die vorgesetzte Person eine Push-Nachricht.
 - Langfristig (opt-in, aggregiert): Tageszeit-Energieprofil als Planungshilfe (Bezug zu Idee #5).
 **Recht:** Mitbestimmung (Betriebsrat), Freiwilligkeit, Datensparsamkeit. **Aufwand:** mittel.
 
+## 7. Gremien-Modul + Betriebsarzt (Stammdaten)
+
+**Idee (User):** Ein **Gremien-Modul** für Aufsichtsrat, Betriebsrat, Gleichstellungsbeauftragte (und Heimbeirat,
+s. Audit-Lücke #10) — Mitglieder, Amtszeiten, Sitzungsprotokolle, Beschlüsse. Außerdem ist aktuell **kein Betriebsarzt
+hinterlegbar** (ASiG-Pflicht, s. Arbeitsschutz-Recherche): Betriebsarzt + Fachkraft für Arbeitssicherheit (Sifa) als
+Einrichtungs-Stammdaten mit Beauftragung, Betreuungszeiten, Besuchsprotokollen.
+- Gremium = generisches Modell (Typ, Mitglieder mit Rolle/Amtszeit, Sitzungen mit Protokoll/Upload via Strang A).
+- Betriebsarzt/Sifa als Einrichtungs-Stammdaten (eigene kleine Tabelle), verlinkt mit den Arbeitsschutz-Nachweisen (Strang C).
+**Bezug:** Heimbeirat (Audit #10), ASiG (Arbeitsschutz-Recherche §11). **Aufwand:** mittel.
+
+## 8. Fortbildung, Skill-Baum & Delegations-Berechtigungen
+
+**Idee (User):** Beim Personal fehlen **Fortbildungsplan**, **Fortbildungswünsche** und ein **„Skill-Baum"** —
+Zusatzqualifikationen über die Grundqualifikation hinaus, z. B. **Wundmanager:in**, **Insulin-Gabe-Berechtigung**,
+Behandlungspflege LG1/LG2, Praxisanleiter:in, Hygienebeauftragte:r. Manche Pflegehelfer:innen dürfen z. B. Insulin
+spritzen, andere nicht — das soll hinterlegt sein.
+- **Skill-/Kompetenz-Katalog** je Einrichtung (Kompetenz → wer darf sie erteilen/nachweisen, Gültigkeit/Auffrischung
+  → nutzt das **Nachweis-mit-Frist-Muster** aus Strang C).
+- **Mitarbeiter-Kompetenzen**: welche Zusatzkompetenzen hat eine Person (mit Nachweis/Datum).
+- **Berechtigungsmatrix**: welche Tätigkeit darf mit welcher (Zusatz-)Qualifikation **durchgeführt/abgehakt** werden
+  (z. B. „Insulingabe" nur mit Kompetenz „Insulin-Berechtigung"). Greift in Medikation/Pflegedoku (Abzeichnen).
+- **Fortbildungsplan + -wünsche**: geplante/absolvierte Fortbildungen je Person, Pflichtfortbildungen mit Frist.
+
+### Delegation ärztlicher Tätigkeiten (Arzt → Pflege)
+Der User fragt zur **Delegation** (z. B. Arzt delegiert Blutabnahme an eine Pflegekraft) und ob das über die **ePA**
+läuft. Fachliche Einordnung (zu verifizieren bei Umsetzung):
+- Delegation ärztlicher Tätigkeiten an Pflegefachkräfte ist etabliert (haftungsrechtlich: Anordnungs-/Durchführungs-
+  verantwortung; BÄK/DBfK-Empfehlungen). Voraussetzung: Qualifikation + dokumentierte ärztliche Anordnung.
+- **ePA**: Die ePA (§ 341 ff. SGB V, ePA „für alle" 2025) ist primär eine **Dokumenten-/Befund-/Medikationsakte**;
+  ein standardisiertes, maschinenlesbares **Delegations-Objekt** ist dort derzeit **nicht** als eigene Struktur
+  vorgesehen. Delegation/Anordnung lebt in der Pflege-/Verordnungsdoku (in opcare: Verordnung + Abzeichnen) und ließe
+  sich als **FHIR `ServiceRequest`** (Anordnung mit `performer`/`requester`) modellieren — ggf. als ePA-Dokument ablegbar.
+  Realistischer erster Schritt: **interne Delegations-/Anordnungsverwaltung** (Arzt ordnet an → berechtigte Pflegekraft
+  führt durch + zeichnet ab), Berechtigung über den Skill-Baum geprüft. ePA-Anbindung später (Track C / Konnektoren).
+**Aufwand:** groß (Katalog + Matrix + Doku-Integration), hoher fachlicher Wert. Eigene Iteration.
+
 ---
 
 **Bezug zur Norm-Recherche:** #3 ist Audit-Lücke #6 (Barbetragsverwaltung), #2 berührt Audit-Lücke #7
-(Beschwerde/Gewaltschutz). #1/#6 sind neue Querschnittsfunktionen. Siehe [recherche-normen-erweiterung-2026-06.md](recherche-normen-erweiterung-2026-06.md).
+(Beschwerde/Gewaltschutz), #7 berührt Audit-Lücke #10 (Heimbeirat) + ASiG. #1/#6/#8 sind neue Querschnittsfunktionen.
+Siehe [recherche-normen-erweiterung-2026-06.md](recherche-normen-erweiterung-2026-06.md).

@@ -29,6 +29,19 @@ Tagen **nicht planbar**. Mitarbeitende melden sich selbst krank; die PDL (Planun
 Krankheits-Vertretungen und freiwillige Tausche teilen sich denselben Mechanismus (`ShiftSwapRequest`, typ
 `krankheit`/`tausch`).
 
+### Qualifikations-Matching bei der Übernahme
+Eine **Fachkraft-Vertretung erfordert eine Fachkraft** (erhält die Fachkraftquote): gibt eine Fachkraft ihren
+Dienst ab, kann ihn nur eine andere Fachkraft übernehmen — eine Hilfskraft sieht stattdessen „nicht übernehmbar".
+Die Eignung (`uebernahmeHindernis`) prüft Qualifikation, Doppeldienst und § 3 ArbZG und wird sowohl im Service
+(Übernahme) als auch in der UI (Button-Status) genutzt — eine Quelle der Wahrheit. Das feinere Skill-Matching
+(Wundmanager, Insulin-Berechtigung …) ist als Idee #8 dokumentiert.
+
+### Push-Benachrichtigung bei Krankmeldung
+Eine Krankmeldung mit offenen Diensten **benachrichtigt die Leitung** (Rollen admin/pflegefachkraft) per
+Laravel-Notification über `database` (In-App-Glocke im Header) **und** `broadcast` (Push via Reverb, im Stack
+vorhanden). Die Glocke zeigt die ungelesenen Benachrichtigungen mit „Vertretung gesucht" und verlinkt direkt in
+die Tauschbörse. Urlaub löst keine Benachrichtigung aus.
+
 ## Architektur
 
 Domäne `App\Domains\Scheduling`: `AbwesenheitTyp`-Enum, Modelle `Abwesenheit`/`ShiftSwapRequest`,
