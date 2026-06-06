@@ -73,6 +73,8 @@ Einrichtungs-Stammdaten mit Beauftragung, Betreuungszeiten, Besuchsprotokollen.
 - Gremium = generisches Modell (Typ, Mitglieder mit Rolle/Amtszeit, Sitzungen mit Protokoll/Upload via Strang A).
 - Betriebsarzt/Sifa als Einrichtungs-Stammdaten (eigene kleine Tabelle), verlinkt mit den Arbeitsschutz-Nachweisen (Strang C).
 **Bezug:** Heimbeirat (Audit #10), ASiG (Arbeitsschutz-Recherche §11). **Aufwand:** mittel.
+**Hinweis:** Das **Beauftragten-Register** (befähigte/benannte Personen mit Frist) ist Teil der
+[skill-baum-berechtigungsmatrix-spec.md](skill-baum-berechtigungsmatrix-spec.md) — Betriebsarzt/Sifa fügen sich dort als Rollen ein.
 
 ## 8. Fortbildung, Skill-Baum & Delegations-Berechtigungen
 
@@ -99,6 +101,8 @@ läuft. Fachliche Einordnung (zu verifizieren bei Umsetzung):
   Realistischer erster Schritt: **interne Delegations-/Anordnungsverwaltung** (Arzt ordnet an → berechtigte Pflegekraft
   führt durch + zeichnet ab), Berechtigung über den Skill-Baum geprüft. ePA-Anbindung später (Track C / Konnektoren).
 **Aufwand:** groß (Katalog + Matrix + Doku-Integration), hoher fachlicher Wert. Eigene Iteration.
+**Recherche + Design fertig (2026-06-06):** konkrete Datenmodelle + Rechtsgrundlagen (Vorbehalt § 4 PflBG, LG1/LG2,
+Delegation, Beauftragte) in [skill-baum-berechtigungsmatrix-spec.md](skill-baum-berechtigungsmatrix-spec.md) — bereit zur Umsetzung.
 
 ---
 
