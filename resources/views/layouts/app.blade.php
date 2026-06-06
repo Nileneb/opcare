@@ -61,6 +61,7 @@
             <nav class="app-nav app-nav-dienstplan">
                 <a href="{{ route('dienstplan') }}" @class(['is-active' => request()->routeIs('dienstplan')])>Dienstplan</a>
                 <a href="{{ route('arbeitsrecht') }}" @class(['is-active' => request()->routeIs('arbeitsrecht')])>Arbeitsrecht</a>
+                <a href="{{ route('spitzenzeiten') }}" @class(['is-active' => request()->routeIs('spitzenzeiten')])>Spitzenzeiten</a>
             </nav>
         @endcan
         @unless ($istPortal)

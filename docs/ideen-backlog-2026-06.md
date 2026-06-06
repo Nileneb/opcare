@@ -39,7 +39,7 @@ generisches Muster, auch für Wirtschaftsbudgets der Buchhaltung. Spezifiziert i
 monatliche Rechnungslegung (HeimSiV § 15) + Befugnis über Rolle `admin`/`buchhaltung`. Rechtsgrundlagen per
 Legal Data Hunter belegt. Siehe [taschengeldkasse.md](taschengeldkasse.md).
 
-## 4. Dienstplan: Übergangs-/Spitzendienste
+## 4. Dienstplan: Übergangs-/Spitzendienste — ✅ umgesetzt 2026-06-06
 
 **Heute:** `ShiftKind` hat bereits `Zwischendienst`; Schichten sind frei mit Beginn/Ende definierbar.
 **Idee:** Kurze, gezielte Dienste für **Bedarfsspitzen** (z. B. Frühstück, Mittag, Abendversorgung) als eigenes Konzept:

@@ -31,6 +31,7 @@ const pages = [
     ['dienstplan', '/dienstplan', true],
     ['tauschboerse', '/tauschboerse', true],
     ['arbeitsrecht', '/arbeitsrecht', true],
+    ['spitzenzeiten', '/spitzenzeiten', true],
     ['zeiterfassung', '/zeiterfassung', true],
     ['haustechnik', '/haustechnik', true],
     ['medizinprodukte', '/medizinprodukte', true],

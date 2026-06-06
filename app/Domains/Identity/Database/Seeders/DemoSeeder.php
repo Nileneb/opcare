@@ -107,8 +107,10 @@ use App\Domains\Quality\Support\QmKatalogDefaults;
 use App\Domains\Scheduling\Compliance\ArbeitszeitgesetzDefaults;
 use App\Domains\Scheduling\Compliance\PersonalbemessungDefaults;
 use App\Domains\Scheduling\Compliance\ScheduleQualityDefaults;
+use App\Domains\Scheduling\Compliance\SpitzenzeitDefaults;
 use App\Domains\Scheduling\Database\Seeders\ShiftSeeder;
 use App\Domains\Scheduling\Enums\AbwesenheitTyp;
+use App\Domains\Scheduling\Enums\ShiftKind;
 use App\Domains\Scheduling\Enums\WunschTyp;
 use App\Domains\Scheduling\Models\ComplianceJustification;
 use App\Domains\Scheduling\Models\Dienstwunsch;
@@ -508,6 +510,10 @@ class DemoSeeder extends Seeder
         // Betreuungsschlüssel (§ 113c) + ergonomische Schichtregeln: Defaults je Einrichtung anlegen.
         PersonalbemessungDefaults::ensureConfig($tenant->id);
         ScheduleQualityDefaults::ensureFor($tenant->id);
+
+        // Spitzenzeiten (tageszeitliche Bedarfs-Fenster) + ein kurzer Spitzendienst als Stammdatum.
+        SpitzenzeitDefaults::ensureFor($tenant->id);
+        Shift::firstOrCreate(['name' => 'Spitzendienst Mittag'], ['kind' => ShiftKind::Spitzendienst, 'beginn' => '11:30', 'ende' => '14:00', 'timeslots' => []]);
 
         // Dokumente & Fotos: Demo-Befund am Bewohner (medizinisch → 10-Jahres-Aufbewahrung § 630f BGB).
         $maria->addMediaFromString("Demo-Arztbrief\nBefund: stabil.\n")

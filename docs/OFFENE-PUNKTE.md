@@ -1,6 +1,6 @@
 # Offene & ungeklärte Punkte (Stand 2026-06-06, Session-Handoff)
 
-Stand: 497 Tests grün, PHPStan 0, Pint clean. Diese Liste sammelt, was vor/nach einem Neustart offen ist.
+Stand: 504 Tests grün, PHPStan 0, Pint clean. Diese Liste sammelt, was vor/nach einem Neustart offen ist.
 Querbezug: [Ideen-Backlog](ideen-backlog-2026-06.md), [Norm-Recherche](recherche-normen-erweiterung-2026-06.md),
 **[Gesetzes-Recherche zu den offenen Punkten](recherche-offene-punkte-2026-06.md)** (Rechtsgrundlage + Datenmodell je Punkt).
 
@@ -72,9 +72,13 @@ Querbezug: [Ideen-Backlog](ideen-backlog-2026-06.md), [Norm-Recherche](recherche
   [bundesland-heimrecht.md](bundesland-heimrecht.md), [freie-hauptbuchung.md](freie-hauptbuchung.md),
   [energiebarometer.md](energiebarometer.md).
 
+- ✅ **Übergangs-/Spitzendienste** (Idee #4) — **umgesetzt 2026-06-06**: `ShiftKind::Spitzendienst` + editierbarer
+  Spitzenzeit-Katalog (Mahlzeiten/Grundpflege mit Soll-Personen), Wochen-Deckungsmatrix je Fenster × Tag gegen die
+  geplanten Schichten (minutenbasierte Überlappung inkl. Mitternacht) + Vorschläge bei Unterdeckung. Siehe
+  [spitzenzeiten-spitzendienste.md](spitzenzeiten-spitzendienste.md).
+
 Noch offen:
-1. **Übergangs-/Spitzendienste** (Idee #4).
-2. **AI-Services** (eigene Session): Ollama + whisperX-mcp als Container mit Build-Pre-Flight-Healthcheck,
+1. **AI-Services** (eigene Session): Ollama + whisperX-mcp als Container mit Build-Pre-Flight-Healthcheck,
    **VLM-Beleg-Capture** und **Budget-Setzungen**. Voll spezifiziert in [ai-services-plan.md](ai-services-plan.md).
 
 ## E. Technische/Infra-Notizen

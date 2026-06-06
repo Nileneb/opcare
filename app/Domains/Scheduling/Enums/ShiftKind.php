@@ -8,6 +8,7 @@ enum ShiftKind: string
     case Spaet = 'spaet';
     case Nacht = 'nacht';
     case Zwischendienst = 'zwischendienst';
+    case Spitzendienst = 'spitzendienst';
 
     public function label(): string
     {
@@ -16,6 +17,13 @@ enum ShiftKind: string
             self::Spaet => 'Spätdienst',
             self::Nacht => 'Nachtdienst',
             self::Zwischendienst => 'Zwischendienst',
+            self::Spitzendienst => 'Spitzendienst',
         };
+    }
+
+    /** Kurzer, gezielter Dienst für Bedarfsspitzen (Mahlzeiten/Grundpflege) — kein Vollschicht-Rang. */
+    public function istSpitze(): bool
+    {
+        return $this === self::Spitzendienst;
     }
 }

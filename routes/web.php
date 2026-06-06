@@ -55,6 +55,7 @@ use App\Livewire\ResidentShow;
 use App\Livewire\Scheduling\Arbeitsrecht;
 use App\Livewire\Scheduling\Dienstplan;
 use App\Livewire\Scheduling\Kalender;
+use App\Livewire\Scheduling\Spitzenzeiten;
 use App\Livewire\Scheduling\Tauschboerse;
 use App\Livewire\Scheduling\Wunschdienstplan;
 use App\Livewire\Scheduling\Zeiterfassung;
@@ -120,6 +121,7 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class, Restrict
     Route::get('/qdvs', QdvsExport::class)->name('qdvs.export');
     Route::get('/dienstplan', Dienstplan::class)->name('dienstplan');
     Route::get('/arbeitsrecht', Arbeitsrecht::class)->name('arbeitsrecht');
+    Route::get('/spitzenzeiten', Spitzenzeiten::class)->name('spitzenzeiten');
     Route::get('/kalender', Kalender::class)->name('kalender');
     Route::get('/haustechnik', Haustechnik::class)->name('haustechnik');
     Route::get('/medizinprodukte', Medizinprodukte::class)->name('medizinprodukte');
