@@ -23,7 +23,7 @@ class DocumentingEntityMapper
     private const ROLE_PROFILE = 'https://fhir.kbv.de/StructureDefinition/KBV_PR_MIO_ULB_PractitionerRole|1.0.0';
 
     /**
-     * @return array{entries: array<int, array<string, mixed>>, recorderReference: string}
+     * @return array{entries: array<int, array<string, mixed>>, recorderReference: string, practitionerReference: string}
      */
     public function build(string $einrichtung, string $base): array
     {
@@ -54,6 +54,7 @@ class DocumentingEntityMapper
                 ['fullUrl' => $base.'PractitionerRole/'.self::ROLE_ID, 'resource' => $role],
             ],
             'recorderReference' => $base.'PractitionerRole/'.self::ROLE_ID,
+            'practitionerReference' => $base.'Practitioner/'.self::PRACTITIONER_ID,
         ];
     }
 }

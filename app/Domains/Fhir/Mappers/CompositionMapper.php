@@ -6,82 +6,100 @@ use App\Domains\CarePlanning\Models\CareReport;
 use App\Domains\Masterdata\Models\Resident;
 use Illuminate\Support\Collection;
 
+/**
+ * KBV_PR_MIO_ULB_Composition (Pflegeüberleitung). Sektions-Slicing ist CLOSED + per code.coding
+ * diskriminiert: jede Sektion muss exakt einem definierten Slice mit fixem Code entsprechen, section.text
+ * ist verboten (Verlauf → Composition.text). Pflicht-Sektion: pflegegrad.
+ */
 class CompositionMapper
 {
+    private const SNOMED = 'http://snomed.info/sct';
+
+    private const SNOMED_VERSION = 'http://snomed.info/sct/900000000000207008/version/20220331';
+
+    /** Slice-Name → [section.code-Coding, Sektions-Titel]. Codes/Displays aus dem ÜLB-Composition-Profil. */
+    private const SECTIONS = [
+        'pflegegrad' => [
+            ['system' => 'https://fhir.kbv.de/CodeSystem/KBV_CS_MIO_ULB_Section_Codes', 'version' => '1.0.0', 'code' => 'SectionPflegegrad', 'display' => 'Bereich Pflegegrad'],
+            'Pflegegrad',
+        ],
+        'vitalparameter' => [
+            ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '1184593002', 'display' => 'Vital sign document section (record artifact)'],
+            'Vitalzeichen und Körpermaße',
+        ],
+        'allergienUndUnvertraeglichkeiten' => [
+            ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '722446000', 'display' => 'Allergy record (record artifact)'],
+            'Allergien und Unverträglichkeiten',
+        ],
+        'medizinprodukte' => [
+            ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '1184586001', 'display' => 'Medical device document section (record artifact)'],
+            'Medizinprodukte',
+        ],
+        'medikationsplan' => [
+            ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '736378000', 'display' => 'Medication management plan (record artifact)'],
+            'Medikationsplan',
+        ],
+        'funktionsbeurteilungen' => [
+            ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '1184588000', 'display' => 'Functional status document section (record artifact)'],
+            'Funktionsbeurteilungen',
+        ],
+        'probleme' => [
+            ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '1184595009', 'display' => 'Present problem document section (record artifact)'],
+            'Probleme',
+        ],
+        'pflegerischeMassnahme' => [
+            ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '9632001', 'display' => 'Nursing procedure (procedure)'],
+            'Pflegerische Maßnahme',
+        ],
+    ];
+
     public static function id(Resident $r): string
     {
         return 'composition-'.$r->id;
     }
 
     /**
+     * @param  array<int, array{slice: string, entries: array<int, string>}>  $sections
      * @param  Collection<int, CareReport>  $reports
-     * @param  array<int, string>  $conditionRefs
-     * @param  array<int, string>  $observationRefs
      * @return array<string, mixed>
      */
     public function map(
         Resident $r,
         string $patientReference,
         string $date,
+        string $authorReference,
+        array $sections,
         Collection $reports,
-        array $conditionRefs = [],
-        ?string $carePlanRef = null,
-        array $observationRefs = [],
-        array $medicationRefs = [],
-        array $allergyRefs = [],
-        array $functionalRefs = [],
-        array $extraSections = [],
     ): array {
-        $sections = [];
-        if ($conditionRefs !== []) {
-            $sections[] = ['title' => 'Diagnosen', 'entry' => $this->entries($conditionRefs)];
-        }
-        if ($allergyRefs !== []) {
-            $sections[] = ['title' => 'Allergien', 'entry' => $this->entries($allergyRefs)];
-        }
-        if ($medicationRefs !== []) {
-            $sections[] = ['title' => 'Medikation', 'entry' => $this->entries($medicationRefs)];
-        }
-        if ($carePlanRef !== null) {
-            $sections[] = ['title' => 'Pflegeplan', 'entry' => $this->entries([$carePlanRef])];
-        }
-        if ($observationRefs !== []) {
-            $sections[] = ['title' => 'Beobachtungen / Vitalwerte', 'entry' => $this->entries($observationRefs)];
-        }
-        if ($functionalRefs !== []) {
-            $sections[] = ['title' => 'Funktionsbeurteilungen', 'entry' => $this->entries($functionalRefs)];
-        }
-        // WHY(ÜLB): dynamische codierte Sektionen (Kontinenz/Ernährung/Bewusstsein/Atmung) aus dem Status-Katalog
-        foreach ($extraSections as $title => $refs) {
-            if ($refs !== []) {
-                $sections[] = ['title' => $title, 'entry' => $this->entries($refs)];
+        $section = [];
+        foreach ($sections as $s) {
+            if ($s['entries'] === [] || ! isset(self::SECTIONS[$s['slice']])) {
+                continue;
             }
+            [$coding, $title] = self::SECTIONS[$s['slice']];
+            $section[] = [
+                'title' => $title,
+                'code' => ['coding' => [$coding]],
+                'entry' => array_map(fn (string $ref) => ['reference' => $ref], $s['entries']),
+            ];
         }
-        $sections[] = ['title' => 'Verlauf', 'text' => ['status' => 'generated', 'div' => $this->narrative($reports)]];
 
         return [
             'resourceType' => 'Composition',
             'id' => self::id($r),
+            'meta' => ['profile' => ['https://fhir.kbv.de/StructureDefinition/KBV_PR_MIO_ULB_Composition|1.0.0']],
+            'text' => ['status' => 'extensions', 'div' => $this->narrative($reports)],
             'status' => 'final',
-            'type' => [
-                'coding' => [['system' => 'http://loinc.org', 'code' => '34746-8', 'display' => 'Nurse Note']],
-                'text' => 'Pflegebericht',
-            ],
+            'type' => ['coding' => [[
+                'system' => self::SNOMED, 'version' => self::SNOMED_VERSION,
+                'code' => '721919000', 'display' => 'Nurse discharge summary (record artifact)',
+            ]]],
             'subject' => ['reference' => $patientReference],
             'date' => $date,
-            'author' => [['display' => 'OPCare']],
-            'title' => 'Pflegebericht',
-            'section' => $sections,
+            'author' => [['reference' => $authorReference]],
+            'title' => 'Überleitungsbogen',
+            'section' => $section,
         ];
-    }
-
-    /**
-     * @param  array<int, string>  $refs
-     * @return array<int, array{reference: string}>
-     */
-    private function entries(array $refs): array
-    {
-        return array_map(fn (string $ref) => ['reference' => $ref], $refs);
     }
 
     /** @param Collection<int, CareReport> $reports */
@@ -92,7 +110,7 @@ class CompositionMapper
             ->implode('');
 
         if ($rows === '') {
-            $rows = '<p>Keine Berichteinträge.</p>';
+            $rows = '<p>Pflegeüberleitungsbogen — keine Verlaufseinträge erfasst.</p>';
         }
 
         return '<div xmlns="http://www.w3.org/1999/xhtml">'.$rows.'</div>';
