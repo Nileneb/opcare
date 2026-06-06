@@ -116,6 +116,44 @@
     </div>
 
     <div class="card">
+        <div class="card-head"><h3>Budgets</h3><span class="badge gray">{{ $budgetKonten->count() }} Konten</span></div>
+        <p class="muted">Monatliches Limit je Konto (z. B. Abteilungs-Aufwand) mit Warn-Schwelle und optionaler harter
+            Sperre. Greift bei der freien Buchung und der Beleg-Bestätigung — dasselbe Muster wie das Budget der Taschengeldkasse.</p>
+        @php($cls = ['gruen' => 'green', 'gelb' => 'amber', 'rot' => 'red', 'kein' => 'gray'])
+        <table class="data-table" style="margin-top:8px">
+            <thead><tr><th>Konto</th><th style="text-align:right">Limit/Monat</th><th style="text-align:right">Verbraucht</th><th style="text-align:right">Rest</th><th>Auslastung</th><th></th></tr></thead>
+            <tbody>
+                @forelse ($budgetKonten as $k)
+                    @php($st = $budgetStatus[$k->id])
+                    <tr>
+                        <td><code>{{ $k->nummer }}</code> {{ $k->name }}@if ($st->budget?->sperreAktiv())<span class="badge gray" title="harte Sperre">🔒</span>@endif</td>
+                        <td style="text-align:right;font-variant-numeric:tabular-nums">{{ number_format((float) $st->limit(), 2, ',', '.') }} €</td>
+                        <td style="text-align:right;font-variant-numeric:tabular-nums">{{ number_format($st->verbraucht, 2, ',', '.') }} €</td>
+                        <td style="text-align:right;font-variant-numeric:tabular-nums">{{ number_format((float) $st->rest(), 2, ',', '.') }} €</td>
+                        <td><span class="badge {{ $cls[$st->ampel()] ?? 'gray' }}">{{ $st->prozent() ?? 0 }} %</span></td>
+                        <td style="text-align:right"><button class="btn btn-ghost btn-sm" wire:click="budgetLoeschen({{ $k->id }})" wire:confirm="Budget entfernen?">✕</button></td>
+                    </tr>
+                @empty
+                    <tr><td colspan="6"><p class="empty">Noch keine Budgets gesetzt.</p></td></tr>
+                @endforelse
+            </tbody>
+        </table>
+        <form wire:submit="budgetSetzen" style="margin-top:14px;border-top:1px solid var(--line-cool);padding-top:14px">
+            <p class="kicker">Budget setzen</p>
+            <div class="form-row-3">
+                <div class="field"><label>Konto</label>
+                    <select wire:model="bg_konto"><option value="">– wählen –</option>@foreach ($konten as $k)<option value="{{ $k->id }}">{{ $k->nummer }} · {{ $k->name }}</option>@endforeach</select>
+                    @error('bg_konto')<span class="err">{{ $message }}</span>@enderror
+                </div>
+                <div class="field"><label>Limit (€/Monat)</label><input type="number" step="0.01" wire:model="bg_limit" />@error('bg_limit')<span class="err">{{ $message }}</span>@enderror</div>
+                <div class="field"><label>Warn-Schwelle (%)</label><input type="number" min="1" max="100" wire:model="bg_warn" /></div>
+            </div>
+            <label style="display:block;margin:4px 0 10px"><input type="checkbox" wire:model="bg_sperre" /> harte Sperre (Buchung über Limit blockieren)</label>
+            <button class="btn btn-primary btn-sm">Budget speichern</button>
+        </form>
+    </div>
+
+    <div class="card">
         <div class="card-head"><h3>Journal</h3><span class="badge gray">letzte {{ $buchungen->count() }} Buchungen</span></div>
         <table class="data-table">
             <thead><tr><th style="width:100px">Datum</th><th>Soll</th><th>Haben</th><th>Text</th><th style="text-align:right">Betrag</th></tr></thead>

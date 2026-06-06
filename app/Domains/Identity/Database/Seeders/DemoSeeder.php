@@ -10,6 +10,7 @@ use App\Domains\Accounting\Enums\Abteilung;
 use App\Domains\Accounting\Enums\BarbetragKategorie;
 use App\Domains\Accounting\Enums\TreuhandVorgang;
 use App\Domains\Accounting\Models\Artikel;
+use App\Domains\Accounting\Models\Budget;
 use App\Domains\Accounting\Models\Treuhandbudget;
 use App\Domains\Accounting\Models\Treuhandkonto;
 use App\Domains\Accounting\Support\AccountingDefaults;
@@ -496,6 +497,12 @@ class DemoSeeder extends Seeder
             AccountingDefaults::konto(AccountingDefaults::KASSE)->id,
             AccountingDefaults::konto(AccountingDefaults::BANK)->id,
             300.0, 'Bargeld-Aufnahme für die Handkasse', now()->subDays(2)->toDateString(), 'KB-2026-014');
+
+        // Budget-Setzung (generisch, verzahnt mit der Buchhaltung): Monatslimit auf das Küchen-Aufwandskonto.
+        Budget::create([
+            'tenant_id' => $tenant->id, 'konto_id' => AccountingDefaults::konto(Abteilung::Kueche->aufwandKonto())->id,
+            'limit_betrag' => 200.00, 'warn_prozent' => 80, 'sperre' => false,
+        ]);
 
         // VLM-Beleg-Capture: eine offene Beleg-Analyse mit Einsortierungs-Vorschlag (zur Bestätigung).
         $belegAnalyse = BelegAnalyse::create([

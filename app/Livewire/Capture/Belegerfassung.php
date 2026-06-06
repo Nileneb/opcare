@@ -5,6 +5,7 @@ namespace App\Livewire\Capture;
 use App\Domains\Accounting\Actions\Buchen;
 use App\Domains\Accounting\Models\Konto;
 use App\Domains\Accounting\Support\AccountingDefaults;
+use App\Domains\Accounting\Support\BudgetGuard;
 use App\Domains\Capture\Models\BelegAnalyse;
 use App\Domains\Capture\Models\EinsortierungsVorschlag;
 use App\Domains\Capture\Services\BelegCapture;
@@ -75,7 +76,7 @@ class Belegerfassung extends Component
         $this->c_haben = null;
     }
 
-    public function bestaetigen(BelegCapture $capture, Buchen $buchen): void
+    public function bestaetigen(BelegCapture $capture, Buchen $buchen, BudgetGuard $guard): void
     {
         abort_unless($this->darf(), 403);
         $v = EinsortierungsVorschlag::findOrFail((int) $this->confirmId);
@@ -86,9 +87,18 @@ class Belegerfassung extends Component
             'c_datum' => ['required', 'date'],
         ]);
 
+        // Budget-Gate des Soll-Kontos — dasselbe wie bei der freien Buchung.
+        $betrag = (float) ($v->ziel_felder['betrag'] ?? 0);
+        $check = $guard->pruefe((int) $data['c_soll'], $betrag, $data['c_datum']);
+        if ($check['block'] !== null) {
+            $this->addError('c_soll', $check['block']);
+
+            return;
+        }
+
         $capture->bestaetige($v, (int) auth()->id(), $data['c_soll'], $data['c_haben'], $data['c_text'], $data['c_datum'], $buchen);
         $this->reset('confirmId', 'c_soll', 'c_haben', 'c_text', 'c_datum');
-        session()->flash('status', 'Beleg gebucht.');
+        session()->flash('status', $check['warn'] ?? 'Beleg gebucht.');
     }
 
     public function verwerfen(int $id, BelegCapture $capture): void

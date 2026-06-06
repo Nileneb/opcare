@@ -6,7 +6,7 @@ Qualitätssicherung (QDVS/DAS-Pflege)** und **FHIR / ÜLB-MIO** (Pflegeüberleit
 des eingestellten Java-Projekts **[Offene-Pflege.de (OPDE)](#herkunft)** — dessen Domänenwissen dient als
 Vorlage, der Code ist von Grund auf neu.
 
-> **Status:** Funktionsfähig und aktiv in Entwicklung. **509 Tests grün**, CI durchgehend grün
+> **Status:** Funktionsfähig und aktiv in Entwicklung. **514 Tests grün**, CI durchgehend grün
 > (Tests · Linter · Security-Audit · FHIR-Validierung). Open Source (AGPL-3.0), **kein Rechtsgate**,
 > solange keine Echt-Patientendaten verarbeitet werden.
 >
@@ -83,7 +83,7 @@ Vorlage, der Code ist von Grund auf neu.
 | Backend | **Laravel 13**, **PHP 8.3+** |
 | Frontend | Blade + **Livewire 4** + Alpine.js |
 | Datenbank | **SQLite** (Dev/CI) · **PostgreSQL** (Prod) |
-| Tests | **Pest 4** (509 Tests) |
+| Tests | **Pest 4** (514 Tests) |
 | Lint/Style | **Laravel Pint** |
 | DTOs / RBAC / Audit | `spatie/laravel-data` · `spatie/laravel-permission` · `spatie/laravel-activitylog` |
 | Deployment | **Docker Compose** (self-contained: eine `.env`, `docker compose up --build`) |
@@ -112,7 +112,7 @@ Domänen-orientierte Struktur unter `app/Domains/`. Layering als Einbahnstraße:
 | **Facility** | Haustechnik/Instandhaltung (DIN 31051): Mängelmeldungen + Wartungsplan mit Prüffristen; Medizinprodukte-Bestandsverzeichnis + Medizinproduktebuch (MPBetreibV) |
 | **Catering** | Küche/Verpflegung (LMIV): Diät-/Allergen-Sicht der Bewohner + Speiseplan mit Allergenwarnung |
 | **SocialCare** | Soziale Betreuung (§ 43b SGB XI): Angebote + Teilnahme-Nachweis je Bewohner |
-| **Accounting** | Doppelte Buchführung (Soll/Haben) + **freie Hauptbuchung** (generischer Buchungssatz, GoB/PBV) + Warenwirtschaft je Abteilung (Lager→Aufwand, automatische Buchung) |
+| **Accounting** | Doppelte Buchführung (Soll/Haben) + **freie Hauptbuchung** (generischer Buchungssatz, GoB/PBV) + Warenwirtschaft je Abteilung (Lager→Aufwand, automatische Buchung) + **generische Budgets** (Konto-/Treuhand-Budget mit Warn-/Sperr-Ampel, greift beim Buchen) |
 | **Speech** | Audio-Handling, Transkription, LLM→SIS®-Strukturierung (Human-in-the-Loop) |
 
 ## FHIR / ÜLB-MIO-Konformität
@@ -164,7 +164,7 @@ php artisan serve
 ## Entwicklung
 
 ```bash
-php artisan test                 # bzw. vendor/bin/pest   (509 Tests)
+php artisan test                 # bzw. vendor/bin/pest   (514 Tests)
 vendor/bin/pint                  # Code-Style
 php artisan fhir:export --output=bundle.json   # FHIR-Document-Bundle erzeugen
 ```

@@ -2,6 +2,7 @@
 
 namespace App\Domains\Accounting\Models;
 
+use App\Domains\Accounting\Contracts\BudgetGrenze;
 use App\Domains\Accounting\Enums\BarbetragKategorie;
 use App\Domains\Identity\Models\Tenant;
 use App\Support\Models\BaseModel;
@@ -27,13 +28,28 @@ use Illuminate\Support\Carbon;
  *
  * @mixin \Eloquent
  */
-class Treuhandbudget extends BaseModel
+class Treuhandbudget extends BaseModel implements BudgetGrenze
 {
     protected $table = 'treuhand_budgets';
 
     protected $fillable = ['tenant_id', 'treuhand_konto_id', 'kategorie', 'limit_betrag', 'warn_prozent', 'sperre'];
 
     protected $casts = ['kategorie' => BarbetragKategorie::class, 'limit_betrag' => 'decimal:2', 'warn_prozent' => 'integer', 'sperre' => 'boolean'];
+
+    public function limitBetrag(): float
+    {
+        return (float) $this->limit_betrag;
+    }
+
+    public function warnProzent(): int
+    {
+        return $this->warn_prozent;
+    }
+
+    public function sperreAktiv(): bool
+    {
+        return $this->sperre;
+    }
 
     public function konto(): BelongsTo
     {

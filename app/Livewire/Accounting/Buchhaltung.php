@@ -9,8 +9,11 @@ use App\Domains\Accounting\Enums\Abteilung;
 use App\Domains\Accounting\Enums\KontoTyp;
 use App\Domains\Accounting\Models\Artikel;
 use App\Domains\Accounting\Models\Buchung;
+use App\Domains\Accounting\Models\Budget;
 use App\Domains\Accounting\Models\Konto;
 use App\Domains\Accounting\Support\AccountingDefaults;
+use App\Domains\Accounting\Support\BudgetGuard;
+use App\Domains\Accounting\Support\KontoBudgetMonitor;
 use App\Domains\Identity\Support\CurrentTenant;
 use App\Support\Concerns\ScopesTenantValidation;
 use InvalidArgumentException;
@@ -39,6 +42,14 @@ class Buchhaltung extends Component
     public string $b_beleg = '';
 
     public ?string $b_datum = null;
+
+    public ?int $bg_konto = null;
+
+    public ?float $bg_limit = null;
+
+    public int $bg_warn = 80;
+
+    public bool $bg_sperre = false;
 
     public string $a_name = '';
 
@@ -92,7 +103,7 @@ class Buchhaltung extends Component
         session()->flash('status', 'Artikel angelegt.');
     }
 
-    public function freieBuchung(Buchen $action): void
+    public function freieBuchung(Buchen $action, BudgetGuard $guard): void
     {
         abort_unless($this->darfSehen(), 403);
         $data = $this->validate([
@@ -104,6 +115,14 @@ class Buchhaltung extends Component
             'b_beleg' => ['nullable', 'string', 'max:80'],
         ]);
 
+        // Budget-Gate: harte Sperre des Soll-Konto-Monatsbudgets blockiert; sonst ggf. weiche Warnung.
+        $check = $guard->pruefe((int) $data['b_soll'], (float) $data['b_betrag'], $data['b_datum']);
+        if ($check['block'] !== null) {
+            $this->addError('b_betrag', $check['block']);
+
+            return;
+        }
+
         try {
             $action->handle($data['b_soll'], $data['b_haben'], (float) $data['b_betrag'], $data['b_text'], $data['b_datum'], $this->b_beleg ?: null);
         } catch (InvalidArgumentException $e) {
@@ -114,7 +133,32 @@ class Buchhaltung extends Component
 
         $this->reset('b_soll', 'b_haben', 'b_betrag', 'b_text', 'b_beleg');
         $this->b_datum = today()->toDateString();
-        session()->flash('status', 'Buchung erfasst.');
+        session()->flash('status', $check['warn'] ?? 'Buchung erfasst.');
+    }
+
+    public function budgetSetzen(): void
+    {
+        abort_unless($this->darfSehen(), 403);
+        $data = $this->validate([
+            'bg_konto' => ['required', 'integer', $this->tenantExists('konten')],
+            'bg_limit' => ['required', 'numeric', 'gt:0'],
+            'bg_warn' => ['required', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        Budget::updateOrCreate(
+            ['tenant_id' => app(CurrentTenant::class)->id(), 'konto_id' => $data['bg_konto']],
+            ['limit_betrag' => $data['bg_limit'], 'warn_prozent' => $data['bg_warn'], 'sperre' => $this->bg_sperre],
+        );
+        $this->reset('bg_konto', 'bg_limit', 'bg_sperre');
+        $this->bg_warn = 80;
+        session()->flash('status', 'Budget gespeichert.');
+    }
+
+    public function budgetLoeschen(int $kontoId): void
+    {
+        abort_unless($this->darfSehen(), 403);
+        Budget::where('konto_id', $kontoId)->delete();
+        session()->flash('status', 'Budget entfernt.');
     }
 
     public function wareneingang(Wareneingang $action): void
@@ -150,6 +194,12 @@ class Buchhaltung extends Component
         $konten = Konto::where('tenant_id', $tenantId)->orderBy('nummer')->get();
         $salden = $konten->groupBy(fn (Konto $k) => $k->typ->value);
 
+        // Budget-Auslastung des laufenden Monats je budgetiertem Konto (Ampel/Rest).
+        $monat = today()->toDateString();
+        $monitor = app(KontoBudgetMonitor::class);
+        $budgetKonten = $konten->whereIn('id', Budget::where('tenant_id', $tenantId)->pluck('konto_id'));
+        $budgetStatus = $budgetKonten->mapWithKeys(fn (Konto $k) => [$k->id => $monitor->status($k, $monat)]);
+
         return view('livewire.accounting.buchhaltung', [
             'kontenNachTyp' => $salden,
             'konten' => $konten,
@@ -157,6 +207,8 @@ class Buchhaltung extends Component
             'artikel' => Artikel::where('tenant_id', $tenantId)->orderBy('abteilung')->orderBy('name')->get(),
             'buchungen' => Buchung::with(['sollKonto', 'habenKonto'])->orderByDesc('datum')->orderByDesc('id')->limit(40)->get(),
             'abteilungen' => Abteilung::cases(),
+            'budgetKonten' => $budgetKonten,
+            'budgetStatus' => $budgetStatus,
         ]);
     }
 }

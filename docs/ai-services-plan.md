@@ -154,7 +154,16 @@ Nutzt die vorhandenen Bau-Muster: **Dokument-mit-Upload** (Strang A), **Genehmig
 
 ---
 
-## 3. Budget-Setzungen (u. a. Taschengeldkasse)
+## 3. Budget-Setzungen — ✅ generisch umgesetzt 2026-06-06
+
+> Generalisiert: Contract `BudgetGrenze` + Wertobjekt `BudgetStatus` (Ampel/Sperre) sind vom konkreten Topf
+> entkoppelt. Das vorhandene `Treuhandbudget` (Taschengeldkasse) und das **neue `Budget` je Sachkonto** (Hauptbuch)
+> teilen sich Verhalten. `KontoBudgetMonitor` (Monatsverbrauch in Kontorichtung) + `BudgetGuard` greifen bei der
+> **freien Hauptbuchung** und der **Beleg-Capture-Bestätigung** (harte Sperre blockiert, sonst weiche Warnung).
+> Pflege + Ampel im Buchhaltungs-Livewire. Siehe [budgets.md](budgets.md). Offen: Capture↔Taschengeld-Verzahnung
+> (Foto-Friseurbeleg → Taschengeld-Auszahlung mit Treuhandbudget-Prüfung) — eigener Schritt.
+
+### Ursprünglicher Entwurf
 
 **Idee (User):** „budgetsetzungen könnten z. B. auch bei der Taschengeldkasse sinnvoll sein."
 

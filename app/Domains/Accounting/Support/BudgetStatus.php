@@ -2,49 +2,49 @@
 
 namespace App\Domains\Accounting\Support;
 
-use App\Domains\Accounting\Models\Treuhandbudget;
+use App\Domains\Accounting\Contracts\BudgetGrenze;
 
 /**
  * Auswertung eines Budgets gegen den bereits verbrauchten Betrag eines Zeitraums: liefert Rest, Auslastung
  * in Prozent und die Ampelfarbe. Ohne hinterlegtes Budget bleibt die Ampel „kein". Generisches Wertobjekt —
- * von der Treuhand-Auszahlung wie von künftigen Wirtschaftsbudgets nutzbar.
+ * von der Treuhand-Auszahlung wie vom Hauptbuch-Konto-Budget nutzbar (entkoppelt über BudgetGrenze).
  */
 class BudgetStatus
 {
     public function __construct(
-        public readonly ?Treuhandbudget $budget,
+        public readonly ?BudgetGrenze $budget,
         public readonly float $verbraucht,
     ) {}
 
     public function limit(): ?float
     {
-        return $this->budget ? (float) $this->budget->limit_betrag : null;
+        return $this->budget?->limitBetrag();
     }
 
     public function rest(): ?float
     {
-        return $this->budget ? round($this->limit() - $this->verbraucht, 2) : null;
+        return $this->budget ? round($this->budget->limitBetrag() - $this->verbraucht, 2) : null;
     }
 
     public function prozent(): ?int
     {
-        if (! $this->budget || $this->limit() <= 0) {
+        if (! $this->budget || $this->budget->limitBetrag() <= 0) {
             return null;
         }
 
-        return (int) floor($this->verbraucht / $this->limit() * 100);
+        return (int) floor($this->verbraucht / $this->budget->limitBetrag() * 100);
     }
 
     /** Würde der zusätzliche Betrag das Limit überschreiten? */
     public function wuerdeUeberschreiten(float $betrag): bool
     {
-        return $this->budget !== null && round($this->verbraucht + $betrag, 2) > $this->limit();
+        return $this->budget !== null && round($this->verbraucht + $betrag, 2) > $this->budget->limitBetrag();
     }
 
     /** Harte Sperre: Budget mit aktiver Sperre, das der zusätzliche Betrag reißen würde. */
     public function istGesperrt(float $betrag): bool
     {
-        return $this->budget?->sperre === true && $this->wuerdeUeberschreiten($betrag);
+        return $this->budget?->sperreAktiv() === true && $this->wuerdeUeberschreiten($betrag);
     }
 
     public function ampel(): string
@@ -57,6 +57,6 @@ class BudgetStatus
             return 'rot';
         }
 
-        return $p >= $this->budget->warn_prozent ? 'gelb' : 'gruen';
+        return $p >= $this->budget->warnProzent() ? 'gelb' : 'gruen';
     }
 }
