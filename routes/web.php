@@ -41,6 +41,7 @@ use App\Livewire\Scheduling\Kalender;
 use App\Livewire\Scheduling\Wunschdienstplan;
 use App\Livewire\Scheduling\Zeiterfassung;
 use App\Livewire\SocialCare\Betreuung;
+use App\Livewire\SocialCare\Praevention;
 use App\Livewire\Speech;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -66,6 +67,7 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class])->group(
     Route::get('/einrichtung', Facility::class)->name('einrichtung');
     Route::get('/pflegeplanung', Pflegeplanung::class)->name('pflegeplanung');
     Route::get('/betreuung', Betreuung::class)->name('betreuung');
+    Route::get('/praevention', Praevention::class)->name('praevention');
     Route::get('/profil', Profile::class)->name('profile');
     Route::get('/admin/einrichtungen', Tenants::class)->name('admin.tenants');
     Route::get('/admin/benutzer', Users::class)->name('admin.users');

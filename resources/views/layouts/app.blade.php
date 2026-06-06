@@ -22,6 +22,7 @@
         ];
         if ($u?->isSuperAdmin() || $u?->hasAnyRole(['admin', 'pflegefachkraft', 'pflegehilfskraft', 'betreuungskraft'])) {
             $nav[] = ['route' => 'betreuung', 'label' => 'Betreuung'];
+            $nav[] = ['route' => 'praevention', 'label' => 'Prävention'];
         }
     @endphp
     <header class="app-top">

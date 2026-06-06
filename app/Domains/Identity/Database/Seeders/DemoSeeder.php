@@ -72,7 +72,9 @@ use App\Domains\Scheduling\Models\ShiftAssignment;
 use App\Domains\Scheduling\Models\Zeitbuchung;
 use App\Domains\SocialCare\Enums\BetreuungsArt;
 use App\Domains\SocialCare\Enums\BetreuungsTyp;
+use App\Domains\SocialCare\Enums\Handlungsfeld;
 use App\Domains\SocialCare\Models\Betreuungsangebot;
+use App\Domains\SocialCare\Models\Praeventionsprogramm;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
@@ -434,6 +436,18 @@ class DemoSeeder extends Seeder
                 'kategorie' => 'befund', 'medizinisch' => true,
                 'retention_until' => now()->addYears(10)->toDateString(), 'einwilligung_von' => null,
             ])->toMediaCollection('documents');
+
+        // Prävention (§ 5 SGB XI, kassenfinanziert): zwei Programme + Teilnahmen als Verwendungsnachweis.
+        $sturz = Praeventionsprogramm::create(['tenant_id' => $tenant->id,
+            'handlungsfeld' => Handlungsfeld::Bewegung, 'titel' => 'Sturzpräventions-Gymnastik',
+            'frequenz' => 'wöchentlich', 'verantwortlich' => $betreuerin->name]);
+        Praeventionsprogramm::create(['tenant_id' => $tenant->id,
+            'handlungsfeld' => Handlungsfeld::Kognition, 'titel' => 'Gedächtnistraining-Gruppe',
+            'frequenz' => 'wöchentlich', 'verantwortlich' => $betreuerin->name]);
+        foreach ($aktive->take(4) as $bewohner) {
+            $sturz->teilnahmen()->create(['tenant_id' => $tenant->id, 'resident_id' => $bewohner->id,
+                'datum' => now()->subDays(3)->toDateString(), 'dauer_minuten' => 45, 'beobachtung' => 'gute Beteiligung']);
+        }
 
         // Zweites Heim — Haus Birkenhof (2 Bewohner, kein SIS für Minimal-Demo)
         $birkenhof = Tenant::create(['name' => 'Haus Birkenhof', 'slug' => 'birkenhof']);

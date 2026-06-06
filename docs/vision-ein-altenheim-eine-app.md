@@ -125,3 +125,15 @@ Tiefenrecherche zu den noch unvollständigen Bereichen → [recherche-normen-erw
 
 **Vier wiederkehrende Bau-Muster** (einmal bauen, vielfach nutzen): *Nachweis-mit-Frist* · *Dokument-mit-Version+Freigabe* ·
 *Genehmigungs-/Melde-Workflow mit Behörden-Frist* · *datengetriebene Wert-/Regel-Kataloge*.
+
+### Umsetzungsstand der Recherche-Stränge (2026-06-06)
+
+- ✅ **A — Datei-/Foto-Upload (MinIO-fähig)** — Bewohner-Dokumente/Fotos hochladen + protokolliert freigeben
+  ([dokumente-dateien.md](dokumente-dateien.md)).
+- ✅ **B — Betreuungsschlüssel (§113c) + ergonomische Schichtregeln** — Soll-vs-Ist-Ampel + zweite Schicht-Engine im Dienstplan
+  ([betreuungsschluessel-schichtregeln.md](betreuungsschluessel-schichtregeln.md)).
+- ✅ **C — Nachweis-mit-Frist (Arbeitsschutz)** — Unterweisung/Vorsorge/Erste Hilfe/Brandschutz/BEM mit Fälligkeits-Ampel
+  ([arbeitsschutz-nachweise.md](arbeitsschutz-nachweise.md)).
+- ✅ **D — §5 SGB XI Bewohner-Prävention** — kassenfinanzierte Programme + Verwendungsnachweis ([praevention-sgb-xi.md](praevention-sgb-xi.md)).
+- 📋 **E — BtM-Nachweis (BtMVV) + FEM-Genehmigung (§1831 BGB)** — als Konzept dokumentiert, Umsetzung folgt
+  ([e-btm-fem-konzept.md](e-btm-fem-konzept.md)).

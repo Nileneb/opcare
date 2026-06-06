@@ -26,6 +26,7 @@ const pages = [
     ['medikation', '/bewohner/1/medikation', true],
     ['controlling', '/controlling', true],
     ['betreuung', '/betreuung', true],
+    ['praevention', '/praevention', true],
     ['qm-checkliste', '/qualitaet/qm-checkliste', true],
     ['dienstplan', '/dienstplan', true],
     ['arbeitsrecht', '/arbeitsrecht', true],
