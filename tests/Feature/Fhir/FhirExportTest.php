@@ -271,6 +271,36 @@ it('exportiert pro Status-Typ nur die jüngste Erfassung (Sektion max=1)', funct
         ->and($bewusstsein->first()['valueCodeableConcept']['coding'][0]['code'])->toBe('271591004');
 });
 
+it('mappt Hilfsmittel auf die Medizinprodukte-Sektion (Presence → DeviceUseStatement → Device)', function () {
+    $this->resident->devices()->create(['bezeichnung' => 'Rollator', 'kategorie' => 'hilfsmittel', 'seit' => '2026-01-01']);
+    $this->resident->devices()->create(['bezeichnung' => 'Hörgerät rechts', 'kategorie' => 'hilfsmittel', 'seit' => '2026-01-01']);
+    $bundle = app(FhirDocumentExporter::class)->export($this->resident);
+    $resources = collect($bundle['entry'])->pluck('resource');
+
+    $device = $resources->firstWhere('resourceType', 'Device');
+    $statement = $resources->firstWhere('resourceType', 'DeviceUseStatement');
+    $presence = $resources->first(fn ($r) => isset($r['meta']['profile'][0]) && str_contains($r['meta']['profile'][0], 'Relevant_Information_Medical_Devices'));
+
+    expect($resources->where('resourceType', 'Device'))->toHaveCount(2)
+        ->and($device['meta']['profile'][0])->toContain('KBV_PR_MIO_ULB_Device')
+        ->and($device['type']['text'])->toBeIn(['Rollator', 'Hörgerät rechts'])
+        ->and($device['patient']['reference'])->toBe($presence['subject']['reference'])
+        ->and($statement['status'])->toBe('active')
+        ->and($statement['device']['reference'])->toContain('Device/')
+        ->and($presence['extension'])->toHaveCount(2)
+        ->and($presence['extension'][0]['url'])->toContain('Reference_Has_Member');
+
+    $titles = collect($bundle['entry'][0]['resource']['section'])->pluck('title')->all();
+    expect($titles)->toContain('Medizinprodukte');
+});
+
+it('lässt die Medizinprodukte-Sektion weg, wenn keine Hilfsmittel erfasst sind', function () {
+    $resources = collect(app(FhirDocumentExporter::class)->export($this->resident)['entry'])->pluck('resource');
+
+    expect($resources->where('resourceType', 'Device'))->toHaveCount(0)
+        ->and($resources->where('resourceType', 'DeviceUseStatement'))->toHaveCount(0);
+});
+
 it('erzeugt eine ÜLB-konforme Composition mit slice-konformen Sektionen + Verlauf-Narrativ', function () {
     $composition = app(FhirDocumentExporter::class)->export($this->resident)['entry'][0]['resource'];
     $titles = collect($composition['section'])->pluck('title')->all();

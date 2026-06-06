@@ -10,6 +10,7 @@ use App\Domains\Fhir\Mappers\CareLevelMapper;
 use App\Domains\Fhir\Mappers\CompositionMapper;
 use App\Domains\Fhir\Mappers\ConditionMapper;
 use App\Domains\Fhir\Mappers\DocumentingEntityMapper;
+use App\Domains\Fhir\Mappers\MedicalDeviceMapper;
 use App\Domains\Fhir\Mappers\MedicationMapper;
 use App\Domains\Fhir\Mappers\MedicationStatementMapper;
 use App\Domains\Fhir\Mappers\ObservationMapper;
@@ -48,6 +49,7 @@ class FhirDocumentExporter
         private readonly PresenceObservationMapper $presenceMapper,
         private readonly ProcedureMapper $procedureMapper,
         private readonly StatusObservationMapper $statusObservationMapper,
+        private readonly MedicalDeviceMapper $medicalDeviceMapper,
     ) {}
 
     /** @return array<string, mixed> */
@@ -188,6 +190,13 @@ class FhirDocumentExporter
             $nutRef = $base.'Observation/'.$nutrition['id'];
             $entry[] = ['fullUrl' => $nutRef, 'resource' => $nutrition['resource']];
             $sections[] = ['slice' => $nutrition['slice'], 'entries' => [$nutRef]];
+        }
+
+        // medizinprodukte: erfasste Hilfsmittel → Presence-Observation, je Gerät DeviceUseStatement→Device.
+        $devices = $this->medicalDeviceMapper->build($resident->devices, $resident->id, $patientRef, $authorRef, $base, $date);
+        if ($devices !== null) {
+            $entry = [...$entry, ...$devices['entries']];
+            $sections[] = ['slice' => 'medizinprodukte', 'entries' => [$devices['presenceRef']]];
         }
 
         // pflegerischeMassnahme: aktuelle Maßnahmen → je eine Procedure (direkt referenziert)
