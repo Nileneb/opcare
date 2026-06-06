@@ -10,7 +10,7 @@ unkritisch; Pflichten (DSGVO, ggf. Zulassung) treffen erst den späteren *Betrei
 
 | Track | Inhalt | Status | Rechtsgate |
 |---|---|---|---|
-| **A — Daten-Konformität** | FHIR R4, deutsche Basisprofile (`de.basisprofil.r4`), **ÜLB-MIO** (`kbv.mio.ueberleitungsbogen` 1.0.0 — veröffentlicht). *ISiK ist krankenhausspezifisch → für Pflege sekundär.* | **weit fortgeschritten** — Blatt-Ressourcen ÜLB-konform + im CI-Gate erzwungen; Composition/Bundle-Wrapper offen (s. `docs/specs/2026-06-05-ulb-mio-gap.md`) | nein |
+| **A — Daten-Konformität** | FHIR R4, deutsche Basisprofile (`de.basisprofil.r4`), **ÜLB-MIO** (`kbv.mio.ueberleitungsbogen` 1.0.0 — veröffentlicht). *ISiK ist krankenhausspezifisch → für Pflege sekundär.* | **Kern erreicht** — Composition + Bundle **voll ÜLB-konform** (7 Sektionen, im CI blockierend erzwungen); optionale Sektionen als Backlog (s. `docs/specs/2026-06-05-ulb-mio-gap.md`) | nein |
 | **B — Security-Hygiene** | Tenant-Isolation, RBAC, Audit-Log, IDOR-Härtung, Dependency-Audit (CVE-Gate ✅), SAST | **viel da**, ausbauen | nein |
 | **C — TI-Anbindung + Zulassung** | Online-Auth (GesundheitsID/TI-IDP), KIM, ePA-Schreibzugriff, eVerordnung, Konnektor-Light, gematik-Zulassung, BSI-TR-Konformität | **aufgeschoben** | **ja** |
 | **D — Domäne/Fachlichkeit** | Pflege-Fachfunktionen nach **Nationalen Expertenstandards** (Dekubitus/Sturz/Schmerz/Ernährung/Kontinenz) | **blockiert** auf Quelle (Expertenstandards nicht frei verfügbar) | nein |
@@ -30,11 +30,14 @@ Architektur-Vorsorge: Auth-Schicht abstrahiert halten, damit TI-IDP später ando
 
 ## Was bereits steht
 
-- FHIR-R4-**Document-Bundle**-Export (13 Sektionen) + `fhir:export` + Download-Route + **CI-Gate mit
-  amtlichem HL7-Validator** (0 errors gegen R4 + `de.basisprofil.r4` + ÜLB).
-- **ÜLB-MIO-Konformität (meta.profile, im Gate erzwungen):** Patient, Condition, AllergyIntolerance,
-  Device, MedicationStatement+Medication, Vital-Observations (7 Arten), dokumentierende Einheit
-  (Organization/Practitioner/PractitionerRole). Composition/Bundle-Wrapper-Schicht offen.
+- **Voll ÜLB-MIO-konformes** FHIR-R4-**Document-Bundle** (`KBV_PR_MIO_ULB_Bundle`) + `fhir:export` +
+  Download-Route + **CI-Gate mit amtlichem HL7-Validator** — 0 errors gegen R4 + `de.basisprofil.r4` +
+  ÜLB, plus expliziter blockierender ÜLB-Bundle-Profil-Check.
+- **Konforme Composition (7 slice-konforme Sektionen):** pflegegrad (Care_Level, Pflicht), vitalparameter
+  (DiagnosticReport), probleme (Condition), allergien (AllergyIntolerance), medikationsplan
+  (MedicationStatement+Medication), funktionsbeurteilungen (Assessment_Free/Barthel), pflegerischeMassnahme
+  (Procedure) — jeweils via Presence-/Wrapper-Ressourcen; dokumentierende Einheit + ÜLB-Patient.
+  Optionaler Sektions-Backlog: Status-Beobachtungen, Medizinprodukte (Basis-Device), Angehörige.
 - QDVS-Engine (DAS-Plausibilität, 57 Regeln aktiv), ICD-10-GM-Katalog, Maßnahmen-Katalog,
   Assessments (Braden/Sturz/BESD/Barthel), Vorkommnis-Erfassung, strukturierte Dekubitus-/Sturz-Doku.
 - Security-Basis: row-level Tenancy + `TenantScope`, spatie-RBAC (Teams je Mandant),

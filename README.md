@@ -67,18 +67,28 @@ Domänen-orientierte Struktur unter `app/Domains/`. Layering als Einbahnstraße:
 
 ## FHIR / ÜLB-MIO-Konformität
 
-Der FHIR-Export zielt auf den **PIO Überleitungsbogen** (`kbv.mio.ueberleitungsbogen` 1.0.0), den
-veröffentlichten FHIR-MIO der Pflegeüberleitung. Das Document-Bundle wird im CI gegen FHIR R4 +
-`de.basisprofil.r4` + das ÜLB-Paket validiert (**0 errors**).
+Der FHIR-Export erzeugt ein **vollständig ÜLB-MIO-konformes Document-Bundle** (`KBV_PR_MIO_ULB_Bundle`,
+PIO Überleitungsbogen `kbv.mio.ueberleitungsbogen` 1.0.0 — der veröffentlichte FHIR-MIO der
+Pflegeüberleitung). Im CI **blockierend** gegen FHIR R4 + `de.basisprofil.r4` + das ÜLB-Paket validiert,
+zusätzlich explizit gegen das ÜLB-Bundle-Profil (**0 errors**).
 
-**ÜLB-konform geclaimt (`meta.profile`, im blockierenden Gate erzwungen):**
-Patient · Condition (Diagnose) · AllergyIntolerance · Device · MedicationStatement + Medication ·
-Vital-Observations (7 Arten) · Organization/Practitioner/PractitionerRole (dokumentierende Einheit).
+**Konforme Composition mit 7 slice-konformen Sektionen** (`meta.profile` durchgängig, closed slicing):
 
-**Offen (präzise charakterisiert):** Die **Composition/Bundle-Vollkonformität** verlangt eine eigene
-„Sektions-Wrapper"-Schicht (ÜLB-Sektionen referenzieren nicht die Blatt-Ressourcen direkt, sondern
-spezifische Presence-Observations / vital-signs-DiagnosticReport / Procedure). Diese Schicht ist als
-nächster großer Block dokumentiert. Details: [Wiki → Track A](https://github.com/Nileneb/opcare/wiki).
+| ÜLB-Sektion | FHIR-Ressource |
+|---|---|
+| `pflegegrad` (Pflicht) | Observation `Care_Level` (Beantragungsstatus, OPS-Pflegegrad) |
+| `vitalparameter` | `DiagnosticReport` über die konformen Vital-Observations (7 Arten) |
+| `probleme` (Diagnosen) | Presence-Observation → `Condition` (ICD-10-GM) |
+| `allergienUndUnvertraeglichkeiten` | Presence-Observation → `AllergyIntolerance` |
+| `medikationsplan` | Information-Observation → `MedicationStatement` + `Medication` |
+| `funktionsbeurteilungen` | Presence-Observation → `Assessment_Free` (Barthel) |
+| `pflegerischeMassnahme` | `Procedure` (je Maßnahme) |
+
+Dazu die dokumentierende Einheit (Organization/Practitioner/PractitionerRole) und der ÜLB-Patient.
+
+**Optionaler Backlog** (dokumentiert, nicht konformitätskritisch — alle Sektionen sind optional):
+Status-Beobachtungen (Orientierung/Ernährung/Atmung/Kontinenz, je eigenes Profil), Medizinprodukte
+(Basis-`Device`-Variante), Angehörige. Details: [Wiki → Track A](https://github.com/Nileneb/opcare/wiki).
 
 ## Schnellstart (Docker)
 
