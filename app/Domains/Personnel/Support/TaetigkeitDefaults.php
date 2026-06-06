@@ -14,7 +14,7 @@ class TaetigkeitDefaults
 {
     public const VERSION = '1.0.0';
 
-    /** @return array<int, array{key:string,label:string,bereich:string,fk:bool,vorbehalt:bool,kompetenz:?string,arzt:bool}> */
+    /** @return array<int, array{key:string,label:string,bereich:string,fk:bool,vorbehalt:bool,kompetenz:?string,arzt:bool,kfk?:bool}> */
     public static function katalog(): array
     {
         return [
@@ -33,7 +33,11 @@ class TaetigkeitDefaults
             ['key' => 'peg', 'label' => 'PEG-/Portversorgung', 'bereich' => 'pflege', 'fk' => false, 'vorbehalt' => false, 'kompetenz' => 'peg_port', 'arzt' => true],
             ['key' => 'btm_abzeichnen', 'label' => 'BtM verabreichen + abzeichnen', 'bereich' => 'medikation', 'fk' => true, 'vorbehalt' => false, 'kompetenz' => null, 'arzt' => false],
             ['key' => 'fem_anordnen', 'label' => 'FEM anordnen', 'bereich' => 'pflege', 'fk' => true, 'vorbehalt' => false, 'kompetenz' => null, 'arzt' => false],
-            ['key' => 'praxisanleitung', 'label' => 'Auszubildende anleiten', 'bereich' => 'pflege', 'fk' => true, 'vorbehalt' => false, 'kompetenz' => 'praxisanleiter', 'arzt' => false],
+            ['key' => 'praxisanleitung', 'label' => 'Auszubildende anleiten', 'bereich' => 'pflege', 'fk' => true, 'vorbehalt' => false, 'kompetenz' => 'praxisanleiter', 'arzt' => false, 'kfk' => true],
+            // BEEP-Gesetz (ab 1.1.2026): eigenständige Heilkunde — auch für Fachkräfte nur mit heilkundlicher Qualifikation (kfk=true).
+            ['key' => 'beep_wunde', 'label' => 'Eigenständige Wundversorgung (BEEP)', 'bereich' => 'pflege', 'fk' => true, 'vorbehalt' => false, 'kompetenz' => 'bsc_pflege_heilkundlich', 'arzt' => false, 'kfk' => true],
+            ['key' => 'beep_diabetes', 'label' => 'Eigenständiges Diabetesmanagement (BEEP)', 'bereich' => 'medikation', 'fk' => true, 'vorbehalt' => false, 'kompetenz' => 'bsc_pflege_heilkundlich', 'arzt' => false, 'kfk' => true],
+            ['key' => 'beep_demenz', 'label' => 'Eigenständige Demenzversorgung (BEEP)', 'bereich' => 'pflege', 'fk' => true, 'vorbehalt' => false, 'kompetenz' => 'bsc_pflege_heilkundlich', 'arzt' => false, 'kfk' => true],
         ];
     }
 
@@ -49,6 +53,7 @@ class TaetigkeitDefaults
                 [
                     'label' => $t['label'], 'bereich' => $t['bereich'], 'nur_fachkraft' => $t['fk'], 'vorbehaltsaufgabe' => $t['vorbehalt'],
                     'erforderliche_kompetenz_id' => $t['kompetenz'] ? $kompetenzByKey[$t['kompetenz']]?->id : null,
+                    'kompetenz_auch_fuer_fachkraft' => $t['kfk'] ?? false,
                     'arzt_anordnung_noetig' => $t['arzt'],
                 ],
             );

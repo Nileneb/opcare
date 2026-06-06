@@ -20,6 +20,7 @@ use App\Domains\Masterdata\Models\IcdCode;
 use App\Domains\Masterdata\Models\Physician;
 use App\Domains\Masterdata\Models\Resident;
 use App\Domains\Masterdata\Support\StatusObservationCatalog;
+use App\Domains\Personnel\Support\Befugnis;
 use App\Domains\Quality\Actions\RecordCareEvent;
 use App\Domains\Quality\Data\CareEventData;
 use App\Domains\Quality\Enums\EventSeverity;
@@ -423,6 +424,10 @@ class ResidentShow extends Component
 
     public function createSis(CreateSisAssessment $createSis): void
     {
+        // Vorbehaltsaufgabe § 4 PflBG: SIS/Pflegeplanung darf nur eine Pflegefachkraft verantworten.
+        abort_unless(app(Befugnis::class)->darfKey(auth()->user(), 'sis_abzeichnen'), 403,
+            'Vorbehaltsaufgabe (§ 4 PflBG) — nur Pflegefachkräfte dürfen die SIS verantworten.');
+
         $felder = [];
         foreach ($this->sis_felder as $key => $text) {
             if (trim((string) $text) !== '') {

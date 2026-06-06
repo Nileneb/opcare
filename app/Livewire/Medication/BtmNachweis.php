@@ -8,6 +8,7 @@ use App\Domains\Medication\Actions\BtmBuchen;
 use App\Domains\Medication\Enums\BtmVorgang;
 use App\Domains\Medication\Models\BtmKonto;
 use App\Domains\Medication\Models\BtmMonatsabschluss;
+use App\Domains\Personnel\Support\Befugnis;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -100,6 +101,12 @@ class BtmNachweis extends Component
         abort_unless($this->darf(), 403);
         $konto = BtmKonto::findOrFail($this->selected);
         $vorgang = BtmVorgang::from($this->b_vorgang);
+
+        // BtM-Gabe abzeichnen: nur Pflegefachkraft (Regelfall § 5c BtMVV).
+        if ($vorgang === BtmVorgang::Gabe) {
+            abort_unless(app(Befugnis::class)->darfKey(auth()->user(), 'btm_abzeichnen'), 403,
+                'BtM-Gabe darf nur eine Pflegefachkraft abzeichnen.');
+        }
 
         $this->validate([
             'b_vorgang' => ['required', 'in:'.implode(',', array_map(fn ($v) => $v->value, BtmVorgang::cases()))],

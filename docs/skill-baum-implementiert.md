@@ -24,8 +24,22 @@ abgebildet; alles datengetrieben + je Einrichtung erweiterbar. Screenshots: Wiki
   Datenschutz, Medizinproduktesicherheit, Betriebsarzt/Sifa, **Elektrofachkraft + Leiterbeauftragte:r (DGUV 208-016)**)
   + `Beauftragtenbestellung` (benannte Person + Frist-Ampel). Kopf zeigt **unbesetzte Pflicht-Rollen** (Compliance-Gate) und überfällige Auffrischungen.
 
+## 5. Befugnis-Guards in den Doku-Modulen (greifen jetzt beim Abzeichnen)
+Der `Befugnis`-Service ist an die echten Signaturpunkte gekoppelt (`darfKey(User, key)` löst den Katalog auf):
+- **SIS/Pflegeplanung** (`ResidentShow::createSis`): Vorbehaltsaufgabe `sis_abzeichnen` → eine Hilfskraft erhält 403,
+  eine Pflegefachkraft darf (Integrationstest belegt beides).
+- **Medikamentengabe** (`Stellplan::quittieren`): `orale_medikation` (LG1 für Hilfskräfte, Fachkraft inhärent).
+- **BtM-Gabe** (`BtmNachweis::buchen`, Vorgang Gabe): `btm_abzeichnen` (nur Fachkraft).
+
+Modell-Feinheit: `Befugnis::istFachkraft` = Rolle (admin/super-admin/pflegefachkraft) **oder** Personalakte-Qualifikation
+**oder** aktive `ist_fachkraft`-Kompetenz. Für Fachkräfte sind LG-Kompetenz + Einzel-Delegation **gewaivt** (inhärent
+bzw. Anordnung = Verordnung); **Spezialqualifikationen** mit `kompetenz_auch_fuer_fachkraft` (z. B. BEEP-Heilkunde)
+gelten auch für Fachkräfte.
+
+## 6. BEEP-Gesetz (ab 1.1.2026) in der Matrix
+Drei eigenständige Heilkunde-Tätigkeiten (`beep_wunde`, `beep_diabetes`, `beep_demenz`) sind im Tätigkeitskatalog,
+freigeschaltet durch die Kompetenz **`bsc_pflege_heilkundlich`** (auch für reguläre Fachkräfte verlangt).
+
 ## Verankerung & Wiederverwendung
-Nutzt die Querschnitts-Bausteine **Nachweis-mit-Frist** (Ampel) und **Datei-Upload** (Nachweise). Rollen: Leitung
-(admin/pflegefachkraft). Nächster Schritt: Doku-Guards (SIS-Vorbehalt, Behandlungspflege/BtM) an `Befugnis` koppeln +
-Skill-Baum-Vervollständigung nach IHK/„geschützte Berufe" (Folge-Recherche). Tests:
-`tests/Feature/Personnel/{SkillBaumTest,BefugnisTest,BeauftragtenregisterTest}.php` (11 Tests).
+Nutzt die Querschnitts-Bausteine **Nachweis-mit-Frist** (Ampel) und **Datei-Upload** (Nachweise). Rollen: Leitung.
+Tests: `tests/Feature/Personnel/{SkillBaumTest,BefugnisTest,BefugnisGuardTest,BeauftragtenregisterTest}.php` (15 Tests).

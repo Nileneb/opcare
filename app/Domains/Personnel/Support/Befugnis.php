@@ -16,18 +16,27 @@ class Befugnis
 {
     public function hindernis(User $user, Taetigkeit $taetigkeit): ?string
     {
-        if ($taetigkeit->nur_fachkraft && ! $this->istFachkraft($user)) {
+        $istFachkraft = $this->istFachkraft($user);
+
+        if ($taetigkeit->nur_fachkraft && ! $istFachkraft) {
             return $taetigkeit->vorbehaltsaufgabe
                 ? 'Vorbehaltsaufgabe — nur Pflegefachkraft (§ 4 PflBG)'
                 : 'nur Pflegefachkraft';
         }
 
+        // Erforderliche Kompetenz: für Fachkräfte gelten LG-Stufen als inhärent (gewaivt); Spezial-
+        // qualifikationen (z. B. eigenständige Heilkunde nach BEEP, B.Sc.) gelten auch für Fachkräfte.
         $kompetenzId = $taetigkeit->erforderliche_kompetenz_id;
-        if ($kompetenzId !== null && ! $this->hatAktiveKompetenz($user, $kompetenzId)) {
-            return 'fehlende Kompetenz: '.($taetigkeit->erforderlicheKompetenz->name ?? '—');
+        if ($kompetenzId !== null) {
+            $verlangt = ! $istFachkraft || $taetigkeit->kompetenz_auch_fuer_fachkraft;
+            if ($verlangt && ! $this->hatAktiveKompetenz($user, $kompetenzId)) {
+                return 'fehlende Kompetenz: '.($taetigkeit->erforderlicheKompetenz->name ?? '—');
+            }
         }
 
-        if ($taetigkeit->arzt_anordnung_noetig && ! $this->hatGueltigeDelegation($user, $taetigkeit->id)) {
+        // Ärztliche Anordnung: für eine Fachkraft liegt sie als Verordnung vor; eine Hilfskraft braucht
+        // eine explizite, gültige Delegation.
+        if ($taetigkeit->arzt_anordnung_noetig && ! $istFachkraft && ! $this->hatGueltigeDelegation($user, $taetigkeit->id)) {
             return 'keine gültige ärztliche Delegation';
         }
 
@@ -39,8 +48,24 @@ class Befugnis
         return $this->hindernis($user, $taetigkeit) === null;
     }
 
+    /** Komfort-Guard für Aufrufer (SIS/Medikation/BtM): löst den Katalog auf und prüft. Fehlt die Tätigkeit
+     *  im Katalog, wird nicht blockiert (fail-open) — der Katalog wird hier idempotent sichergestellt. */
+    public function darfKey(User $user, string $taetigkeitKey): bool
+    {
+        $tenantId = (int) $user->tenant_id;
+        TaetigkeitDefaults::ensureFor($tenantId);
+        $taetigkeit = Taetigkeit::where('tenant_id', $tenantId)->where('key', $taetigkeitKey)->where('aktiv', true)->first();
+
+        return $taetigkeit === null || $this->darf($user, $taetigkeit);
+    }
+
     public function istFachkraft(User $user): bool
     {
+        // Rolle (Leitung/Pflegefachkraft) ODER Qualifikation in der Personalakte ODER eine aktive
+        // Grundberuf-Kompetenz mit ist_fachkraft.
+        if ($user->hasAnyRole(['admin', 'super-admin', 'pflegefachkraft'])) {
+            return true;
+        }
         if ($user->employeeProfile?->qualifikation?->istFachkraft() ?? false) {
             return true;
         }

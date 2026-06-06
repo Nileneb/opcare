@@ -8,6 +8,7 @@ use App\Domains\Medication\Actions\RefuseMedication;
 use App\Domains\Medication\Data\AdministerData;
 use App\Domains\Medication\Enums\AdministrationStatus;
 use App\Domains\Medication\Models\MedicationAdministration;
+use App\Domains\Personnel\Support\Befugnis;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -30,6 +31,9 @@ class Stellplan extends Component
     {
         $a = MedicationAdministration::where('resident_id', $this->resident->id)->findOrFail($id);
         $this->authorize('administer', $a);
+        // Berechtigung: Medikamentengabe braucht mind. LG1-Kompetenz (Fachkräfte inhärent) — § 132a SGB V.
+        abort_unless(app(Befugnis::class)->darfKey(auth()->user(), 'orale_medikation'), 403,
+            'Keine Berechtigung zur Medikamentengabe (LG1/Delegation erforderlich).');
         $productId = $a->schedule?->prescription?->med_product_id;
         $administer->handle($a, new AdministerData(quittiert_von: auth()->id(), med_product_id: $productId));
         session()->flash('status', 'Gabe quittiert.');

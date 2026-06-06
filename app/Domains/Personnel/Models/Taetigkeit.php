@@ -52,9 +52,9 @@ class Taetigkeit extends BaseModel
 {
     protected $table = 'taetigkeiten';
 
-    protected $fillable = ['tenant_id', 'key', 'label', 'bereich', 'nur_fachkraft', 'vorbehaltsaufgabe', 'erforderliche_kompetenz_id', 'arzt_anordnung_noetig', 'aktiv'];
+    protected $fillable = ['tenant_id', 'key', 'label', 'bereich', 'nur_fachkraft', 'vorbehaltsaufgabe', 'erforderliche_kompetenz_id', 'kompetenz_auch_fuer_fachkraft', 'arzt_anordnung_noetig', 'aktiv'];
 
-    protected $casts = ['nur_fachkraft' => 'boolean', 'vorbehaltsaufgabe' => 'boolean', 'arzt_anordnung_noetig' => 'boolean', 'aktiv' => 'boolean'];
+    protected $casts = ['nur_fachkraft' => 'boolean', 'vorbehaltsaufgabe' => 'boolean', 'kompetenz_auch_fuer_fachkraft' => 'boolean', 'arzt_anordnung_noetig' => 'boolean', 'aktiv' => 'boolean'];
 
     public function erforderlicheKompetenz(): BelongsTo
     {
