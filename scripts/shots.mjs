@@ -59,7 +59,13 @@ for (const [name, path, auth] of pages) {
     try {
         await page.goto(base + path, { waitUntil: 'networkidle', timeout: 20000 });
         await page.waitForTimeout(600);
-        await page.screenshot({ path: `${outDir}/${name}.png`, fullPage: true });
+        try {
+            await page.screenshot({ path: `${outDir}/${name}.png`, fullPage: true });
+        } catch {
+            // Sehr hohe Seiten sprengen die Chromium-Canvas-Grenze (~32767px) → Viewport-Fallback.
+            await page.screenshot({ path: `${outDir}/${name}.png`, fullPage: false });
+            console.log(`     ${name}: fullPage zu groß → Viewport-Screenshot`);
+        }
         console.log(`OK   ${name}  (${path})  ->  ${page.url()}`);
     } catch (e) {
         console.log(`FAIL ${name}  (${path}): ${e.message}`);
