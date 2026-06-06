@@ -29,6 +29,7 @@ const pages = [
     ['dienstplan', '/dienstplan', true],
     ['arbeitsrecht', '/arbeitsrecht', true],
     ['haustechnik', '/haustechnik', true],
+    ['kueche', '/kueche', true],
     ['mitarbeitende', '/admin/benutzer', true],
     ['qdvs', '/qdvs', true],
     ['einrichtung', '/einrichtung', true],

@@ -37,7 +37,7 @@ sichtbar machen. Immer gleich. „Abschreiben" ist hier Best Practice.
 | **Pflege-Datenaustausch** | FHIR R4, KBV-MIO ÜLB | Fhir | ✅ |
 | **Qualitätsmanagement** | DIN EN 15224, § 113 SGB XI, MD-QPR | Quality | ✅ QS-Indikatoren + **QM-Norm-Checkliste** (QB1–6 + Querschnittsnormen) |
 | **Personal & Lohn** | Personalfragebogen, ArbZG, SGB IV (DEÜV/SV-Meldung), ELStAM | Personnel, Scheduling | ✅ Stammakte + Dienstplan |
-| **Hauswirtschaft / Küche** | LMHV/HACCP, DIN 10506, LMIV (VO 1169/2011, Allergene), DGE-Qualitätsstandard | (neu) Catering | 🔴 — Allergien existieren schon (Bewohner) |
+| **Hauswirtschaft / Küche** | LMHV/HACCP, DIN 10506, LMIV (VO 1169/2011, Allergene), DGE-Qualitätsstandard | Catering | ✅ Diät-/Allergen-Sicht + Speiseplan mit Allergenwarnung |
 | **Haustechnik / FM** | DIN 31051 (Instandhaltung), DGUV V3, TrinkwV (Legionellen), Brandschutz | Facility | ✅ Mängelmeldungen + Wartungsplan (Prüffristen) |
 | **Soziale Betreuung** | § 43b SGB XI, Biografiearbeit | (neu) SocialCare | 🔴 |
 | **Verwaltung / Heimaufsicht** | Landesheim-/WTG, Heimmitwirkungs-VO, Pflegesatz § 85 SGB XI | (neu) Administration | 🔴 |
@@ -65,7 +65,9 @@ sichtbar machen. Immer gleich. „Abschreiben" ist hier Best Practice.
 2. ✅ **Facility-Tickets** *(erledigt 2026-06-06)* — Personal meldet Mängel → Haustechnik-Queue
    (offen → in Arbeit → erledigt) + Wartungsplan mit Prüffristen (DIN 31051). Macht den QM-Punkt
    `ht_instand` operativ; das Meldung/Ticket-Muster ist für weitere Module wiederverwendbar.
-3. **Catering** — Speiseplan + Allergen-/Kostform-Sicht (LMIV), liest vorhandene Allergien.
+3. ✅ **Catering** *(erledigt 2026-06-06)* — Küche sieht Lebensmittelallergien + Kostformen (aus vorhandenen
+   Daten) + Speiseplan mit LMIV-Allergenkennzeichnung; je Gericht Warnung betroffener Bewohner. Macht den
+   QM-Punkt `hw_allergene` operativ.
 4. **Arbeitszeit-Ist-Erfassung** — Stempeln gegen den Plan (EuGH/BAG), füttert den ArbZG-§3-Schnitt.
 5. **Messaging-Querschnitt** — interne Nachrichten/Video.
 6. **Lohn-/Steuerexport** — DEÜV/ELSTER-Adapter auf der Personalakte.
