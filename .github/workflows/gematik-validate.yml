@@ -1,0 +1,87 @@
+name: gematik-validate
+
+# Track-C-Vorbereitung (kostenlos, ohne Anmeldung): validiert opcare-erzeugte gematik-Ressourcen mit dem
+# OFFIZIELLEN gematik Referenzvalidator. Deckt aktuell ISiP (Pflege-Interop) + EVP (Versorgungsplan Pflege).
+# De-riskt die spätere bezahlte Konformitätsprüfung — wir bestehen das offizielle Tool BEVOR wir zahlen.
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [master, 'feat/**', 'fix/**', 'chore/**']
+  pull_request:
+    branches: [master]
+
+env:
+  REFVALIDATOR_VERSION: '2.16.2'
+  ISIP_PLUGIN: 'isip1-1.1.0'
+  EVP_PLUGIN: 'evp-1.0.0'
+
+jobs:
+  gematik:
+    runs-on: ubuntu-latest
+    env:
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ${{ github.workspace }}/database/ci.sqlite
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+      BROADCAST_CONNECTION: log
+      REFVALIDATOR_JAR: ${{ github.workspace }}/refval/referencevalidator-cli.jar
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_sqlite, sqlite3, mbstring, intl, bcmath, gd
+          tools: composer:v2
+          coverage: none
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install Dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress --optimize-autoloader
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          touch "$DB_DATABASE"
+
+      - name: Migrate + seed (SQLite)
+        run: php artisan migrate --force --seed
+
+      - name: gematik-Ressourcen exportieren
+        run: |
+          php artisan isip:export --output=isip-patient.json
+          php artisan evp:export --output=evp-pflegegrad.json
+
+      - name: Cache gematik Referenzvalidator + Plugins
+        uses: actions/cache@v4
+        with:
+          path: refval
+          key: refvalidator-${{ env.REFVALIDATOR_VERSION }}-${{ env.ISIP_PLUGIN }}-${{ env.EVP_PLUGIN }}
+
+      - name: Referenzvalidator + Plugins laden (falls nicht gecacht)
+        run: |
+          mkdir -p refval/plugins
+          [ -f refval/referencevalidator-cli.jar ] || curl -fsSL -o refval/referencevalidator-cli.jar \
+            "https://github.com/gematik/app-referencevalidator/releases/download/${REFVALIDATOR_VERSION}/referencevalidator-cli-${REFVALIDATOR_VERSION}.jar"
+          [ -f refval/plugins/isip1.zip ] || curl -fsSL -o refval/plugins/isip1.zip \
+            "https://github.com/gematik/app-referencevalidator-plugins/releases/download/${ISIP_PLUGIN}/${ISIP_PLUGIN}.zip"
+          [ -f refval/plugins/evp.zip ] || curl -fsSL -o refval/plugins/evp.zip \
+            "https://github.com/gematik/app-referencevalidator-plugins/releases/download/${EVP_PLUGIN}/${EVP_PLUGIN}.zip"
+
+      - name: ISiP-Konformität (Modul isip1, fails on errors)
+        run: bash scripts/gematik/validate.sh isip1 isip-patient.json
+
+      - name: EVP-Konformität (Modul evp, fails on errors)
+        run: bash scripts/gematik/validate.sh evp evp-pflegegrad.json
