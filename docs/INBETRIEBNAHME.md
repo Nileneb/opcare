@@ -24,8 +24,8 @@ sind, wird diese Liste von oben nach unten abgearbeitet („Schalter umlegen") �
 
 | Platzhalter | Wo | Echte Quelle |
 |---|---|---|
-| **Bewohner-Postadresse** (E-Rezept Patient) | `ErezeptBundleMapper::address()` | Stammdaten-Feld (s. §3) bzw. Einrichtungsadresse |
-| **Praxis-Postadresse** (E-Rezept Organization) | `ErezeptBundleMapper::address()` | Praxis-Stammdaten |
+| ~~Bewohner-Postadresse~~ ✅ gelöst | jetzt echtes Feld (`residents.strasse/hausnummer/plz/ort`, im Bewohner-Formular) | Platzhalter greift nur noch als Fallback bei leerem Feld |
+| ~~Praxis-Postadresse~~ ✅ gelöst | jetzt echtes Feld (`physicians.strasse/…`) | Platzhalter nur Fallback |
 | **PrescriptionId** `160.000.764.737.300.50` | `ErezeptBundleMapper` Bundle.identifier | E-Rezept-Fachdienst |
 | **Prüfnummer** `Y/400/1910/36/346` | `ErezeptBundleMapper` Composition.author[Device] | PVS-Zertifizierung |
 | **Test-KVNR** `X110411319` | `DemoSeeder` (ResidentInsurance) | eGK/VSDM bzw. Erfassung |
@@ -33,11 +33,12 @@ sind, wird diese Liste von oben nach unten abgearbeitet („Schalter umlegen") �
 | **Test-PZN** `06313728` | `DemoSeeder` (MedProduct Ramipril) | Arzneimittel-Stammdaten (IFA) |
 | **Institutions-Identifier-Systeme** `opcare.local/sid/*` | ISiP/EVP-Mapper | reale NamingSystems der Einrichtung |
 
-## 3. Stammdaten-Felder, die noch fehlen (real anlegbar, kein Zulassungs-Gate)
+## 3. Stammdaten-Felder (real anlegbar, kein Zulassungs-Gate)
 
-- **Bewohner-Postadresse** (Straße/Hausnr./PLZ/Ort) — für E-Rezept-Patient + allg. Korrespondenz.
-- **Einrichtungs-/Praxis-Adresse** (Tenant bzw. Physician-Praxis).
-- Diese sind reine Dateneingabe → Felder können jederzeit ergänzt werden; bis dahin Platzhalter (§2).
+- ✅ **Bewohner-Postadresse** — `residents.strasse/hausnummer/plz/ort`, im Bewohner-Anlageformular erfassbar.
+- ✅ **Praxis-Adresse** — `physicians.strasse/hausnummer/plz/ort`.
+- offen (optional): **Einrichtungs-Adresse** am Tenant (aktuell nicht von einem Gate gefordert).
+- Reale Dateneingabe → bis befüllt greift der Platzhalter-Fallback (§2) nur bei leeren Feldern.
 
 ## 4. Konfigurations-Schalter (Prod-Härtung, vom Betreiber zu setzen)
 

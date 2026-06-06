@@ -29,6 +29,14 @@ class Residents extends Component
 
     public ?int $room_id = null;
 
+    public string $strasse = '';
+
+    public string $hausnummer = '';
+
+    public string $plz = '';
+
+    public string $ort = '';
+
     public function rules(): array
     {
         return [
@@ -38,6 +46,10 @@ class Residents extends Component
             'pflegegrad' => ['nullable', 'integer', 'between:1,5'],
             'aufnahme_am' => ['required', 'date'],
             'room_id' => ['nullable', 'integer', $this->tenantExists('rooms')],
+            'strasse' => ['nullable', 'string', 'max:255'],
+            'hausnummer' => ['nullable', 'string', 'max:20'],
+            'plz' => ['nullable', 'string', 'max:10'],
+            'ort' => ['nullable', 'string', 'max:255'],
         ];
     }
 
@@ -53,9 +65,13 @@ class Residents extends Component
             pflegegrad: $data['pflegegrad'],
             status: 'aktiv',
             room_id: $data['room_id'],
+            strasse: $data['strasse'] ?: null,
+            hausnummer: $data['hausnummer'] ?: null,
+            plz: $data['plz'] ?: null,
+            ort: $data['ort'] ?: null,
         ));
 
-        $this->reset('name', 'geburtsdatum', 'pflegegrad', 'aufnahme_am', 'room_id', 'showForm');
+        $this->reset('name', 'geburtsdatum', 'pflegegrad', 'aufnahme_am', 'room_id', 'strasse', 'hausnummer', 'plz', 'ort', 'showForm');
         session()->flash('status', 'Bewohner:in angelegt.');
     }
 

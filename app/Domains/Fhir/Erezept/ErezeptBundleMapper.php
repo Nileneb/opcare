@@ -125,9 +125,7 @@ class ErezeptBundleMapper
             ]],
             'name' => $this->name($r->name),
             'birthDate' => $r->geburtsdatum->toDateString(),
-            // WHY(E-Rezept): Patientenadresse ist Pflicht. opcare führt keine Bewohner-Postadresse →
-            // Platzhalter (= Einrichtungsadresse). Adress-Stammdaten sind eine dokumentierte Erweiterung.
-            'address' => $this->address(),
+            'address' => $this->address($r->strasse, $r->hausnummer, $r->plz, $r->ort),
         ];
 
         $practitioner = [
@@ -157,7 +155,7 @@ class ErezeptBundleMapper
             ]],
             'name' => 'Praxis '.$arzt->name,
             'telecom' => [['system' => 'phone', 'value' => $arzt->kontakt ?: '0000000']],
-            'address' => $this->address(),
+            'address' => $this->address($arzt->strasse, $arzt->hausnummer, $arzt->plz, $arzt->ort),
         ];
 
         $coverage = [
@@ -245,17 +243,26 @@ class ErezeptBundleMapper
      *
      * @return array<int, array<string, mixed>>
      */
-    private function address(): array
+    /**
+     * Baut eine FHIR-Adresse aus echten Stammdaten; fehlende Felder fallen auf Platzhalter zurück
+     * (E-Rezept erzwingt eine Adresse — s. docs/INBETRIEBNAHME.md §3, Adress-Stammdaten).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function address(?string $strasse, ?string $hausnummer, ?string $plz, ?string $ort): array
     {
+        $strasse = $strasse ?: 'Musterstr.';
+        $hausnummer = $hausnummer ?: '1';
+
         return [[
             'type' => 'both',
-            'line' => ['Musterstr. 1'],
+            'line' => [trim($strasse.' '.$hausnummer)],
             '_line' => [['extension' => [
-                ['url' => 'http://hl7.org/fhir/StructureDefinition/iso21090-ADXP-houseNumber', 'valueString' => '1'],
-                ['url' => 'http://hl7.org/fhir/StructureDefinition/iso21090-ADXP-streetName', 'valueString' => 'Musterstr.'],
+                ['url' => 'http://hl7.org/fhir/StructureDefinition/iso21090-ADXP-houseNumber', 'valueString' => $hausnummer],
+                ['url' => 'http://hl7.org/fhir/StructureDefinition/iso21090-ADXP-streetName', 'valueString' => $strasse],
             ]]],
-            'city' => 'Musterstadt',
-            'postalCode' => '12345',
+            'city' => $ort ?: 'Musterstadt',
+            'postalCode' => $plz ?: '12345',
             'country' => 'D',
         ]];
     }

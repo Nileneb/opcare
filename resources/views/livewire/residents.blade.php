@@ -61,6 +61,30 @@
                     <input type="date" wire:model="aufnahme_am" required />
                     @error('aufnahme_am') <span class="err">{{ $message }}</span> @enderror
                 </div>
+
+                <div class="field" style="display:flex;gap:12px;flex-wrap:wrap">
+                    <div style="flex:2;min-width:160px">
+                        <label>Straße</label>
+                        <input type="text" wire:model="strasse" placeholder="Musterstr." />
+                        @error('strasse') <span class="err">{{ $message }}</span> @enderror
+                    </div>
+                    <div style="flex:1;min-width:80px">
+                        <label>Hausnr.</label>
+                        <input type="text" wire:model="hausnummer" placeholder="1" />
+                        @error('hausnummer') <span class="err">{{ $message }}</span> @enderror
+                    </div>
+                    <div style="flex:1;min-width:90px">
+                        <label>PLZ</label>
+                        <input type="text" wire:model="plz" placeholder="12345" />
+                        @error('plz') <span class="err">{{ $message }}</span> @enderror
+                    </div>
+                    <div style="flex:2;min-width:140px">
+                        <label>Ort</label>
+                        <input type="text" wire:model="ort" placeholder="Musterstadt" />
+                        @error('ort') <span class="err">{{ $message }}</span> @enderror
+                    </div>
+                </div>
+
                 <button type="submit" class="btn btn-primary">Anlegen</button>
             </form>
         </div>

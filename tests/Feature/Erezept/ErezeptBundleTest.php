@@ -15,8 +15,8 @@ beforeEach(function () {
     $t = Tenant::create(['name' => 'A', 'slug' => 'a']);
     app(CurrentTenant::class)->set($t);
     $this->user = User::factory()->create(['tenant_id' => $t->id]);
-    $this->resident = Resident::factory()->create(['name' => 'Maria Schneider', 'geburtsdatum' => '1940-05-10']);
-    $this->arzt = Physician::create(['name' => 'Dr. Walter Hausarzt', 'fachrichtung' => 'Allgemeinmedizin', 'lanr' => '838382202', 'bsnr' => '031234567']);
+    $this->resident = Resident::factory()->create(['name' => 'Maria Schneider', 'geburtsdatum' => '1940-05-10', 'strasse' => 'Bergische Str.', 'hausnummer' => '12', 'plz' => '42489', 'ort' => 'Wülfrath']);
+    $this->arzt = Physician::create(['name' => 'Dr. Walter Hausarzt', 'fachrichtung' => 'Allgemeinmedizin', 'lanr' => '838382202', 'bsnr' => '031234567', 'strasse' => 'Praxisweg', 'hausnummer' => '5', 'plz' => '42489', 'ort' => 'Wülfrath']);
     $kasse = HealthInsurance::create(['name' => 'AOK', 'ik_nummer' => '104212505']);
     $this->ins = $this->resident->insurances()->create(['health_insurance_id' => $kasse->id, 'versichertennr' => 'X110411319', 'ist_primaer' => true]);
     $product = MedProduct::factory()->create(['name' => 'Ramipril', 'wirkstoff' => 'Ramipril', 'staerke' => '5 mg', 'pzn' => '06313728']);
@@ -45,5 +45,9 @@ it('baut ein KBV-E-Rezept-Bundle (Muster 16) aus Verordnung + Arzt + Versicherun
         ->and($byType['Practitioner']['resource']['name'][0]['prefix'])->toBe(['Dr.'])
         ->and($byType['Organization']['resource']['identifier'][0]['value'])->toBe('031234567')
         ->and($byType['Medication']['resource']['code']['coding'][0]['code'])->toBe('06313728')
-        ->and($byType['MedicationRequest']['resource']['dosageInstruction'][0]['text'])->toBe('1-0-1-0');
+        ->and($byType['MedicationRequest']['resource']['dosageInstruction'][0]['text'])->toBe('1-0-1-0')
+        // Echte Adress-Stammdaten (statt Platzhalter) fließen in Patient + Organization
+        ->and($byType['Patient']['resource']['address'][0]['city'])->toBe('Wülfrath')
+        ->and($byType['Patient']['resource']['address'][0]['postalCode'])->toBe('42489')
+        ->and($byType['Organization']['resource']['address'][0]['line'][0])->toBe('Praxisweg 5');
 });

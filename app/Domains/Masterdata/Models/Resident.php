@@ -33,6 +33,10 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property string $status
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property string|null $strasse
+ * @property string|null $hausnummer
+ * @property string|null $plz
+ * @property string|null $ort
  * @property-read Collection<int, Activity> $activitiesAsSubject
  * @property-read int|null $activities_as_subject_count
  * @property-read Collection<int, ResidentAllergy> $allergies
@@ -71,11 +75,15 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resident whereEntlassungAm($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resident whereGeburtsdatum($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resident whereGeschlecht($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Resident whereHausnummer($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resident whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resident whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Resident whereOrt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resident wherePflegegrad($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Resident wherePlz($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resident whereRoomId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resident whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Resident whereStrasse($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resident whereTenantId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resident whereUpdatedAt($value)
  *
@@ -88,6 +96,7 @@ class Resident extends BaseModel implements HasMedia
     protected $fillable = [
         'tenant_id', 'room_id', 'name', 'geburtsdatum', 'geschlecht',
         'pflegegrad', 'aufnahme_am', 'entlassung_am', 'status',
+        'strasse', 'hausnummer', 'plz', 'ort',
     ];
 
     protected $casts = [

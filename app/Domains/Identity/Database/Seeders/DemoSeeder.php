@@ -236,11 +236,12 @@ class DemoSeeder extends Seeder
         }
         $maria->contacts()->create(['name' => 'Anna Schneider', 'beziehung' => 'Tochter', 'telefon' => '0201 1234567', 'benachrichtigen' => true]);
 
-        $arzt = Physician::create(['name' => 'Dr. Walter Hausarzt', 'fachrichtung' => 'Allgemeinmedizin', 'lanr' => '838382202', 'bsnr' => '031234567', 'kontakt' => '0201 9876543']);
+        $arzt = Physician::create(['name' => 'Dr. Walter Hausarzt', 'fachrichtung' => 'Allgemeinmedizin', 'lanr' => '838382202', 'bsnr' => '031234567', 'kontakt' => '0201 9876543', 'strasse' => 'Praxisweg', 'hausnummer' => '5', 'plz' => '42489', 'ort' => 'Wülfrath']);
         $maria->physicians()->attach($arzt);
 
         $kasse = HealthInsurance::create(['name' => 'AOK Rheinland/Hamburg', 'ik_nummer' => '104212505']);
         $maria->insurances()->create(['health_insurance_id' => $kasse->id, 'versichertennr' => 'X110411319', 'ist_primaer' => true]);
+        $maria->update(['strasse' => 'Bergische Str.', 'hausnummer' => '12', 'plz' => '42489', 'ort' => 'Wülfrath']);
 
         $wilhelm = Resident::query()->where('name', 'Wilhelm Müller')->firstOrFail();
         CareEvent::create([

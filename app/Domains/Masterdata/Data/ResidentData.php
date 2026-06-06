@@ -15,5 +15,9 @@ class ResidentData extends Data
         public string $status = 'aktiv',
         public ?int $room_id = null,
         public ?string $entlassung_am = null,
+        public ?string $strasse = null,
+        public ?string $hausnummer = null,
+        public ?string $plz = null,
+        public ?string $ort = null,
     ) {}
 }
