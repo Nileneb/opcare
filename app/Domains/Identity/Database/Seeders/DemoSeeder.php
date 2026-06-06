@@ -57,7 +57,13 @@ use App\Domains\Personnel\Enums\Masernschutz;
 use App\Domains\Personnel\Enums\NachweisTyp;
 use App\Domains\Personnel\Enums\Qualifikation;
 use App\Domains\Personnel\Enums\Steuerklasse;
+use App\Domains\Personnel\Models\Beauftragtenbestellung;
+use App\Domains\Personnel\Models\Delegation;
+use App\Domains\Personnel\Models\MitarbeiterKompetenz;
 use App\Domains\Personnel\Models\Schutznachweis;
+use App\Domains\Personnel\Support\BeauftragtenrolleDefaults;
+use App\Domains\Personnel\Support\KompetenzDefaults;
+use App\Domains\Personnel\Support\TaetigkeitDefaults;
 use App\Domains\Quality\Enums\EventSeverity;
 use App\Domains\Quality\Enums\FemArt;
 use App\Domains\Quality\Enums\FemEinwilligung;
@@ -497,6 +503,35 @@ class DemoSeeder extends Seeder
                 'gueltig_bis' => now()->addMonths(11)->toDateString()]);
             $fem->protokolle()->create(['tenant_id' => $tenant->id, 'zeitpunkt' => now()->subHours(6), 'typ' => 'kontrolle', 'befund' => 'ruhig, Haut o. B.', 'indikation_gegeben' => true, 'dokumentiert_von' => $admin->id]);
         }
+
+        // Skill-Baum + Berechtigungsmatrix + Delegation + Beauftragten-Register (Demo).
+        $komp = KompetenzDefaults::ensureFor($tenant->id)->keyBy('key');
+        $taet = TaetigkeitDefaults::ensureFor($tenant->id)->keyBy('key');
+        $brollen = BeauftragtenrolleDefaults::ensureFor($tenant->id)->keyBy('key');
+        $kompErteilen = function ($user, string $key) use ($tenant, $komp, $admin) {
+            $k = $komp[$key];
+            MitarbeiterKompetenz::firstOrCreate(
+                ['user_id' => $user->id, 'kompetenz_id' => $k->id],
+                ['tenant_id' => $tenant->id, 'erworben_am' => now()->subMonths(6)->toDateString(),
+                    'gueltig_bis' => $k->gueltigkeit_monate ? now()->subMonths(6)->addMonths($k->gueltigkeit_monate)->toDateString() : null,
+                    'verifiziert_von' => $admin->id],
+            );
+        };
+        foreach (['pflegefachkraft', 'wundexperte_icw', 'praxisanleiter'] as $k) {
+            $kompErteilen($sandra, $k);
+        }
+        foreach (['pflegehilfskraft', 'lg1', 'lg2', 'sc_injektion'] as $k) {
+            $kompErteilen($tom, $k);
+        }
+        // Delegation: SC-Injektion an Tom (Hilfskraft) durch den Arzt.
+        Delegation::create(['tenant_id' => $tenant->id, 'taetigkeit_id' => $taet['sc_injektion']->id,
+            'nehmer_id' => $tom->id, 'anordner_name' => 'Dr. Wagner', 'delegiert_am' => now()->subMonth()->toDateString(),
+            'gueltig_bis' => now()->addMonths(11)->toDateString(), 'nachweis_notiz' => 'Spritzenschein + Einweisung']);
+        // Beauftragte: Sandra Hygiene, Tom Ersthelfer (übrige Pflicht-Rollen bleiben offen → Lücken-Ampel).
+        Beauftragtenbestellung::create(['tenant_id' => $tenant->id, 'beauftragten_rolle_id' => $brollen['hygiene']->id,
+            'user_id' => $sandra->id, 'bestellt_am' => now()->subMonths(2)->toDateString(), 'gueltig_bis' => now()->subMonths(2)->addMonths(36)->toDateString()]);
+        Beauftragtenbestellung::create(['tenant_id' => $tenant->id, 'beauftragten_rolle_id' => $brollen['ersthelfer']->id,
+            'user_id' => $tom->id, 'bestellt_am' => now()->subMonths(20)->toDateString(), 'gueltig_bis' => now()->subMonths(20)->addMonths(24)->toDateString()]);
 
         // Zweites Heim — Haus Birkenhof (2 Bewohner, kein SIS für Minimal-Demo)
         $birkenhof = Tenant::create(['name' => 'Haus Birkenhof', 'slug' => 'birkenhof']);
