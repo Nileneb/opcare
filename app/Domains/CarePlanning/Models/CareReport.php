@@ -17,7 +17,8 @@ class CareReport extends BaseModel
         'version', 'datum', 'schicht', 'text',
     ];
 
-    protected $casts = ['datum' => 'datetime', 'schicht' => Shift::class, 'version' => 'integer'];
+    // WHY(Track B, At-Rest): Pflegeverlauf ist sensibler Gesundheits-Freitext, nicht SQL-durchsucht → verschlüsselt.
+    protected $casts = ['datum' => 'datetime', 'schicht' => Shift::class, 'version' => 'integer', 'text' => 'encrypted'];
 
     protected $attributes = ['version' => 1];
 

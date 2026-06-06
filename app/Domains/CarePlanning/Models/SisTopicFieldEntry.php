@@ -12,7 +12,9 @@ class SisTopicFieldEntry extends BaseModel
 
     protected $casts = [
         'themenfeld' => SisTopicField::class,
-        'strukturdaten' => 'array',
+        // WHY(Track B, At-Rest): SIS-Narrativ (Freitext + strukturierte Themenfeld-Daten) verschlüsselt.
+        'freitext' => 'encrypted',
+        'strukturdaten' => 'encrypted:array',
     ];
 
     public function sisAssessment(): BelongsTo

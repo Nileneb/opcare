@@ -19,7 +19,8 @@ class CareMeasure extends BaseModel
         'themenfeld', 'beschreibung', 'ziel', 'verantwortlich', 'aktiv',
     ];
 
-    protected $casts = ['themenfeld' => SisTopicField::class, 'aktiv' => 'boolean', 'version' => 'integer'];
+    // WHY(Track B, At-Rest): Maßnahmen-Beschreibung/Ziel = sensibler Gesundheits-Freitext → verschlüsselt.
+    protected $casts = ['themenfeld' => SisTopicField::class, 'aktiv' => 'boolean', 'version' => 'integer', 'beschreibung' => 'encrypted', 'ziel' => 'encrypted'];
 
     protected $attributes = ['version' => 1];
 
