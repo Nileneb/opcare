@@ -69,7 +69,8 @@ jobs:
           php artisan isip:export angehoeriger --output=isip-angehoeriger.json
           php artisan isip:export person --output=isip-person.json
           php artisan evp:export --output=evp-pflegegrad.json
-          php artisan epa:export --output=epa-medication.json
+          php artisan epa:export medication --output=epa-medication.json
+          php artisan epa:export medication-request --output=epa-medication-request.json
 
       - name: Cache gematik Referenzvalidator + Plugins
         uses: actions/cache@v4
@@ -101,4 +102,6 @@ jobs:
         run: bash scripts/gematik/validate.sh evp evp-pflegegrad.json
 
       - name: ePA-Konformität (Modul epa3-medication, fails on errors)
-        run: bash scripts/gematik/validate.sh epa3-medication epa-medication.json
+        run: |
+          bash scripts/gematik/validate.sh epa3-medication epa-medication.json
+          bash scripts/gematik/validate.sh epa3-medication epa-medication-request.json
