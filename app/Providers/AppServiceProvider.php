@@ -15,6 +15,8 @@ use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Policies\TenantPolicy;
 use App\Domains\Identity\Policies\UserPolicy;
 use App\Domains\Identity\Support\CurrentTenant;
+use App\Domains\Kim\Contracts\KimTransport;
+use App\Domains\Kim\DormantKimTransport;
 use App\Domains\Masterdata\Models\Building;
 use App\Domains\Masterdata\Models\Resident;
 use App\Domains\Masterdata\Policies\BuildingPolicy;
@@ -49,6 +51,12 @@ class AppServiceProvider extends ServiceProvider
             (string) config('ti20.pep_base_url'),
             (int) config('ti20.timeout'),
         ));
+
+        // Track C (KIM): Transport per config-Schalter. Default dormant (komponiert, sendet nicht);
+        // bei Anschluss auf den S/MIME-Transport umstellen — siehe docs/INBETRIEBNAHME.md.
+        $this->app->bind(KimTransport::class, fn ($app) => match (config('kim.transport')) {
+            default => $app->make(DormantKimTransport::class),
+        });
     }
 
     public function boot(): void

@@ -17,7 +17,7 @@ sind, wird diese Liste von oben nach unten abgearbeitet („Schalter umlegen") �
 | **SMC-B-Testzertifikat** | TI-2.0/ZETA-Testhub-Gate scharf schalten | `scripts/ti2.0/run-gate.sh`, `.github/workflows/ti2.0-conformance.yml` | gematik-Anfrageportal → ZIP → `.p12` → CI-Secret `TI20_SMCB_P12_BASE64` |
 | **HBA (Heilberufsausweis) des Arztes** | E-Rezept-QES (Signatur) | E-Rezept ist Daten-Repräsentation, Signatur ist nicht im FHIR | Arzt-seitig; opcare erzeugt nur den Datensatz |
 | **E-Rezept-Fachdienst-Zugang** | echte PrescriptionId, Übertragung | `ErezeptBundleMapper` (Platzhalter-PrescriptionId/Prüfnummer) | TI-Anbindung (Track C) |
-| **KIM-Konto + Clientmodul** | KIM-Nachrichten senden/empfangen | _(KIM-Modul, in Arbeit)_ | KIM-Fachdienst-Vertrag + Clientmodul |
+| **KIM-Konto + Clientmodul** | KIM-Nachrichten real senden (S/MIME) | `app/Domains/Kim/` (Composer fertig, Transport dormant) | KIM-Fachdienst-Vertrag + Clientmodul → `KIM_TRANSPORT=smime` + S/MIME-Transport implementieren/einhängen |
 | **ePA-Fachdienst-Zugang** | ePA-EML/Statement, Dispense, op-* | ePA-Statement/EML nicht gebaut (E-Rezept-ID-gekoppelt) | TI-Anbindung (Track C) |
 
 ## 2. Platzhalter-Daten → durch echte ersetzen (sobald Stammdaten/Anschluss da)
@@ -48,7 +48,14 @@ sind, wird diese Liste von oben nach unten abgearbeitet („Schalter umlegen") �
 | At-Rest-Volume-Verschlüsselung | — | LUKS/TDE (s. `docs/security/sicherheitskonzept.md` §2a) |
 | `APP_KEY` | lokal | aus Secrets-Manager/KMS |
 
-## 5. CI-Gates, die extern-gegatet „skippen" (kein Fehler, sichtbar)
+## 5. Stillgelegte Bausteine (gebaut, per Schalter aktivierbar)
+
+| Baustein | Status | Aktivieren |
+|---|---|---|
+| **KIM-Transport** | dormant — `DormantKimTransport` komponiert die Nachricht, sendet aber NICHT (loggt sichtbar) | `KIM_TRANSPORT=smime` + S/MIME-Transport-Klasse implementieren + Binding in `AppServiceProvider` |
+| **ZETA-Sidecar (C1)** | Seam + Discovery gebaut, Sidecar nicht eingehängt | SMC-B-Cert + gematik ZETA-Guard-Sidecar (`config/ti20.php`) |
+
+## 6. CI-Gates, die extern-gegatet „skippen" (kein Fehler, sichtbar)
 
 - **`ti2.0-conformance`** — überspringt ohne SMC-B-Cert (sichtbares `::warning::`). Wird mit dem Secret scharf.
 
