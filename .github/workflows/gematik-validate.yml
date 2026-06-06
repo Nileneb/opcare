@@ -1,8 +1,9 @@
 name: gematik-validate
 
 # Track-C-Vorbereitung (kostenlos, ohne Anmeldung): validiert opcare-erzeugte gematik-Ressourcen mit dem
-# OFFIZIELLEN gematik Referenzvalidator. Deckt aktuell ISiP (Pflege-Interop) + EVP (Versorgungsplan Pflege).
-# De-riskt die spätere bezahlte Konformitätsprüfung — wir bestehen das offizielle Tool BEVOR wir zahlen.
+# OFFIZIELLEN gematik Referenzvalidator. Deckt ISiP (Pflege-Interop) + EVP (Versorgungsplan Pflege) +
+# ePA (Medikationsliste). De-riskt die spätere bezahlte Konformitätsprüfung — wir bestehen das offizielle
+# Tool BEVOR wir zahlen.
 
 permissions:
   contents: read
@@ -17,6 +18,7 @@ env:
   REFVALIDATOR_VERSION: '2.16.2'
   ISIP_PLUGIN: 'isip1-1.1.0'
   EVP_PLUGIN: 'evp-1.0.0'
+  EPA_PLUGIN: 'epa3-medication-1.5.0'
 
 jobs:
   gematik:
@@ -63,12 +65,13 @@ jobs:
         run: |
           php artisan isip:export --output=isip-patient.json
           php artisan evp:export --output=evp-pflegegrad.json
+          php artisan epa:export --output=epa-medication.json
 
       - name: Cache gematik Referenzvalidator + Plugins
         uses: actions/cache@v4
         with:
           path: refval
-          key: refvalidator-${{ env.REFVALIDATOR_VERSION }}-${{ env.ISIP_PLUGIN }}-${{ env.EVP_PLUGIN }}
+          key: refvalidator-${{ env.REFVALIDATOR_VERSION }}-${{ env.ISIP_PLUGIN }}-${{ env.EVP_PLUGIN }}-${{ env.EPA_PLUGIN }}
 
       - name: Referenzvalidator + Plugins laden (falls nicht gecacht)
         run: |
@@ -79,9 +82,14 @@ jobs:
             "https://github.com/gematik/app-referencevalidator-plugins/releases/download/${ISIP_PLUGIN}/${ISIP_PLUGIN}.zip"
           [ -f refval/plugins/evp.zip ] || curl -fsSL -o refval/plugins/evp.zip \
             "https://github.com/gematik/app-referencevalidator-plugins/releases/download/${EVP_PLUGIN}/${EVP_PLUGIN}.zip"
+          [ -f refval/plugins/epa3-medication.zip ] || curl -fsSL -o refval/plugins/epa3-medication.zip \
+            "https://github.com/gematik/app-referencevalidator-plugins/releases/download/${EPA_PLUGIN}/${EPA_PLUGIN}.zip"
 
       - name: ISiP-Konformität (Modul isip1, fails on errors)
         run: bash scripts/gematik/validate.sh isip1 isip-patient.json
 
       - name: EVP-Konformität (Modul evp, fails on errors)
         run: bash scripts/gematik/validate.sh evp evp-pflegegrad.json
+
+      - name: ePA-Konformität (Modul epa3-medication, fails on errors)
+        run: bash scripts/gematik/validate.sh epa3-medication epa-medication.json
