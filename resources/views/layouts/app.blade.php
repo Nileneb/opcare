@@ -13,13 +13,16 @@
 </head>
 <body>
     @php
+        $u = auth()->user();
         $nav = [
             ['route' => 'overview', 'label' => 'Übersicht'],
             ['route' => 'bewohner', 'label' => 'Bewohner'],
             ['route' => 'einrichtung', 'label' => 'Stammdaten'],
             ['route' => 'pflegeplanung', 'label' => 'SIS-Board'],
         ];
-        $u = auth()->user();
+        if ($u?->isSuperAdmin() || $u?->hasAnyRole(['admin', 'pflegefachkraft', 'pflegehilfskraft', 'betreuungskraft'])) {
+            $nav[] = ['route' => 'betreuung', 'label' => 'Betreuung'];
+        }
     @endphp
     <header class="app-top">
         <a class="app-brand" href="{{ route('overview') }}" style="text-decoration:none">

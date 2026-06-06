@@ -57,6 +57,9 @@ use App\Domains\Scheduling\Models\ComplianceJustification;
 use App\Domains\Scheduling\Models\Shift;
 use App\Domains\Scheduling\Models\ShiftAssignment;
 use App\Domains\Scheduling\Models\Zeitbuchung;
+use App\Domains\SocialCare\Enums\BetreuungsArt;
+use App\Domains\SocialCare\Enums\BetreuungsTyp;
+use App\Domains\SocialCare\Models\Betreuungsangebot;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
@@ -361,6 +364,19 @@ class DemoSeeder extends Seeder
         $woStart = now()->startOfWeek();
         foreach ([[$sandra, 0, '06:00', '14:30'], [$sandra, 1, '06:00', '14:15'], [$tom, 0, '13:30', '22:00']] as [$mitarbeiter, $offset, $beginn, $ende]) {
             Zeitbuchung::create(['user_id' => $mitarbeiter->id, 'datum' => $woStart->copy()->addDays($offset)->toDateString(), 'beginn' => $beginn, 'ende' => $ende, 'pause_minuten' => 30]);
+        }
+
+        // Soziale Betreuung (§ 43b SGB XI): Betreuungskraft + Angebote des Tages + Teilnahme-Nachweis.
+        $betreuerin = User::create(['name' => 'Petra Sommer', 'email' => 'betreuung@opcare.local', 'password' => Hash::make('password'), 'tenant_id' => $tenant->id]);
+        $betreuerin->assignRole('betreuungskraft');
+        $aktive = Resident::query()->where('tenant_id', $tenant->id)->where('status', 'aktiv')->get();
+        $singkreis = Betreuungsangebot::create(['datum' => now()->toDateString(), 'beginn' => '10:00', 'dauer_minuten' => 45, 'art' => BetreuungsArt::Musik, 'typ' => BetreuungsTyp::Gruppe, 'titel' => 'Singkreis im Aufenthaltsraum', 'leitung_id' => $betreuerin->id]);
+        $gedaechtnis = Betreuungsangebot::create(['datum' => now()->toDateString(), 'beginn' => '15:00', 'dauer_minuten' => 30, 'art' => BetreuungsArt::Gedaechtnistraining, 'typ' => BetreuungsTyp::Gruppe, 'titel' => 'Gedächtnistraining', 'leitung_id' => $betreuerin->id]);
+        foreach ($aktive->take(3) as $bewohner) {
+            $singkreis->teilnahmen()->create(['resident_id' => $bewohner->id]);
+        }
+        foreach ($aktive->take(2) as $bewohner) {
+            $gedaechtnis->teilnahmen()->create(['resident_id' => $bewohner->id]);
         }
 
         // Zweites Heim — Haus Birkenhof (2 Bewohner, kein SIS für Minimal-Demo)
