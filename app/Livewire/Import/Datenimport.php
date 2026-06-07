@@ -14,6 +14,7 @@ use App\Domains\Import\Services\ImportMatching;
 use App\Domains\Import\Support\SpaltenAlias;
 use App\Domains\Import\Support\StammdatenParser;
 use App\Support\Concerns\ScopesTenantValidation;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -252,7 +253,8 @@ class Datenimport extends Component
 
             try {
                 $commit->commit($zeile, $tenantId, auth()->id());
-            } catch (\InvalidArgumentException|\RuntimeException $e) {
+            } catch (\InvalidArgumentException|\RuntimeException|QueryException $e) {
+                // WHY(A1): QueryException (z.B. NOT-NULL-Verletzung) darf die Schleife nicht abbrechen
                 $this->addError("ist.{$zeile->id}.bestand", $e->getMessage());
             }
         }
@@ -263,6 +265,18 @@ class Datenimport extends Component
     public function render()
     {
         $tenantId = app(CurrentTenant::class)->id();
+
+        // WHY(UX): kein aktiver Upload → jüngsten offenen Batch laden, damit Direktaufruf nicht leer wirkt
+        if ($this->batchId === null) {
+            $offener = ImportBatch::where('tenant_id', $tenantId)
+                ->where('status', 'offen')
+                ->latest()
+                ->first();
+            if ($offener !== null) {
+                $this->batchId = $offener->id;
+                $this->mapping = $offener->mapping ?? [];
+            }
+        }
 
         $batch = $this->batchId ? ImportBatch::find($this->batchId) : null;
         $zeilen = $batch

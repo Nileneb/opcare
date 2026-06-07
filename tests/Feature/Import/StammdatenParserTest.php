@@ -33,6 +33,31 @@ describe('StammdatenParser', function () {
         expect($result['mapping']['pg_nummer'])->toBeNull()
             ->and($result['mapping']['mhd'])->toBeNull();
     });
+
+    it('C1: erkennt Tab-Delimiter und liest Zeilen korrekt', function () {
+        $csv = "Name\tEinheit\tBestand\nMehl\tkg\t50\n";
+        $result = StammdatenParser::parseCsv($csv);
+
+        expect($result['zeilen'])->toHaveCount(1)
+            ->and($result['zeilen'][0]['Name'])->toBe('Mehl')
+            ->and($result['zeilen'][0]['Einheit'])->toBe('kg')
+            ->and($result['zeilen'][0]['Bestand'])->toBe('50');
+    });
+
+    it('C1: erkennt Pipe-Delimiter', function () {
+        $csv = "Name|Einheit|Bestand\nButter|Stück|20\n";
+        $result = StammdatenParser::parseCsv($csv);
+
+        expect($result['zeilen'])->toHaveCount(1)
+            ->and($result['zeilen'][0]['Name'])->toBe('Butter');
+    });
+
+    it('C1: bei Gleichstand Semikolon vor Komma bevorzugt', function () {
+        $csv = "A;B,C\nX;Y,Z\n";
+        $result = StammdatenParser::parseCsv($csv);
+
+        expect($result['header'])->toContain('A');
+    });
 });
 
 describe('SpaltenAlias::erkenne', function () {

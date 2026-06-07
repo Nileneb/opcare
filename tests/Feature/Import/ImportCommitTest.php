@@ -13,6 +13,7 @@ use App\Domains\Import\Enums\ImportZeileStatus;
 use App\Domains\Import\Models\ImportBatch;
 use App\Domains\Import\Models\ImportZeile;
 use App\Domains\Import\Services\ImportCommit;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 beforeEach(function () {
     config(['speech.fake' => true]);
@@ -223,4 +224,62 @@ it('commit Ueberspringen setzt Status Uebersprungen', function () {
     $result = $this->service->commit($zeile, $this->tenant->id);
 
     expect($result->status)->toBe(ImportZeileStatus::Uebersprungen);
+});
+
+// --- Regressionstests Final-Review ---
+
+it('A1: commit Anlegen mit name=null wirft InvalidArgumentException und legt keinen Artikel an', function () {
+    $zeile = ImportZeile::create([
+        'tenant_id' => $this->tenant->id,
+        'batch_id' => $this->batch->id,
+        'ziel_typ' => 'artikel',
+        'name' => null,
+        'aktion' => ImportAktion::Anlegen,
+        'status' => ImportZeileStatus::Vorgeschlagen,
+    ]);
+
+    expect(fn () => $this->service->commit($zeile, $this->tenant->id))
+        ->toThrow(InvalidArgumentException::class, 'Artikel-Name fehlt');
+
+    expect(Artikel::where('tenant_id', $this->tenant->id)->count())->toBe(0);
+});
+
+it('A2: commitLieferant Mergen mit matched_lieferant_id aus Fremd-Tenant wirft ModelNotFoundException', function () {
+    $fremd = Tenant::create(['name' => 'Fremd-Commit', 'slug' => 'fremd-commit']);
+    AccountingDefaults::ensureFor($fremd->id);
+
+    $fremdLief = Lieferant::withoutGlobalScopes()->create([
+        'tenant_id' => $fremd->id,
+        'name' => 'Fremd-Lieferant',
+    ]);
+
+    $zeile = ImportZeile::create([
+        'tenant_id' => $this->tenant->id,
+        'batch_id' => $this->batch->id,
+        'ziel_typ' => 'lieferant',
+        'matched_lieferant_id' => $fremdLief->id,
+        'aktion' => ImportAktion::Mergen,
+        'status' => ImportZeileStatus::Vorgeschlagen,
+    ]);
+
+    expect(fn () => $this->service->commit($zeile, $this->tenant->id))
+        ->toThrow(ModelNotFoundException::class);
+
+    expect(Lieferant::where('tenant_id', $this->tenant->id)->count())->toBe(0);
+});
+
+it('B1: commit mit falschem tenantId wirft InvalidArgumentException', function () {
+    $andererTenant = Tenant::create(['name' => 'Anderer', 'slug' => 'anderer-b1']);
+
+    $zeile = ImportZeile::create([
+        'tenant_id' => $this->tenant->id,
+        'batch_id' => $this->batch->id,
+        'ziel_typ' => 'artikel',
+        'name' => 'Artikel B1',
+        'aktion' => ImportAktion::Anlegen,
+        'status' => ImportZeileStatus::Vorgeschlagen,
+    ]);
+
+    expect(fn () => $this->service->commit($zeile, $andererTenant->id))
+        ->toThrow(InvalidArgumentException::class, 'Zeile gehört nicht zum angegebenen Mandanten');
 });

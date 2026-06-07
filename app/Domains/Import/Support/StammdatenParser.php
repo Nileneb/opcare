@@ -22,7 +22,10 @@ final class StammdatenParser
         }
 
         $ersteZeile = $zeilen[0];
-        $delimiter = substr_count($ersteZeile, ';') >= substr_count($ersteZeile, ',') ? ';' : ',';
+        $candidates = [';', ',', "\t", '|'];
+        $counts = array_map(fn (string $d): int => substr_count($ersteZeile, $d), $candidates);
+        $max = max($counts);
+        $delimiter = $max > 0 ? $candidates[array_search($max, $counts)] : ';';
 
         $header = array_map('trim', str_getcsv($ersteZeile, $delimiter));
 

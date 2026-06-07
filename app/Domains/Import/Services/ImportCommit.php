@@ -21,6 +21,11 @@ class ImportCommit
 
     public function commit(ImportZeile $z, int $tenantId, ?int $userId = null): ImportZeile
     {
+        // WHY(B1, defense-in-depth): Zeile könnte von anderem Tenant stammen wenn Aufrufer tenantId falsch übergibt
+        if ((int) $z->tenant_id !== (int) $tenantId) {
+            throw new \InvalidArgumentException('Zeile gehört nicht zum angegebenen Mandanten.');
+        }
+
         if (! $z->offen()) {
             throw new RuntimeException("ImportZeile #{$z->id} ist nicht mehr offen (Status: {$z->status->value}).");
         }
@@ -47,7 +52,9 @@ class ImportCommit
         }
 
         if ($z->aktion === ImportAktion::Mergen) {
-            $z->ergebnis_lieferant_id = $z->matched_lieferant_id;
+            // WHY(A2): findOrFail nutzt TenantScope via BaseModel → Fremd-ID wirft ModelNotFoundException
+            $lief = Lieferant::findOrFail($z->matched_lieferant_id);
+            $z->ergebnis_lieferant_id = $lief->id;
         } else {
             $lief = Lieferant::create([
                 'tenant_id' => $tenantId,
@@ -68,6 +75,11 @@ class ImportCommit
         }
 
         if ($z->aktion === ImportAktion::Anlegen) {
+            // WHY(A1): artikel.name ist NOT NULL — QueryException würde sonst als 500 durchschlagen
+            if ($z->name === null || trim((string) $z->name) === '') {
+                throw new \InvalidArgumentException('Artikel-Name fehlt (Zeile kann nicht angelegt werden).');
+            }
+
             $abteilung = Abteilung::tryFrom((string) $z->abteilung) ?? Abteilung::Verwaltung;
             $ziel = Artikel::create([
                 'tenant_id' => $tenantId,

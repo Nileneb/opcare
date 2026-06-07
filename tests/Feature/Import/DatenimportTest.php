@@ -7,6 +7,8 @@ use App\Domains\Accounting\Support\AccountingDefaults;
 use App\Domains\Identity\Models\Tenant;
 use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Support\CurrentTenant;
+use App\Domains\Import\Enums\ImportAktion;
+use App\Domains\Import\Enums\ImportZeileStatus;
 use App\Domains\Import\Models\ImportBatch;
 use App\Domains\Import\Models\ImportZeile;
 use App\Livewire\Import\Datenimport;
@@ -133,4 +135,72 @@ it('bestaetigeZeile lehnt matched_artikel_id aus Fremd-Tenant ab', function () {
         ->assertHasErrors(["ist.{$zeile->id}.matched_artikel_id"]);
 
     unset($file);
+});
+
+// --- Regressionstests Final-Review ---
+
+it('A1: bestaetigeAlle importiert gültige Zeile und sammelt Fehler bei name-leerer Zeile (Schleife bricht nicht ab)', function () {
+    $this->actingAs($this->user);
+
+    $batch = ImportBatch::create([
+        'tenant_id' => $this->tenant->id,
+        'dateiname' => 'bulk.csv',
+        'anfangsbestand_modus' => 'ebk',
+        'status' => 'offen',
+        'erstellt_von' => $this->user->id,
+    ]);
+
+    $zeileOhneNamen = ImportZeile::create([
+        'tenant_id' => $this->tenant->id,
+        'batch_id' => $batch->id,
+        'ziel_typ' => 'artikel',
+        'name' => null,
+        'aktion' => ImportAktion::Anlegen,
+        'status' => ImportZeileStatus::Vorgeschlagen,
+    ]);
+
+    $zeileGueltig = ImportZeile::create([
+        'tenant_id' => $this->tenant->id,
+        'batch_id' => $batch->id,
+        'ziel_typ' => 'artikel',
+        'name' => 'Verbandsmaterial',
+        'einheit' => 'Stück',
+        'aktion' => ImportAktion::Anlegen,
+        'status' => ImportZeileStatus::Vorgeschlagen,
+    ]);
+
+    Livewire::test(Datenimport::class)
+        ->set('batchId', $batch->id)
+        ->call('bestaetigeAlle')
+        ->assertHasErrors(["ist.{$zeileOhneNamen->id}.bestand"]);
+
+    // Gültige Zeile wurde importiert
+    expect(Artikel::where('tenant_id', $this->tenant->id)->where('name', 'Verbandsmaterial')->exists())->toBeTrue();
+
+    // Fehlerhafte Zeile bleibt offen
+    expect($zeileOhneNamen->fresh()->status)->toBe(ImportZeileStatus::Vorgeschlagen);
+});
+
+it('UX: direkter Aufruf zeigt jüngsten offenen Batch', function () {
+    $this->actingAs($this->user);
+
+    $batch = ImportBatch::create([
+        'tenant_id' => $this->tenant->id,
+        'dateiname' => 'demo-import.csv',
+        'anfangsbestand_modus' => 'ebk',
+        'status' => 'offen',
+        'erstellt_von' => $this->user->id,
+    ]);
+
+    ImportZeile::create([
+        'tenant_id' => $this->tenant->id,
+        'batch_id' => $batch->id,
+        'ziel_typ' => 'artikel',
+        'name' => 'Testprodukt',
+        'aktion' => ImportAktion::Anlegen,
+        'status' => ImportZeileStatus::Vorgeschlagen,
+    ]);
+
+    Livewire::test(Datenimport::class)
+        ->assertSee('demo-import.csv');
 });
