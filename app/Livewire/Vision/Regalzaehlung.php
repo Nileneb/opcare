@@ -88,11 +88,19 @@ class Regalzaehlung extends Component
             $artikelId = $pl?->artikel_id;
             $mengeVorschlag = $pl !== null ? $pl->mengeFuer($anzahl) : (float) $anzahl;
 
+            $labelDetections = array_filter(
+                $ergebnis['detections'] ?? [],
+                fn (array $d) => ($d['label'] ?? '') === $yoloLabel
+            );
+            $confidence = count($labelDetections) > 0
+                ? max(array_column($labelDetections, 'confidence'))
+                : 0.0;
+
             $det = RegalDetection::create([
                 'tenant_id' => $tenantId,
                 'aufnahme_id' => $aufnahme->id,
                 'label' => $yoloLabel,
-                'confidence' => $ergebnis['detections'][0]['confidence'] ?? 0.0,
+                'confidence' => $confidence,
                 'artikel_id' => $artikelId,
                 'menge_vorschlag' => $mengeVorschlag,
             ]);
@@ -183,15 +191,16 @@ class Regalzaehlung extends Component
         session()->flash('status', count($ergebnis['suggestions']).' Labeling-Vorschläge gespeichert.');
     }
 
-    public function trainingStarten(VisionClient $vision): void
+    public function trainingStarten(): void
     {
         abort_unless($this->darf(), 403);
         abort_unless(config('vision.training_aktiv', false), 403);
 
-        $tenantId = app(CurrentTenant::class)->id();
-
-        $this->trainingJobId = $vision->train('', "tenant-{$tenantId}");
-        session()->flash('status', "Training gestartet — Job-ID: {$this->trainingJobId}");
+        // WHY(Dataset-Pipeline offen): Es gibt noch keine Pipeline, die gelabelte
+        // Aufnahmen in ein ZIP-Dataset exportiert. Ein leerer ZIP-Call würde vom
+        // MCP-Server mit „dataset_zip_base64 required" abgewiesen. Die Pipeline
+        // ist als Folge-Inkrement geplant (docs/INBETRIEBNAHME.md §5).
+        $this->addError('training', 'Noch keine gelabelten Trainingsdaten gesammelt — die Dataset-/ZIP-Pipeline ist ein Folge-Inkrement.');
     }
 
     public function trainingStatusAktualisieren(VisionClient $vision): void

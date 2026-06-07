@@ -102,11 +102,6 @@
                 <a href="{{ route('datenimport') }}" @class(['is-active' => request()->routeIs('datenimport')])>Datenimport</a>
             </nav>
         @endif
-        @if (auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'buchhaltung', 'pflegefachkraft']))
-            <nav class="app-nav app-nav-vision">
-                <a href="{{ route('regalzaehlung') }}" @class(['is-active' => request()->routeIs('regalzaehlung')])>Regalzählung</a>
-            </nav>
-        @endif
         @if (auth()->user()?->hasAnyRole(['admin', 'super-admin']))
             <nav class="app-nav app-nav-admin">
                 <a href="{{ route('admin.tenants') }}" @class(['is-active' => request()->routeIs('admin.tenants')])>Einrichtungen</a>

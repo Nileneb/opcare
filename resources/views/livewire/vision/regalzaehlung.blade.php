@@ -170,15 +170,23 @@
 
         @if ($trainingAktiv)
             <p style="font-size:.875rem;color:#6b7280;margin-bottom:12px">Training mit den gesammelten Labeling-Aufnahmen dieses Tenants starten.</p>
+            <div style="background:#fff7ed;border-left:3px solid #f59e0b;padding:10px 14px;border-radius:4px;color:#92400e;margin-bottom:12px">
+                <strong>Dataset-Pipeline folgt:</strong> Das Modelltraining setzt einen ZIP-Export der gelabelten Aufnahmen voraus — dieser Baustein ist als Folge-Inkrement geplant.
+            </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-                <button type="button" class="btn btn-primary" wire:click="trainingStarten" wire:loading.attr="disabled">
-                    <span wire:loading.remove wire:target="trainingStarten">Training starten</span>
-                    <span wire:loading wire:target="trainingStarten">Starte…</span>
+                <button type="button" class="btn btn-primary" wire:click="trainingStarten" wire:loading.attr="disabled" disabled title="Dataset-/ZIP-Pipeline noch nicht implementiert">
+                    Training starten (Datenpipeline folgt)
                 </button>
                 @if ($trainingJobId)
                     <button type="button" class="btn btn-secondary" wire:click="trainingStatusAktualisieren">Status aktualisieren</button>
                 @endif
             </div>
+
+            @error('training')
+                <div style="margin-top:10px;padding:10px;background:#fef2f2;border-left:3px solid #f87171;border-radius:4px;color:#991b1b">
+                    {{ $message }}
+                </div>
+            @enderror
 
             @if ($trainingJobId)
                 <div style="margin-top:12px;padding:10px;background:#f9fafb;border-radius:6px">

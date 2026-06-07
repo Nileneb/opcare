@@ -12,26 +12,31 @@ class HttpVisionClient implements VisionClient
     public function detect(string $imageB64, string $modelPath, float $conf = 0.25): array
     {
         return $this->call('detect', [
-            'image_b64' => $imageB64,
+            'image_base64' => $imageB64,
             'model_path' => $modelPath,
-            'conf' => $conf,
+            'confidence' => $conf,
         ]);
     }
 
     public function autoAnnotate(string $imageB64, bool $useSam = true): array
     {
         return $this->call('auto_annotate', [
-            'image_b64' => $imageB64,
+            'image_base64' => $imageB64,
             'use_sam' => $useSam,
         ]);
     }
 
-    public function train(string $zipB64, string $tenantRef, array $opts = []): string
+    public function train(string $zipB64, string $tenantId, array $opts = []): string
     {
-        $result = $this->call('train', array_merge([
-            'zip_b64' => $zipB64,
-            'tenant_ref' => $tenantRef,
-        ], $opts));
+        $payload = ['dataset_zip_base64' => $zipB64, 'tenant_id' => $tenantId];
+
+        foreach (['base_model', 'epochs', 'batch_size', 'image_size'] as $key) {
+            if (isset($opts[$key])) {
+                $payload[$key] = $opts[$key];
+            }
+        }
+
+        $result = $this->call('train', $payload);
 
         return (string) ($result['job_id'] ?? throw new RuntimeException('vision-mcp: train lieferte keine job_id'));
     }
