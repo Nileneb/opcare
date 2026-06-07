@@ -45,10 +45,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(CurrentTenant::class);
         $this->app->singleton(QdvsRuleRepository::class, fn () => new QdvsRuleRepository(config('qdvs.rules_csv')));
 
-        // Track C (TI 2.0): ZETA-Zugriff über den lokalen Sidecar/PEP — opcare hängt nur am Interface.
+        // Track C (TI 2.0): ZETA-Zugriff über den lokalen Sidecar/PEP + gematik Test-Fachdienst.
         $this->app->bind(ZetaClient::class, fn ($app) => new HttpZetaClient(
             $app->make(Factory::class),
             (string) config('ti20.pep_base_url'),
+            (string) config('ti20.testfachdienst_url'),
             (int) config('ti20.timeout'),
         ));
 

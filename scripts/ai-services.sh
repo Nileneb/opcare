@@ -1,23 +1,24 @@
 #!/usr/bin/env bash
 #
-# AI-Dienste (Ollama + whisperX-mcp) auf dem GPU-Dev-Rechner.
+# AI-Dienste (Ollama + whisperX-mcp + vision-mcp) + gematik ZETA-Test-Fachdienst auf dem Dev-Rechner.
 #
-# Grundsatz (User-Vorgabe): Beide Dienste laufen hier in der Regel als lokale Prozesse/Container
-# auf localhost. Dieses Skript prüft ZUERST die Erreichbarkeit. Container werden NUR auf
-# ausdrückliches `up` gebaut — und auch dann nur für die NICHT erreichbaren Dienste. Ein laufender
-# Dienst wird nie durch einen kollidierenden Container überbaut.
+# Grundsatz (User-Vorgabe): Dienste laufen hier in der Regel als lokale Prozesse/Container auf
+# localhost. Dieses Skript prüft ZUERST die Erreichbarkeit. Container werden NUR auf ausdrückliches
+# `up` gebaut — und auch dann nur für die NICHT erreichbaren Dienste. Ein laufender Dienst wird nie
+# durch einen kollidierenden Container überbaut.
 #
 #   scripts/ai-services.sh check          Erreichbarkeit prüfen + Diagnose (Default, baut NICHTS)
 #   scripts/ai-services.sh up [dienst…]   nur fehlende Dienste bauen/starten (GPU wenn möglich, sonst CPU)
 #   scripts/ai-services.sh down           die opcare-ai-Container stoppen
 #   scripts/ai-services.sh logs [dienst…] Container-Logs
 #
-# dienst ∈ {ollama, whisperx, vision}  (whisperx == whisperx-mcp, vision == vision-mcp)
+# dienst ∈ {ollama, whisperx, vision, zeta}  (whisperx == whisperx-mcp, vision == vision-mcp)
 set -euo pipefail
 
 OLLAMA_URL="${OLLAMA_URL:-http://localhost:11434}"
 WHISPER_URL="${WHISPER_URL:-http://localhost:8000}"
 VISION_URL="${VISION_URL:-http://localhost:8001}"
+ZETA_URL="${TI20_ZETA_TESTFACHDIENST_URL:-http://localhost:8082}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AI_DIR="$SCRIPT_DIR/../docker/ai-services"
@@ -31,6 +32,8 @@ probe_ollama()  { curl -fsS --max-time 4 "$OLLAMA_URL/api/version" >/dev/null 2>
 # /health meldet ready:true, sobald der Dienst lauscht (Modell ggf. idle aus dem VRAM entladen).
 probe_whisper() { curl -fsS --max-time 4 "$WHISPER_URL/health" >/dev/null 2>&1; }
 probe_vision()  { curl -fsS --max-time 4 "$VISION_URL/health" >/dev/null 2>&1; }
+# Spring Actuator /health gibt {"status":"UP"} — kein Auth nötig (Test-Fachdienst öffentlich).
+probe_zeta()    { curl -fsS --max-time 4 "$ZETA_URL/achelos_testfachdienst/actuator/health" >/dev/null 2>&1; }
 
 # GPU nutzbar? nvidia-container-toolkit + eine CDI-Spec müssen vorhanden sein.
 gpu_available() {
@@ -66,12 +69,14 @@ diagnose() {
 
 cmd_check() {
   local rc=0
-  if probe_ollama; then echo "✓ Ollama erreichbar       ($OLLAMA_URL)"
-  else echo "✗ Ollama NICHT erreichbar ($OLLAMA_URL)"; diagnose ollama "$OLLAMA_URL"; rc=1; fi
-  if probe_whisper; then echo "✓ whisperX-mcp erreichbar ($WHISPER_URL)"
+  if probe_ollama; then echo "✓ Ollama erreichbar            ($OLLAMA_URL)"
+  else echo "✗ Ollama NICHT erreichbar      ($OLLAMA_URL)"; diagnose ollama "$OLLAMA_URL"; rc=1; fi
+  if probe_whisper; then echo "✓ whisperX-mcp erreichbar      ($WHISPER_URL)"
   else echo "✗ whisperX-mcp NICHT erreichbar ($WHISPER_URL)"; diagnose whisperx "$WHISPER_URL"; rc=1; fi
-  if probe_vision; then echo "✓ vision-mcp erreichbar   ($VISION_URL)"
-  else echo "✗ vision-mcp NICHT erreichbar ($VISION_URL)"; diagnose vision "$VISION_URL"; rc=1; fi
+  if probe_vision; then echo "✓ vision-mcp erreichbar        ($VISION_URL)"
+  else echo "✗ vision-mcp NICHT erreichbar  ($VISION_URL)"; diagnose vision "$VISION_URL"; rc=1; fi
+  if probe_zeta; then echo "✓ ZETA-Testfachdienst erreichbar ($ZETA_URL)"
+  else echo "✗ ZETA-Testfachdienst NICHT erreichbar ($ZETA_URL)"; diagnose zeta "$ZETA_URL"; rc=1; fi
   if [ "$rc" -ne 0 ]; then
     echo
     echo "Hinweis: erst Aufruf/Port/Prozess prüfen — nicht vorschnell Container bauen."
@@ -80,9 +85,9 @@ cmd_check() {
 }
 
 # normalisiert ein Alias auf den Compose-Service-Namen
-service_name() { case "$1" in whisperx|whisperx-mcp) echo whisperx-mcp ;; ollama) echo ollama ;; vision|vision-mcp) echo vision-mcp ;; *) return 1 ;; esac; }
+service_name() { case "$1" in whisperx|whisperx-mcp) echo whisperx-mcp ;; ollama) echo ollama ;; vision|vision-mcp) echo vision-mcp ;; zeta|zeta-testfachdienst) echo zeta-testfachdienst ;; *) return 1 ;; esac; }
 
-reachable() { case "$1" in ollama) probe_ollama ;; whisperx-mcp) probe_whisper ;; vision-mcp) probe_vision ;; esac; }
+reachable() { case "$1" in ollama) probe_ollama ;; whisperx-mcp) probe_whisper ;; vision-mcp) probe_vision ;; zeta-testfachdienst) probe_zeta ;; esac; }
 
 cmd_up() {
   local requested=("$@") targets=() svc
@@ -90,13 +95,14 @@ cmd_up() {
     probe_ollama  || targets+=(ollama)
     probe_whisper || targets+=(whisperx-mcp)
     probe_vision  || targets+=(vision-mcp)
+    probe_zeta    || targets+=(zeta-testfachdienst)
     if [ "${#targets[@]}" -eq 0 ]; then
       echo "Alle Dienste laufen bereits — nichts zu bauen."
       return 0
     fi
   else
     for arg in "${requested[@]}"; do
-      svc="$(service_name "$arg")" || { echo "Unbekannter Dienst: $arg (erlaubt: ollama, whisperx)"; exit 2; }
+      svc="$(service_name "$arg")" || { echo "Unbekannter Dienst: $arg (erlaubt: ollama, whisperx, vision, zeta)"; exit 2; }
       if reachable "$svc"; then
         echo "↷ $svc läuft bereits auf localhost — überspringe (ein Container würde auf dem Port kollidieren)."
       else
@@ -127,5 +133,5 @@ case "${1:-check}" in
   logs)  shift; cmd_logs "$@" ;;
   -h|--help|help)
     sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//' ;;
-  *) echo "Unbekanntes Kommando: $1" >&2; echo "Nutzung: scripts/ai-services.sh {check|up|down|logs}" >&2; exit 2 ;;
+  *) echo "Unbekanntes Kommando: $1" >&2; echo "Nutzung: scripts/ai-services.sh {check|up|down|logs} [dienst…]" >&2; exit 2 ;;
 esac

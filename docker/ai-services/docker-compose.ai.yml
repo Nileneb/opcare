@@ -73,6 +73,26 @@ services:
       start_period: 30s
     restart: unless-stopped
 
+  zeta-testfachdienst:
+    # Baut aus dem Schwester-Repo (gematik/zeta-testfachdienst). Multi-Stage-Build (kein lokales Gradle).
+    # WHY: Dienst simuliert die Ressource-Seite im ZETA-Szenario (E-Rezept-CRUD + hello) — kein PEP,
+    #      kein RFC-9728-Discovery-Endpunkt. pingFachdienst()/fetchHelloZeta() belegen operative
+    #      Erreichbarkeit ohne SMC-B oder RU-Zulassung. Nur Dev — NICHT für Prod (kein Auth).
+    build:
+      context: ${ZETA_TESTFACHDIENST_CONTEXT:-../../../../zeta-testfachdienst}
+      dockerfile: Dockerfile.opcare-dev
+    image: zeta-testfachdienst:opcare-dev
+    environment:
+      SERVER_SSL_ENABLED: "false"
+      SERVER_PORT: "8080"
+      APP_LOG_LEVEL: ${ZETA_LOG_LEVEL:-INFO}
+    ports:
+      - "${ZETA_TESTFACHDIENST_PORT:-8082}:8080"
+    # WHY: distroless-Image hat kein curl/sh/wget — kein Container-interner Healthcheck möglich.
+    #      Erreichbarkeit wird extern via ai-services.sh probe_zeta() geprüft (HTTP-GET auf /actuator/health).
+    # healthcheck: absichtlich weggelassen
+    restart: unless-stopped
+
 volumes:
   ollama-models:
   whisperx-cache:
