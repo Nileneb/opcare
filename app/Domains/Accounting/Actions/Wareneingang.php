@@ -8,15 +8,17 @@ use App\Domains\Accounting\Support\AccountingDefaults;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Wareneingang: erhöht den Bestand und bucht den Einkauf (Soll Warenbestand an Haben Verbindlichkeiten).
+ * Wareneingang: erhöht den Bestand, legt eine FIFO-Eingangsschicht (Lot) mit ihrem Einstandspreis an und bucht
+ * den Einkauf (Soll Warenbestand an Haben Verbindlichkeiten). Die Bewertung der Vorräte (§ 256 HGB) kommt
+ * ausschließlich aus den Schichten; `artikel.einkaufspreis` bleibt nur Anzeige-/Bestell-Default.
  */
 class Wareneingang
 {
     public function __construct(private readonly Buchen $buchen) {}
 
-    public function handle(Artikel $artikel, float $menge, ?float $preis, string $datum, ?string $notiz = null): Lagerbewegung
+    public function handle(Artikel $artikel, float $menge, ?float $preis, string $datum, ?string $notiz = null, ?string $chargeNr = null, ?string $mhd = null): Lagerbewegung
     {
-        return DB::transaction(function () use ($artikel, $menge, $preis, $datum, $notiz) {
+        return DB::transaction(function () use ($artikel, $menge, $preis, $datum, $notiz, $chargeNr, $mhd) {
             AccountingDefaults::ensureFor($artikel->tenant_id);
             $stueckpreis = $preis ?? (float) ($artikel->einkaufspreis ?? 0);
 
@@ -36,9 +38,22 @@ class Wareneingang
                 );
             }
 
-            return $artikel->bewegungen()->create([
+            $bewegung = $artikel->bewegungen()->create([
                 'typ' => 'eingang', 'menge' => $menge, 'datum' => $datum, 'notiz' => $notiz, 'buchung_id' => $buchung?->id,
             ]);
+
+            $artikel->schichten()->create([
+                'tenant_id' => $artikel->tenant_id,
+                'eingang_bewegung_id' => $bewegung->id,
+                'eingangsdatum' => $datum,
+                'menge_eingang' => $menge,
+                'menge_rest' => $menge,
+                'einstandspreis' => $stueckpreis,
+                'charge_nr' => $chargeNr,
+                'mhd' => $mhd,
+            ]);
+
+            return $bewegung;
         });
     }
 }
