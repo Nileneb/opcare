@@ -6,6 +6,7 @@ use App\Domains\Accounting\Enums\GhsPiktogramm;
 use App\Domains\Accounting\Models\Artikel;
 use App\Domains\Accounting\Models\Gefahrstoff;
 use App\Domains\Identity\Support\CurrentTenant;
+use App\Support\Concerns\ScopesTenantValidation;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -15,6 +16,7 @@ use Livewire\WithFileUploads;
 #[Layout('layouts.app')]
 class Gefahrstoffverzeichnis extends Component
 {
+    use ScopesTenantValidation;
     use WithFileUploads;
 
     public ?int $artikelId = null;
@@ -51,6 +53,12 @@ class Gefahrstoffverzeichnis extends Component
 
     public function editEintrag(int $artikelId): void
     {
+        $u = auth()->user();
+        abort_unless(
+            $u !== null && ($u->isSuperAdmin() || $u->hasAnyRole(['admin', 'haustechnik', 'kueche', 'buchhaltung'])),
+            403,
+        );
+
         $this->artikelId = $artikelId;
         $this->resetFormFields();
 
@@ -79,7 +87,7 @@ class Gefahrstoffverzeichnis extends Component
         );
 
         $this->validate([
-            'artikelId' => ['required', 'integer', 'exists:artikel,id'],
+            'artikelId' => ['required', 'integer', $this->tenantExists('artikel')],
             'sdbFile' => ['nullable', 'file', 'mimes:pdf', 'max:20480'],
         ]);
 

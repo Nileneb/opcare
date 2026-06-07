@@ -188,3 +188,29 @@ it('erlaubt Zugriff für haustechnik-Rolle', function () {
         ->test(Gefahrstoffverzeichnis::class)
         ->assertOk();
 });
+
+// ─── IDOR-Härtung: fremder Tenant ────────────────────────────────────────────
+
+it('lehnt artikelId eines fremden Tenants in eintragSpeichern ab (IDOR)', function () {
+    $fremdTenant = Tenant::create(['name' => 'Fremd-Tenant', 'slug' => 'fremd-gef']);
+    AccountingDefaults::ensureFor($fremdTenant->id);
+
+    $fremdArtikel = Artikel::create([
+        'tenant_id' => $fremdTenant->id,
+        'name' => 'Fremd-Reiniger',
+        'einheit' => 'ml',
+        'abteilung' => Abteilung::Pflege,
+        'bestand' => 0,
+        'gefahrstoff' => false,
+    ]);
+
+    // Authentifizierter User gehört zum eigenen Tenant (this->tenant), CurrentTenant ist this->tenant.
+    Livewire::actingAs($this->user)
+        ->test(Gefahrstoffverzeichnis::class)
+        ->set('artikelId', $fremdArtikel->id)
+        ->call('eintragSpeichern')
+        ->assertHasErrors(['artikelId']);
+
+    // Kein Gefahrstoff-Datensatz für den fremden Artikel angelegt.
+    expect(Gefahrstoff::where('artikel_id', $fremdArtikel->id)->exists())->toBeFalse();
+});
