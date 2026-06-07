@@ -2,12 +2,15 @@
 
 namespace App\Domains\Capture\Providers;
 
+use App\Domains\Capture\Contracts\ArtikelMatcher;
 use App\Domains\Capture\Contracts\BelegVlmAnalyzer;
 use App\Domains\Capture\Contracts\LieferscheinVlmAnalyzer;
 use App\Domains\Capture\Contracts\TextEmbedder;
+use App\Domains\Capture\Services\EmbeddingArtikelMatcher;
 use App\Domains\Capture\Services\OllamaBelegAnalyzer;
 use App\Domains\Capture\Services\OllamaLieferscheinAnalyzer;
 use App\Domains\Capture\Services\OllamaTextEmbedder;
+use App\Domains\Capture\Testing\FakeArtikelMatcher;
 use App\Domains\Capture\Testing\FakeBelegAnalyzer;
 use App\Domains\Capture\Testing\FakeLieferscheinAnalyzer;
 use App\Domains\Capture\Testing\FakeTextEmbedder;
@@ -32,6 +35,11 @@ class CaptureServiceProvider extends ServiceProvider
         $this->app->bind(
             TextEmbedder::class,
             config('speech.fake') ? FakeTextEmbedder::class : OllamaTextEmbedder::class,
+        );
+
+        $this->app->bind(
+            ArtikelMatcher::class,
+            config('speech.fake') ? FakeArtikelMatcher::class : EmbeddingArtikelMatcher::class,
         );
     }
 }
