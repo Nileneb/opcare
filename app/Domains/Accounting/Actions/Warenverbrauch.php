@@ -18,9 +18,9 @@ class Warenverbrauch
 {
     public function __construct(private readonly Buchen $buchen) {}
 
-    public function handle(Artikel $artikel, float $menge, string $datum, ?string $notiz = null): Lagerbewegung
+    public function handle(Artikel $artikel, float $menge, string $datum, ?string $notiz = null, ?int $residentId = null): Lagerbewegung
     {
-        return DB::transaction(function () use ($artikel, $menge, $datum, $notiz) {
+        return DB::transaction(function () use ($artikel, $menge, $datum, $notiz, $residentId) {
             AccountingDefaults::ensureFor($artikel->tenant_id);
 
             $schichten = $artikel->schichten()->where('menge_rest', '>', 0)
@@ -46,6 +46,7 @@ class Warenverbrauch
                 $schicht->save();
                 $bewegung->abgaenge()->create([
                     'tenant_id' => $artikel->tenant_id,
+                    'resident_id' => $residentId,
                     'schicht_id' => $schicht->id,
                     'menge' => $nimm,
                     'einstandspreis' => $schicht->einstandspreis,

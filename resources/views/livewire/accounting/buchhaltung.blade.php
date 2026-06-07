@@ -72,6 +72,13 @@
                     @error('beweg_artikel')<span class="err">{{ $message }}</span>@enderror
                 </div>
                 <div class="field"><label>Menge</label><input type="number" step="0.01" wire:model="beweg_menge" />@error('beweg_menge')<span class="err">{{ $message }}</span>@enderror</div>
+                <div class="field"><label>Bewohner (optional, für § 40 SGB XI)</label>
+                    <select wire:model="beweg_resident">
+                        <option value="">— ohne Bewohner —</option>
+                        @foreach ($bewohner as $bw)<option value="{{ $bw->id }}">{{ $bw->name }}</option>@endforeach
+                    </select>
+                    @error('beweg_resident')<span class="err">{{ $message }}</span>@enderror
+                </div>
                 <div class="field"><label>Notiz</label><input type="text" wire:model="beweg_notiz" placeholder="z. B. Wohnbereich 2" /></div>
                 <button class="btn btn-ghost btn-sm">– Verbrauch buchen</button>
             </form>

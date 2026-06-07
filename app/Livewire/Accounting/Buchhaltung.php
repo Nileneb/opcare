@@ -16,6 +16,7 @@ use App\Domains\Accounting\Support\BudgetGuard;
 use App\Domains\Accounting\Support\KontoBudgetMonitor;
 use App\Domains\Accounting\Support\Lagerwert;
 use App\Domains\Identity\Support\CurrentTenant;
+use App\Domains\Masterdata\Models\Resident;
 use App\Support\Concerns\ScopesTenantValidation;
 use InvalidArgumentException;
 use Livewire\Attributes\Layout;
@@ -69,6 +70,8 @@ class Buchhaltung extends Component
     public ?float $beweg_preis = null;
 
     public string $beweg_notiz = '';
+
+    public ?int $beweg_resident = null;
 
     public function mount(): void
     {
@@ -182,10 +185,11 @@ class Buchhaltung extends Component
         $data = $this->validate([
             'beweg_artikel' => ['required', 'integer', 'exists:artikel,id'],
             'beweg_menge' => ['required', 'numeric', 'gt:0'],
+            'beweg_resident' => ['nullable', 'integer', $this->tenantExists('residents')],
         ]);
         $artikel = Artikel::findOrFail($data['beweg_artikel']);
-        $action->handle($artikel, (float) $data['beweg_menge'], today()->toDateString(), $this->beweg_notiz ?: null);
-        $this->reset('beweg_menge', 'beweg_preis', 'beweg_notiz');
+        $action->handle($artikel, (float) $data['beweg_menge'], today()->toDateString(), $this->beweg_notiz ?: null, $data['beweg_resident'] ?? null);
+        $this->reset('beweg_menge', 'beweg_preis', 'beweg_notiz', 'beweg_resident');
         session()->flash('status', 'Verbrauch gebucht.');
     }
 
@@ -197,6 +201,7 @@ class Buchhaltung extends Component
 
         $artikel = Artikel::where('tenant_id', $tenantId)->orderBy('abteilung')->orderBy('name')->get();
         $artikelwerte = $artikel->mapWithKeys(fn (Artikel $a) => [$a->id => $lagerwert->bestandswert($a)]);
+        $bewohner = Resident::where('tenant_id', $tenantId)->orderBy('name')->get();
 
         // Budget-Auslastung des laufenden Monats je budgetiertem Konto (Ampel/Rest).
         $monat = today()->toDateString();
@@ -215,6 +220,7 @@ class Buchhaltung extends Component
             'abteilungen' => Abteilung::cases(),
             'budgetKonten' => $budgetKonten,
             'budgetStatus' => $budgetStatus,
+            'bewohner' => $bewohner,
         ]);
     }
 }

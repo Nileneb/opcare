@@ -24,6 +24,8 @@ use Spatie\Activitylog\Models\Activity;
  * @property bool $aktiv
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property bool $pflegehilfsmittel
+ * @property string|null $pg_nummer
  * @property-read Collection<int, Activity> $activitiesAsSubject
  * @property-read int|null $activities_as_subject_count
  * @property-read Collection<int, Lagerbewegung> $bewegungen
@@ -44,6 +46,8 @@ use Spatie\Activitylog\Models\Activity;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Artikel whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Artikel whereMindestbestand($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Artikel whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Artikel wherePflegehilfsmittel($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Artikel wherePgNummer($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Artikel whereTenantId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Artikel whereUpdatedAt($value)
  *
@@ -53,7 +57,7 @@ class Artikel extends BaseModel
 {
     protected $table = 'artikel';
 
-    protected $fillable = ['tenant_id', 'name', 'einheit', 'abteilung', 'bestand', 'mindestbestand', 'einkaufspreis', 'aktiv'];
+    protected $fillable = ['tenant_id', 'name', 'einheit', 'abteilung', 'bestand', 'mindestbestand', 'einkaufspreis', 'aktiv', 'pflegehilfsmittel', 'pg_nummer'];
 
     protected $casts = [
         'abteilung' => Abteilung::class,
@@ -61,6 +65,7 @@ class Artikel extends BaseModel
         'mindestbestand' => 'decimal:2',
         'einkaufspreis' => 'decimal:2',
         'aktiv' => 'boolean',
+        'pflegehilfsmittel' => 'boolean',
     ];
 
     /**

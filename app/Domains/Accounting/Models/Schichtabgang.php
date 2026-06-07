@@ -4,6 +4,7 @@ namespace App\Domains\Accounting\Models;
 
 use App\Domains\Identity\Concerns\BelongsToTenant;
 use App\Domains\Identity\Models\Tenant;
+use App\Domains\Masterdata\Models\Resident;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
@@ -21,7 +22,9 @@ use Illuminate\Support\Carbon;
  * @property numeric $einstandspreis
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property int|null $resident_id
  * @property-read Lagerbewegung $bewegung
+ * @property-read Resident|null $resident
  * @property-read Lagerschicht $schicht
  * @property-read Tenant $tenant
  *
@@ -33,6 +36,7 @@ use Illuminate\Support\Carbon;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Schichtabgang whereEinstandspreis($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Schichtabgang whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Schichtabgang whereMenge($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Schichtabgang whereResidentId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Schichtabgang whereSchichtId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Schichtabgang whereTenantId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Schichtabgang whereUpdatedAt($value)
@@ -45,7 +49,7 @@ class Schichtabgang extends Model
 
     protected $table = 'schichtabgaenge';
 
-    protected $fillable = ['tenant_id', 'bewegung_id', 'schicht_id', 'menge', 'einstandspreis'];
+    protected $fillable = ['tenant_id', 'resident_id', 'bewegung_id', 'schicht_id', 'menge', 'einstandspreis'];
 
     protected $casts = [
         'menge' => 'decimal:2',
@@ -60,5 +64,10 @@ class Schichtabgang extends Model
     public function bewegung(): BelongsTo
     {
         return $this->belongsTo(Lagerbewegung::class, 'bewegung_id');
+    }
+
+    public function resident(): BelongsTo
+    {
+        return $this->belongsTo(Resident::class, 'resident_id');
     }
 }

@@ -8,6 +8,7 @@ use App\Http\Middleware\RequireTwoFactorEnrollment;
 use App\Http\Middleware\RestrictPortalUsers;
 use App\Livewire\Accounting\Buchhaltung;
 use App\Livewire\Accounting\Inventur;
+use App\Livewire\Accounting\Pflegehilfsmittel;
 use App\Livewire\Accounting\Taschengeldkasse;
 use App\Livewire\Admin\Heimrecht;
 use App\Livewire\Admin\Tenants;
@@ -133,6 +134,7 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class, Restrict
     Route::get('/tauschboerse', Tauschboerse::class)->name('tauschboerse');
     Route::get('/buchhaltung', Buchhaltung::class)->name('buchhaltung');
     Route::get('/inventur', Inventur::class)->name('inventur');
+    Route::get('/pflegehilfsmittel', Pflegehilfsmittel::class)->name('pflegehilfsmittel');
     Route::get('/beleg-capture', Belegerfassung::class)->name('belegerfassung');
     Route::get('/taschengeld', Taschengeldkasse::class)->name('taschengeld');
     Route::get('/dokumente/{media}', MediaDownloadController::class)->name('media.download')->middleware('signed');
