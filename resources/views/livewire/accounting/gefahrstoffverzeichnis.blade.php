@@ -28,6 +28,7 @@
                         <th>Arbeitsbereiche <small class="muted">(Nr. 4)</small></th>
                         <th>Lagerort</th>
                         <th>SDB / Version <small class="muted">(Nr. 5)</small></th>
+                        <th>Betriebsanweisung</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -67,6 +68,13 @@
                                     @if ($gs->sdb_version_datum)
                                         <span class="muted" style="font-size:.75rem;display:block">v {{ $gs->sdb_version_datum->format('d.m.Y') }}</span>
                                     @endif
+                                @else
+                                    <span class="muted">—</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if ($gs)
+                                    <a href="{{ route('betriebsanweisung-druck', $artikel) }}" class="btn btn-ghost btn-sm" target="_blank">Betriebsanweisung</a>
                                 @else
                                     <span class="muted">—</span>
                                 @endif
@@ -147,8 +155,37 @@
         </div>
 
         <div class="field" style="margin-top:10px">
-            <label>Betriebsanweisung (§ 14 GefStoffV / TRGS 555)</label>
+            <label>Betriebsanweisung (§ 14 GefStoffV / TRGS 555) — Kurzhinweis/Verweis</label>
             <textarea wire:model="betriebsanweisung" rows="2" placeholder="Verweis auf BA oder Kurztext"></textarea>
+        </div>
+
+        <div style="margin-top:14px;padding:10px;background:#f5f5f5;border-radius:4px;border-left:3px solid #1a1a2e">
+            <p style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">TRGS 555 — Pflichtabschnitte der Betriebsanweisung</p>
+
+            <div class="field" style="margin-top:8px">
+                <label>Schutzmaßnahmen und Verhaltensregeln <small class="muted">(TRGS 555 Nr. 3)</small></label>
+                <textarea wire:model="schutzmassnahmen" rows="3" placeholder="z. B. Schutzhandschuhe tragen, Kontakt mit Augen vermeiden, nur in belüfteten Räumen verwenden"></textarea>
+            </div>
+
+            <div class="field" style="margin-top:8px">
+                <label>Verhalten bei Störungen und Unfällen <small class="muted">(TRGS 555 Nr. 4)</small></label>
+                <textarea wire:model="stoerfallMassnahmen" rows="3" placeholder="z. B. Bei Verschütten Bereich absperren, kontaminierte Bereiche lüften, Vorgesetzten informieren"></textarea>
+            </div>
+
+            <div class="field" style="margin-top:8px">
+                <label>Erste-Hilfe-Maßnahmen <small class="muted">(TRGS 555 Nr. 5)</small></label>
+                <textarea wire:model="ersteHilfe" rows="3" placeholder="z. B. Bei Hautkontakt sofort mit Wasser spülen, bei Augenkontakt Augenarzt aufsuchen, Notruf 112"></textarea>
+            </div>
+
+            <div class="field" style="margin-top:8px">
+                <label>Sachgerechte Entsorgung <small class="muted">(TRGS 555 Nr. 6)</small></label>
+                <textarea wire:model="entsorgung" rows="2" placeholder="z. B. Restmengen als Sondermüll entsorgen (Abfallschlüssel 200114)"></textarea>
+            </div>
+
+            <div class="field" style="margin-top:8px">
+                <label>Unterweisungsintervall (Monate) <small class="muted">(§ 14 Abs. 2 GefStoffV, Standard: 12)</small></label>
+                <input type="number" wire:model="unterweisungIntervallMonate" min="1" max="120" style="max-width:100px" />
+            </div>
         </div>
 
         <div class="form-row-2" style="margin-top:10px;gap:12px">
