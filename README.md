@@ -6,7 +6,7 @@ Qualitätssicherung (QDVS/DAS-Pflege)** und **FHIR / ÜLB-MIO** (Pflegeüberleit
 des eingestellten Java-Projekts **[Offene-Pflege.de (OPDE)](#herkunft)** — dessen Domänenwissen dient als
 Vorlage, der Code ist von Grund auf neu.
 
-> **Status:** Funktionsfähig und aktiv in Entwicklung. **602 Tests grün**, CI durchgehend grün
+> **Status:** Funktionsfähig und aktiv in Entwicklung. **646 Tests grün**, CI durchgehend grün
 > (Tests · Linter · Security-Audit · FHIR-Validierung). Open Source (AGPL-3.0), **kein Rechtsgate**,
 > solange keine Echt-Patientendaten verarbeitet werden.
 >
@@ -83,7 +83,7 @@ Vorlage, der Code ist von Grund auf neu.
 | Backend | **Laravel 13**, **PHP 8.3+** |
 | Frontend | Blade + **Livewire 4** + Alpine.js |
 | Datenbank | **SQLite** (Dev/CI) · **PostgreSQL** (Prod) |
-| Tests | **Pest 4** (602 Tests) |
+| Tests | **Pest 4** (646 Tests) |
 | Lint/Style | **Laravel Pint** |
 | DTOs / RBAC / Audit | `spatie/laravel-data` · `spatie/laravel-permission` · `spatie/laravel-activitylog` |
 | Deployment | **Docker Compose** (self-contained: eine `.env`, `docker compose up --build`) |
@@ -104,6 +104,7 @@ Domänen-orientierte Struktur unter `app/Domains/`. Layering als Einbahnstraße:
 | **Quality** | Vorkommnisse/CareEvents, QS-Indikatoren, KPIs, **QM-Norm-Checkliste**, **Beschwerde-/Gewaltschutz-Management** (Weiterleitung anonym/namentlich), **Gremien/Heimbeirat** (HeimmwV/§ 11 ASiG) |
 | **Compliance** | **Datenschutz-Register**: Verzeichnis von Verarbeitungstätigkeiten (Art. 30 DSGVO) mit Prüf-Frist-Ampel + Auftragsverarbeitungen (Art. 28) + Art-30-Export |
 | **Capture** | **VLM-Beleg-Capture**: Belegfoto → Ollama-VLM-Extraktion → Einsortierungs-Vorschlag → berechtigte Bestätigung bucht (Human-in-the-loop, kein stiller Schreibvorgang) + **Lieferschein→Wareneingang**: Foto → VLM-Positionen → lokales Embedding-Artikel-Matching (Match-Gedächtnis + Ollama-Cosine, DSGVO-lokal) → bestätigter FIFO-Wareneingang (standalone/gegen Bestellung) |
+| **Import** | **WaWi-Stammdaten-Datenimport** (Mandanten-Onboarding): CSV → Spalten-Alias-Erkennung (editierbar) → Artikel-Matching gegen den Katalog (anlegen/mergen, Dedup) → HITL-Vorschau → bewerteter Anfangsbestand (FIFO-Schicht, EBK-Eröffnungsbuchung oder echte Verbindlichkeit) |
 | **Hygiene** | **Hygieneplan** (Dokument-mit-Freigabe + Revisions-Ampel) + **MRE-/Infektions-Surveillance** je Bewohner mit Meldepflicht-Verfolgung (§ 23/§§ 6/7 IfSG) |
 | **Qdvs** | DAS-Plausibilitäts-Regel-Engine + QDVS-Export |
 | **Fhir** | FHIR-R4-Mapper + Document-Bundle-Export (ÜLB-MIO-Richtung) |
@@ -164,7 +165,7 @@ php artisan serve
 ## Entwicklung
 
 ```bash
-php artisan test                 # bzw. vendor/bin/pest   (602 Tests)
+php artisan test                 # bzw. vendor/bin/pest   (646 Tests)
 vendor/bin/pint                  # Code-Style
 php artisan fhir:export --output=bundle.json   # FHIR-Document-Bundle erzeugen
 ```
