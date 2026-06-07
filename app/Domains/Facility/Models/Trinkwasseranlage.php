@@ -97,15 +97,19 @@ class Trinkwasseranlage extends BaseModel
         return 'gruen';
     }
 
-    /** Gibt true wenn ein Befund mit Überschreitung vorliegt, der noch nicht vollständig bearbeitet ist. */
-    public function offeneUeberschreitung(): bool
+    /** Liefert den jüngsten offenen Überschreitungs-Befund (Meldung ODER Maßnahme fehlt noch). */
+    public function offenerBefund(): ?Legionellenbefund
     {
         return $this->befunde()
             ->where('ueberschreitung', true)
-            ->where(function ($q) {
-                $q->whereNull('gesundheitsamt_gemeldet_am')
-                    ->orWhereNull('massnahme');
-            })
-            ->exists();
+            ->where(fn ($q) => $q->whereNull('gesundheitsamt_gemeldet_am')->orWhereNull('massnahme'))
+            ->latest('untersucht_am')
+            ->first();
+    }
+
+    /** Gibt true wenn ein Befund mit Überschreitung vorliegt, der noch nicht vollständig bearbeitet ist. */
+    public function offeneUeberschreitung(): bool
+    {
+        return $this->offenerBefund() !== null;
     }
 }

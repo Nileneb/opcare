@@ -114,6 +114,88 @@ it('schliesst den Ueberschreitungs-Workflow ab via meldungSetzen', function () {
     expect($fresh->massnahme)->toBe('Thermische Desinfektion durchgeführt.');
 });
 
+// --- B1: untersucht_am darf nicht in der Zukunft liegen ---
+
+it('B1: befundErfassen mit Zukunftsdatum schlägt fehl und legt keinen Befund an', function () {
+    $anlage = Trinkwasseranlage::create([
+        'tenant_id' => $this->tenant->id,
+        'bezeichnung' => 'Anlage Zukunft',
+        'ist_grossanlage' => true,
+        'untersuchungsintervall_monate' => 12,
+        'letzte_untersuchung_am' => '2026-06-01',
+    ]);
+
+    $morgen = now()->addDay()->toDateString();
+
+    Livewire::test(Trinkwasser::class)
+        ->set('untersucht_am', $morgen)
+        ->set('kbe', 50)
+        ->call('befundErfassen', $anlage->id)
+        ->assertHasErrors(['untersucht_am']);
+
+    expect(Legionellenbefund::where('trinkwasseranlage_id', $anlage->id)->count())->toBe(0);
+    expect($anlage->fresh()->letzte_untersuchung_am->toDateString())->toBe('2026-06-01');
+});
+
+// --- B2: offenerBefund() und § 51-Kasten-Schließbarkeit ---
+
+it('B2: offenerBefund liefert bereits-gemeldeten Befund wenn massnahme noch fehlt', function () {
+    $anlage = Trinkwasseranlage::create([
+        'tenant_id' => $this->tenant->id,
+        'bezeichnung' => 'Anlage Offen B2',
+        'ist_grossanlage' => true,
+        'untersuchungsintervall_monate' => 12,
+    ]);
+    $befund = Legionellenbefund::create([
+        'tenant_id' => $this->tenant->id,
+        'trinkwasseranlage_id' => $anlage->id,
+        'untersucht_am' => '2026-06-01',
+        'kbe_pro_100ml' => 200,
+        'ueberschreitung' => true,
+        'gesundheitsamt_gemeldet_am' => '2026-06-02',
+        'massnahme' => null,
+    ]);
+
+    expect($anlage->offenerBefund()?->id)->toBe($befund->id);
+    expect($anlage->offeneUeberschreitung())->toBeTrue();
+
+    Livewire::test(Trinkwasser::class)
+        ->set('meldung_massnahme', 'Thermische Desinfektion.')
+        ->call('meldungSetzen', $befund->id)
+        ->assertHasNoErrors();
+
+    $fresh = $befund->fresh();
+    expect($fresh->massnahme)->toBe('Thermische Desinfektion.');
+    // Ursprüngliches Meldedatum darf nicht überschrieben werden
+    expect($fresh->gesundheitsamt_gemeldet_am->toDateString())->toBe('2026-06-02');
+    expect($anlage->fresh()->offeneUeberschreitung())->toBeFalse();
+});
+
+it('B2: offenerBefund liefert den jüngsten bei zwei offenen Überschreitungs-Befunden', function () {
+    $anlage = Trinkwasseranlage::create([
+        'tenant_id' => $this->tenant->id,
+        'bezeichnung' => 'Anlage Zwei Offen',
+        'ist_grossanlage' => true,
+        'untersuchungsintervall_monate' => 12,
+    ]);
+    Legionellenbefund::create([
+        'tenant_id' => $this->tenant->id,
+        'trinkwasseranlage_id' => $anlage->id,
+        'untersucht_am' => '2026-05-01',
+        'kbe_pro_100ml' => 150,
+        'ueberschreitung' => true,
+    ]);
+    $juengster = Legionellenbefund::create([
+        'tenant_id' => $this->tenant->id,
+        'trinkwasseranlage_id' => $anlage->id,
+        'untersucht_am' => '2026-06-01',
+        'kbe_pro_100ml' => 300,
+        'ueberschreitung' => true,
+    ]);
+
+    expect($anlage->offenerBefund()?->id)->toBe($juengster->id);
+});
+
 it('verwehrt den Zugriff für Rolle kueche mit 403', function () {
     $kueche = User::factory()->create(['tenant_id' => $this->tenant->id]);
     $kueche->assignRole('kueche');

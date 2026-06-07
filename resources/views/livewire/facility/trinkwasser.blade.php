@@ -74,7 +74,7 @@
                 <div class="alert alert-danger" style="border:2px solid #c0392b;background:#fdf0ef;padding:1rem;border-radius:4px;margin-bottom:1rem">
                     <strong>⚠ Maßnahmenwert 100 KbE/100 ml überschritten — § 51 TrinkwV 2023</strong><br>
                     Ursachenuntersuchung und Maßnahmen sind unverzüglich einzuleiten. Die zuständige Behörde (Gesundheitsamt) ist nach § 51 TrinkwV 2023 anzuzeigen.
-                    <form wire:submit="meldungSetzen({{ $anlage->befunde->where('ueberschreitung', true)->whereNull('gesundheitsamt_gemeldet_am')->first()?->id ?? 0 }})" style="margin-top:.75rem">
+                    <form wire:submit="meldungSetzen({{ $anlage->offenerBefund()?->id ?? 0 }})" style="margin-top:.75rem">
                         <div class="field">
                             <label>Eingeleitete Maßnahmen *</label>
                             <textarea wire:model="meldung_massnahme" rows="3" placeholder="Beschreibung der eingeleiteten Maßnahmen (z. B. Thermische Desinfektion, Chlorung, Nutzungseinschränkung)"></textarea>

@@ -109,7 +109,7 @@ class Trinkwasser extends Component
 
         $rules = [
             'stelle_id' => ['nullable', 'integer', $this->tenantExists('probenahmestellen')],
-            'untersucht_am' => ['required', 'date'],
+            'untersucht_am' => ['required', 'date', 'before_or_equal:today'],
             'kbe' => ['required', 'integer', 'min:0'],
             'labor' => ['nullable', 'string', 'max:160'],
         ];
@@ -149,12 +149,14 @@ class Trinkwasser extends Component
             'meldung_massnahme' => ['required', 'string', 'max:1000'],
         ]);
 
-        Legionellenbefund::where('tenant_id', app(CurrentTenant::class)->id())
-            ->findOrFail($befundId)
-            ->update([
-                'massnahme' => $data['meldung_massnahme'],
-                'gesundheitsamt_gemeldet_am' => today()->toDateString(),
-            ]);
+        $befund = Legionellenbefund::where('tenant_id', app(CurrentTenant::class)->id())
+            ->findOrFail($befundId);
+
+        $befund->massnahme = $data['meldung_massnahme'];
+        if ($befund->gesundheitsamt_gemeldet_am === null) {
+            $befund->gesundheitsamt_gemeldet_am = today();
+        }
+        $befund->save();
 
         $this->reset('meldung_massnahme');
         session()->flash('status', '§ 51 TrinkwV: Meldung an Gesundheitsamt dokumentiert.');
