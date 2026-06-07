@@ -9,6 +9,7 @@ use App\Http\Middleware\RestrictPortalUsers;
 use App\Livewire\Accounting\Buchhaltung;
 use App\Livewire\Accounting\Inventur;
 use App\Livewire\Accounting\Pflegehilfsmittel;
+use App\Livewire\Accounting\Rueckverfolgung;
 use App\Livewire\Accounting\Taschengeldkasse;
 use App\Livewire\Admin\Heimrecht;
 use App\Livewire\Admin\Tenants;
@@ -136,6 +137,7 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class, Restrict
     Route::get('/inventur', Inventur::class)->name('inventur');
     Route::get('/pflegehilfsmittel', Pflegehilfsmittel::class)->name('pflegehilfsmittel');
     Route::get('/beleg-capture', Belegerfassung::class)->name('belegerfassung');
+    Route::get('/rueckverfolgung', Rueckverfolgung::class)->name('rueckverfolgung');
     Route::get('/taschengeld', Taschengeldkasse::class)->name('taschengeld');
     Route::get('/dokumente/{media}', MediaDownloadController::class)->name('media.download')->middleware('signed');
     Route::get('/bewohner/{resident}/assessment/{instrument}', AssessmentDurchfuehren::class)->name('assessment.durchfuehren');
