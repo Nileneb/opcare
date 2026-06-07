@@ -43,6 +43,7 @@ const pages = [
     ['gefahrstoffe', '/gefahrstoffe', true],
     ['beschaffung', '/beschaffung', true],
     ['belegerfassung', '/beleg-capture', true],
+    ['wareneingang-capture', '/wareneingang-capture', true],
     ['taschengeld', '/taschengeld', true],
     ['skill-baum', '/personal/kompetenzen', true],
     ['berechtigungen', '/personal/berechtigungen', true],
