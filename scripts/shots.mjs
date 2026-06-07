@@ -44,6 +44,7 @@ const pages = [
     ['beschaffung', '/beschaffung', true],
     ['belegerfassung', '/beleg-capture', true],
     ['wareneingang-capture', '/wareneingang-capture', true],
+    ['datenimport', '/datenimport', true],
     ['taschengeld', '/taschengeld', true],
     ['skill-baum', '/personal/kompetenzen', true],
     ['berechtigungen', '/personal/berechtigungen', true],
