@@ -3,6 +3,8 @@
 namespace App\Domains\Identity\Database\Seeders;
 
 use App\Domains\Accounting\Actions\Buchen;
+use App\Domains\Accounting\Actions\InventurAbschliessen;
+use App\Domains\Accounting\Actions\InventurStarten;
 use App\Domains\Accounting\Actions\TreuhandBuchen;
 use App\Domains\Accounting\Actions\Wareneingang;
 use App\Domains\Accounting\Actions\Warenverbrauch;
@@ -492,6 +494,16 @@ class DemoSeeder extends Seeder
         app(Wareneingang::class)->handle($filter, 5, 6.50, now()->subDays(2)->toDateString(), 'Haustechnik-Service'); // unter Mindestbestand
         app(Warenverbrauch::class)->handle($mehl->fresh(), 12, now()->subDay()->toDateString(), 'Backtag Wohnbereich 1');
         app(Warenverbrauch::class)->handle($handschuhe->fresh(), 35, now()->toDateString(), 'Tagesbedarf Pflege');
+
+        // FIFO sichtbar (§ 256 HGB): zweite Mehl-Lieferung zu höherem Preis → zwei Bewertungsschichten.
+        app(Wareneingang::class)->handle($mehl->fresh(), 25, 1.10, now()->toDateString(), 'Großhandel Bergisch (Nachlieferung)');
+
+        // Inventur (§§ 240/241 HGB): Stichtag mit einer erfassten Zähldifferenz (2 kg Mehl-Schwund), abgeschlossen.
+        $inventur = app(InventurStarten::class)->handle(now()->toDateString(), Abteilung::Kueche, $buchhalterin->id);
+        $mehlPos = $inventur->positionen->firstWhere('artikel_id', $mehl->id);
+        $mehlPos?->update(['ist_menge' => (float) $mehlPos->soll_menge - 2, 'gezaehlt_von' => $buchhalterin->id, 'gezaehlt_am' => now()]);
+        app(InventurAbschliessen::class)->handle($inventur->fresh(), $buchhalterin->id);
+
         // Freie Hauptbuchung (GoB/PBV): generischer Buchungssatz, hier Bargeld-Aufnahme von der Bank in die Kasse.
         app(Buchen::class)->handle(
             AccountingDefaults::konto(AccountingDefaults::KASSE)->id,

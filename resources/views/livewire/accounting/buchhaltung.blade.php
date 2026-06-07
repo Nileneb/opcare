@@ -28,9 +28,9 @@
     </div>
 
     <div class="card">
-        <div class="card-head"><h3>Lagerartikel</h3><span class="badge gray">{{ $artikel->count() }} Artikel</span></div>
+        <div class="card-head"><h3>Lagerartikel</h3><span class="badge gray">Lagerwert (FIFO): {{ number_format($lagerwertSumme, 2, ',', '.') }} €</span></div>
         <table class="data-table">
-            <thead><tr><th>Artikel</th><th>Abteilung</th><th style="text-align:right">Bestand</th><th style="text-align:right">EK-Preis</th><th></th></tr></thead>
+            <thead><tr><th>Artikel</th><th>Abteilung</th><th style="text-align:right">Bestand</th><th style="text-align:right">EK-Preis</th><th style="text-align:right">Bestandswert</th><th></th></tr></thead>
             <tbody>
                 @forelse ($artikel as $a)
                     <tr @class(['row-warn' => $a->unterbestand()])>
@@ -41,10 +41,11 @@
                             @if ($a->unterbestand())<span class="badge red" title="unter Mindestbestand {{ $a->mindestbestand }}">⚠ Unterbestand</span>@endif
                         </td>
                         <td style="text-align:right">{{ $a->einkaufspreis !== null ? number_format((float) $a->einkaufspreis, 2, ',', '.').' €' : '–' }}</td>
+                        <td style="text-align:right;font-variant-numeric:tabular-nums"><b>{{ number_format($artikelwerte[$a->id] ?? 0, 2, ',', '.') }} €</b></td>
                         <td style="text-align:right"><button class="btn btn-ghost btn-sm" wire:click="$set('beweg_artikel', {{ $a->id }})">buchen</button></td>
                     </tr>
                 @empty
-                    <tr><td colspan="5"><p class="empty">Noch keine Artikel angelegt.</p></td></tr>
+                    <tr><td colspan="6"><p class="empty">Noch keine Artikel angelegt.</p></td></tr>
                 @endforelse
             </tbody>
         </table>

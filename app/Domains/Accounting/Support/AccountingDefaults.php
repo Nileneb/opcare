@@ -21,6 +21,8 @@ class AccountingDefaults
 
     public const WARENBESTAND = '3980';
 
+    public const INVENTURDIFFERENZ = '4980';
+
     public static function ensureFor(int $tenantId): void
     {
         $standard = [
@@ -28,6 +30,7 @@ class AccountingDefaults
             [self::BANK, 'Bank', KontoTyp::Aktiv],
             [self::VERBINDLICHKEITEN, 'Verbindlichkeiten aus L+L', KontoTyp::Passiv],
             [self::WARENBESTAND, 'Warenbestand', KontoTyp::Aktiv],
+            [self::INVENTURDIFFERENZ, 'Bestandsdifferenzen (Inventur)', KontoTyp::Aufwand],
         ];
         foreach ($standard as [$nummer, $name, $typ]) {
             Konto::firstOrCreate(['tenant_id' => $tenantId, 'nummer' => $nummer], ['name' => $name, 'typ' => $typ->value]);
