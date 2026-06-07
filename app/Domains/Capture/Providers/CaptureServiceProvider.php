@@ -4,10 +4,13 @@ namespace App\Domains\Capture\Providers;
 
 use App\Domains\Capture\Contracts\BelegVlmAnalyzer;
 use App\Domains\Capture\Contracts\LieferscheinVlmAnalyzer;
+use App\Domains\Capture\Contracts\TextEmbedder;
 use App\Domains\Capture\Services\OllamaBelegAnalyzer;
 use App\Domains\Capture\Services\OllamaLieferscheinAnalyzer;
+use App\Domains\Capture\Services\OllamaTextEmbedder;
 use App\Domains\Capture\Testing\FakeBelegAnalyzer;
 use App\Domains\Capture\Testing\FakeLieferscheinAnalyzer;
+use App\Domains\Capture\Testing\FakeTextEmbedder;
 use Illuminate\Support\ServiceProvider;
 
 class CaptureServiceProvider extends ServiceProvider
@@ -24,6 +27,11 @@ class CaptureServiceProvider extends ServiceProvider
         $this->app->bind(
             LieferscheinVlmAnalyzer::class,
             config('speech.fake') ? FakeLieferscheinAnalyzer::class : OllamaLieferscheinAnalyzer::class,
+        );
+
+        $this->app->bind(
+            TextEmbedder::class,
+            config('speech.fake') ? FakeTextEmbedder::class : OllamaTextEmbedder::class,
         );
     }
 }

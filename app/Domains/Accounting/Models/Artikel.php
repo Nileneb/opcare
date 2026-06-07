@@ -28,6 +28,8 @@ use Spatie\Activitylog\Models\Activity;
  * @property bool $pflegehilfsmittel
  * @property string|null $pg_nummer
  * @property bool $gefahrstoff
+ * @property array<array-key, mixed>|null $name_embedding
+ * @property string|null $embedding_model
  * @property-read Collection<int, Activity> $activitiesAsSubject
  * @property-read int|null $activities_as_subject_count
  * @property-read Collection<int, Lagerbewegung> $bewegungen
@@ -46,10 +48,12 @@ use Spatie\Activitylog\Models\Activity;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Artikel whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Artikel whereEinheit($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Artikel whereEinkaufspreis($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Artikel whereEmbeddingModel($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Artikel whereGefahrstoff($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Artikel whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Artikel whereMindestbestand($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Artikel whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Artikel whereNameEmbedding($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Artikel wherePflegehilfsmittel($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Artikel wherePgNummer($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Artikel whereTenantId($value)
@@ -61,7 +65,7 @@ class Artikel extends BaseModel
 {
     protected $table = 'artikel';
 
-    protected $fillable = ['tenant_id', 'name', 'einheit', 'abteilung', 'bestand', 'mindestbestand', 'einkaufspreis', 'aktiv', 'pflegehilfsmittel', 'pg_nummer', 'gefahrstoff'];
+    protected $fillable = ['tenant_id', 'name', 'einheit', 'abteilung', 'bestand', 'mindestbestand', 'einkaufspreis', 'aktiv', 'pflegehilfsmittel', 'pg_nummer', 'gefahrstoff', 'name_embedding', 'embedding_model'];
 
     protected $casts = [
         'abteilung' => Abteilung::class,
@@ -71,6 +75,7 @@ class Artikel extends BaseModel
         'aktiv' => 'boolean',
         'pflegehilfsmittel' => 'boolean',
         'gefahrstoff' => 'boolean',
+        'name_embedding' => 'array',
     ];
 
     /**

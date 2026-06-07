@@ -21,5 +21,6 @@ return [
     // VLM-Beleg-Capture: vision-fähiges Ollama-Modell (nutzt dieselbe OLLAMA_URL/-timeout).
     'capture' => [
         'model' => env('CAPTURE_VLM_MODEL', 'qwen2.5vl:latest'),
+        'embedding_model' => env('CAPTURE_EMBEDDING_MODEL', 'nomic-embed-text'),
     ],
 ];
