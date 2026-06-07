@@ -60,3 +60,16 @@ it('zeigt der Leitung die Team-Übersicht (Ist vs. Soll)', function () {
 
     Livewire::test(Zeiterfassung::class)->assertSee('Team');
 });
+
+it('zählt Buchungen am letzten Wochentag mit (date-Cast-Grenze, nicht nur Mo–Sa)', function () {
+    $leitung = User::factory()->create(['tenant_id' => $this->tenant->id]);
+    $leitung->assignRole('admin');
+    $this->actingAs($leitung);
+    // 2026-06-07 ist ein Sonntag = letzter Tag der Woche, die am 2026-06-01 (Mo) beginnt.
+    Zeitbuchung::create(['user_id' => $this->user->id, 'datum' => '2026-06-07', 'beginn' => '08:00', 'ende' => '16:00', 'pause_minuten' => 30]);
+
+    Livewire::test(Zeiterfassung::class)
+        ->set('weekStart', '2026-06-01')
+        ->assertSee('Team')
+        ->assertSee('7.5 h'); // Ist-Stunden tauchen in der Team-Übersicht auf
+});

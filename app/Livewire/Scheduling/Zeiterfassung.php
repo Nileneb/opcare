@@ -95,13 +95,15 @@ class Zeiterfassung extends Component
         $von = $start->toDateString();
         $bis = $start->addDays(6)->toDateString();
 
+        // whereDate statt whereBetween: die als date gecastete Spalte wird als '…00:00:00' gespeichert —
+        // ein reiner Bis-String würde den letzten Wochentag ausschließen (Bug: Wochenansicht sonntags leer).
         $eigene = Zeitbuchung::where('user_id', auth()->id())
-            ->whereBetween('datum', [$von, $bis])->orderBy('datum')->orderBy('beginn')->get();
+            ->whereDate('datum', '>=', $von)->whereDate('datum', '<=', $bis)->orderBy('datum')->orderBy('beginn')->get();
         $laufend = Zeitbuchung::where('user_id', auth()->id())->whereNull('ende')->latest()->first();
 
         // Soll je User aus dem Dienstplan (geplante Schichtstunden) für die Woche.
         $soll = [];
-        foreach (ShiftAssignment::with('shift')->whereBetween('dienst_am', [$von, $bis])->get() as $a) {
+        foreach (ShiftAssignment::with('shift')->whereDate('dienst_am', '>=', $von)->whereDate('dienst_am', '<=', $bis)->get() as $a) {
             if ($a->shift) {
                 $soll[$a->user_id] = ($soll[$a->user_id] ?? 0) + WorkingHoursAnalyzer::stunden($a->shift->beginn, $a->shift->ende);
             }
@@ -110,7 +112,7 @@ class Zeiterfassung extends Component
 
         $alleUebersicht = [];
         if ($this->darfAlle()) {
-            $istProUser = Zeitbuchung::whereBetween('datum', [$von, $bis])->whereNotNull('ende')->get()
+            $istProUser = Zeitbuchung::whereDate('datum', '>=', $von)->whereDate('datum', '<=', $bis)->whereNotNull('ende')->get()
                 ->groupBy('user_id')->map(fn ($g) => round($g->sum(fn (Zeitbuchung $b) => $b->istStunden() ?? 0), 2));
             foreach (User::where('tenant_id', $tenantId)->orderBy('name')->get() as $u) {
                 $ist = $istProUser[$u->id] ?? 0;
