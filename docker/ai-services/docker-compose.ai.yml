@@ -79,7 +79,7 @@ services:
     #      kein RFC-9728-Discovery-Endpunkt. pingFachdienst()/fetchHelloZeta() belegen operative
     #      Erreichbarkeit ohne SMC-B oder RU-Zulassung. Nur Dev — NICHT für Prod (kein Auth).
     build:
-      context: ${ZETA_TESTFACHDIENST_CONTEXT:-../../../../zeta-testfachdienst}
+      context: ${ZETA_TESTFACHDIENST_CONTEXT:-../../../zeta-testfachdienst}
       dockerfile: Dockerfile.opcare-dev
     image: zeta-testfachdienst:opcare-dev
     environment:
