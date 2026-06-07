@@ -7,6 +7,7 @@ use App\Http\Controllers\SpeechController;
 use App\Http\Middleware\RequireTwoFactorEnrollment;
 use App\Http\Middleware\RestrictPortalUsers;
 use App\Livewire\Accounting\Beschaffung;
+use App\Livewire\Accounting\BetriebsanweisungDruck;
 use App\Livewire\Accounting\Buchhaltung;
 use App\Livewire\Accounting\Gefahrstoffverzeichnis;
 use App\Livewire\Accounting\Inventur;
@@ -145,6 +146,7 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class, Restrict
     Route::get('/inventur', Inventur::class)->name('inventur');
     Route::get('/pflegehilfsmittel', Pflegehilfsmittel::class)->name('pflegehilfsmittel');
     Route::get('/gefahrstoffe', Gefahrstoffverzeichnis::class)->name('gefahrstoffe');
+    Route::get('/gefahrstoffe/{artikel}/betriebsanweisung', BetriebsanweisungDruck::class)->name('betriebsanweisung-druck');
     Route::get('/beleg-capture', Belegerfassung::class)->name('belegerfassung');
     Route::get('/wareneingang-capture', Wareneingangerfassung::class)->name('wareneingang-capture');
     Route::get('/regalzaehlung', Regalzaehlung::class)->name('regalzaehlung');

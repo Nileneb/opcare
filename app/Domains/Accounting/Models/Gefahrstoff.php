@@ -27,6 +27,11 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property string|null $arbeitsbereiche
  * @property string|null $lagerort
  * @property string|null $betriebsanweisung
+ * @property string|null $schutzmassnahmen
+ * @property string|null $stoerfall_massnahmen
+ * @property string|null $erste_hilfe
+ * @property string|null $entsorgung
+ * @property int $unterweisung_intervall_monate
  * @property Carbon|null $sdb_version_datum
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -44,6 +49,8 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Gefahrstoff whereArtikelId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Gefahrstoff whereBetriebsanweisung($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Gefahrstoff whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Gefahrstoff whereEntsorgung($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Gefahrstoff whereErsteHilfe($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Gefahrstoff whereGhsPiktogramme($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Gefahrstoff whereHSaetze($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Gefahrstoff whereId($value)
@@ -51,8 +58,11 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Gefahrstoff whereMengenbereich($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Gefahrstoff wherePSaetze($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Gefahrstoff whereSdbVersionDatum($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Gefahrstoff whereSchutzmassnahmen($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Gefahrstoff whereSignalwort($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Gefahrstoff whereStoerfallMassnahmen($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Gefahrstoff whereTenantId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Gefahrstoff whereUnterweisungIntervallMonate($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Gefahrstoff whereUpdatedAt($value)
  *
  * @mixin \Eloquent
@@ -74,6 +84,11 @@ class Gefahrstoff extends BaseModel implements HasMedia
         'arbeitsbereiche',
         'lagerort',
         'betriebsanweisung',
+        'schutzmassnahmen',
+        'stoerfall_massnahmen',
+        'erste_hilfe',
+        'entsorgung',
+        'unterweisung_intervall_monate',
         'sdb_version_datum',
     ];
 

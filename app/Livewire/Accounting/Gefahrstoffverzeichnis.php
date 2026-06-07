@@ -38,6 +38,16 @@ class Gefahrstoffverzeichnis extends Component
 
     public string $betriebsanweisung = '';
 
+    public string $schutzmassnahmen = '';
+
+    public string $stoerfallMassnahmen = '';
+
+    public string $ersteHilfe = '';
+
+    public string $entsorgung = '';
+
+    public int $unterweisungIntervallMonate = 12;
+
     public string $sdbVersionDatum = '';
 
     /** @var TemporaryUploadedFile|null */
@@ -76,6 +86,11 @@ class Gefahrstoffverzeichnis extends Component
         $this->arbeitsbereiche = $gefahrstoff->arbeitsbereiche ?? '';
         $this->lagerort = $gefahrstoff->lagerort ?? '';
         $this->betriebsanweisung = $gefahrstoff->betriebsanweisung ?? '';
+        $this->schutzmassnahmen = $gefahrstoff->schutzmassnahmen ?? '';
+        $this->stoerfallMassnahmen = $gefahrstoff->stoerfall_massnahmen ?? '';
+        $this->ersteHilfe = $gefahrstoff->erste_hilfe ?? '';
+        $this->entsorgung = $gefahrstoff->entsorgung ?? '';
+        $this->unterweisungIntervallMonate = $gefahrstoff->unterweisung_intervall_monate;
         $this->sdbVersionDatum = $gefahrstoff->sdb_version_datum?->format('Y-m-d') ?? '';
     }
 
@@ -111,6 +126,11 @@ class Gefahrstoffverzeichnis extends Component
                 'arbeitsbereiche' => $this->arbeitsbereiche ?: null,
                 'lagerort' => $this->lagerort ?: null,
                 'betriebsanweisung' => $this->betriebsanweisung ?: null,
+                'schutzmassnahmen' => $this->schutzmassnahmen ?: null,
+                'stoerfall_massnahmen' => $this->stoerfallMassnahmen ?: null,
+                'erste_hilfe' => $this->ersteHilfe ?: null,
+                'entsorgung' => $this->entsorgung ?: null,
+                'unterweisung_intervall_monate' => $this->unterweisungIntervallMonate,
                 'sdb_version_datum' => $this->sdbVersionDatum ? Carbon::parse($this->sdbVersionDatum) : null,
             ],
         );
@@ -163,6 +183,11 @@ class Gefahrstoffverzeichnis extends Component
         $this->arbeitsbereiche = '';
         $this->lagerort = '';
         $this->betriebsanweisung = '';
+        $this->schutzmassnahmen = '';
+        $this->stoerfallMassnahmen = '';
+        $this->ersteHilfe = '';
+        $this->entsorgung = '';
+        $this->unterweisungIntervallMonate = 12;
         $this->sdbVersionDatum = '';
         $this->sdbFile = null;
     }
