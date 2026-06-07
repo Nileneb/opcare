@@ -62,7 +62,7 @@
                                 @if ($gs)
                                     @php($sdbMedia = $gs->getFirstMedia('sdb'))
                                     @if ($sdbMedia)
-                                        <a href="{{ route('media.download', $sdbMedia->id) }}" class="btn btn-ghost btn-sm">SDB ↓</a>
+                                        <a href="{{ \Illuminate\Support\Facades\URL::temporarySignedRoute('media.download', now()->addMinutes(5), ['media' => $sdbMedia->id]) }}" class="btn btn-ghost btn-sm">SDB ↓</a>
                                     @endif
                                     @if ($gs->sdb_version_datum)
                                         <span class="muted" style="font-size:.75rem;display:block">v {{ $gs->sdb_version_datum->format('d.m.Y') }}</span>

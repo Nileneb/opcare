@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Domains\Accounting\Models\Gefahrstoff;
 use App\Domains\Identity\Support\CurrentTenant;
 use App\Domains\Masterdata\Models\MediaShare;
 use App\Domains\Masterdata\Models\Resident;
@@ -11,17 +12,23 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Liefert ein Bewohner-Dokument/Foto über eine signierte, ablaufende Route aus (disk-agnostisch: lokal
- * oder MinIO). Tenant-Scope wird über das verknüpfte Resident-Modell erzwungen (IDOR-Schutz); bei
- * Freigabe-Links wird der Zugriff protokolliert.
+ * Liefert ein Bewohner-Dokument/Foto sowie Gefahrstoff-SDB über eine signierte, ablaufende Route
+ * aus (disk-agnostisch: lokal oder MinIO). Tenant-Scope wird über das Trägermodell erzwungen
+ * (IDOR-Schutz); bei Freigabe-Links wird der Zugriff protokolliert.
  */
 class MediaDownloadController extends Controller
 {
     public function __invoke(Request $request, Media $media): StreamedResponse
     {
-        // Tenant-Scope: das Trägermodell (Resident) unterliegt dem globalen TenantScope.
         $owner = $media->model;
-        abort_unless($owner instanceof Resident && (int) $owner->tenant_id === (int) app(CurrentTenant::class)->id(), 403);
+        // WHY(§ 6 Abs. 12 Nr. 5 GefStoffV): SDB gehört einem Gefahrstoff, nicht einem Resident —
+        // beide Owner-Typen tenant-scoped erlauben, sonst 403 bei SDB-Download.
+        $ownerTenantId = match (true) {
+            $owner instanceof Resident => $owner->tenant_id,
+            $owner instanceof Gefahrstoff => $owner->tenant_id,
+            default => null,
+        };
+        abort_unless($ownerTenantId !== null && (int) $ownerTenantId === (int) app(CurrentTenant::class)->id(), 403);
 
         if ($request->filled('share')) {
             $share = MediaShare::where('media_id', $media->id)->findOrFail($request->integer('share'));

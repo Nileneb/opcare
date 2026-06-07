@@ -184,7 +184,7 @@ class Buchhaltung extends Component
     {
         abort_unless($this->darfSehen(), 403);
         $data = $this->validate([
-            'beweg_artikel' => ['required', 'integer', 'exists:artikel,id'],
+            'beweg_artikel' => ['required', 'integer', $this->tenantExists('artikel')],
             'beweg_menge' => ['required', 'numeric', 'gt:0'],
             'beweg_preis' => ['nullable', 'numeric', 'min:0'],
             'beweg_charge' => ['nullable', 'string', 'max:120'],
@@ -231,7 +231,7 @@ class Buchhaltung extends Component
     {
         abort_unless($this->darfSehen(), 403);
         $data = $this->validate([
-            'beweg_artikel' => ['required', 'integer', 'exists:artikel,id'],
+            'beweg_artikel' => ['required', 'integer', $this->tenantExists('artikel')],
             'beweg_menge' => ['required', 'numeric', 'gt:0'],
             'beweg_resident' => ['nullable', 'integer', $this->tenantExists('residents')],
         ]);

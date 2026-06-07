@@ -8,6 +8,7 @@ use App\Domains\Accounting\Models\Gefahrstoff;
 use App\Domains\Identity\Support\CurrentTenant;
 use App\Support\Concerns\ScopesTenantValidation;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
@@ -88,6 +89,8 @@ class Gefahrstoffverzeichnis extends Component
 
         $this->validate([
             'artikelId' => ['required', 'integer', $this->tenantExists('artikel')],
+            'ghsPiktogramme' => ['array'],
+            'ghsPiktogramme.*' => [Rule::enum(GhsPiktogramm::class)],
             'sdbFile' => ['nullable', 'file', 'mimes:pdf', 'max:20480'],
         ]);
 

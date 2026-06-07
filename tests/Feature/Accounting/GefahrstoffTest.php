@@ -11,6 +11,7 @@ use App\Livewire\Accounting\Gefahrstoffverzeichnis;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
 
@@ -187,6 +188,63 @@ it('erlaubt Zugriff für haustechnik-Rolle', function () {
     Livewire::actingAs($tech)
         ->test(Gefahrstoffverzeichnis::class)
         ->assertOk();
+});
+
+// ─── SDB-Download: signierte URL (B1) ────────────────────────────────────────
+
+it('SDB-Download gibt 200 für eigenen Mandanten zurück', function () {
+    // WHY(GC-FALLE): Variable muss bis nach Assertion leben.
+    $sdbFile = UploadedFile::fake()->create('sdb_test.pdf', 50, 'application/pdf');
+
+    Livewire::actingAs($this->user)
+        ->test(Gefahrstoffverzeichnis::class)
+        ->set('artikelId', $this->artikelGefahr->id)
+        ->set('sdbFile', $sdbFile)
+        ->call('eintragSpeichern')
+        ->assertHasNoErrors();
+
+    $gefahrstoff = Gefahrstoff::where('artikel_id', $this->artikelGefahr->id)->first();
+    $sdbMedia = $gefahrstoff->getFirstMedia('sdb');
+    expect($sdbMedia)->not->toBeNull();
+
+    $url = URL::temporarySignedRoute('media.download', now()->addMinutes(5), ['media' => $sdbMedia->id]);
+
+    $this->actingAs($this->user)
+        ->get($url)
+        ->assertOk();
+
+    unset($sdbFile);
+});
+
+it('SDB-Download gibt 403 für fremden Mandanten (IDOR)', function () {
+    // WHY(GC-FALLE): Variable muss bis nach Assertion leben.
+    $sdbFile = UploadedFile::fake()->create('sdb_fremd.pdf', 50, 'application/pdf');
+
+    Livewire::actingAs($this->user)
+        ->test(Gefahrstoffverzeichnis::class)
+        ->set('artikelId', $this->artikelGefahr->id)
+        ->set('sdbFile', $sdbFile)
+        ->call('eintragSpeichern')
+        ->assertHasNoErrors();
+
+    unset($sdbFile);
+
+    $gefahrstoff = Gefahrstoff::where('artikel_id', $this->artikelGefahr->id)->first();
+    $sdbMedia = $gefahrstoff->getFirstMedia('sdb');
+    expect($sdbMedia)->not->toBeNull();
+
+    // Fremder Tenant — CurrentTenant auf fremd setzen, dann Download-Versuch.
+    $fremdTenant = Tenant::create(['name' => 'SDB-Fremd', 'slug' => 'sdb-fremd']);
+    AccountingDefaults::ensureFor($fremdTenant->id);
+    $fremdUser = User::factory()->create(['tenant_id' => $fremdTenant->id]);
+    $fremdUser->assignRole('buchhaltung');
+    app(CurrentTenant::class)->set($fremdTenant);
+
+    $url = URL::temporarySignedRoute('media.download', now()->addMinutes(5), ['media' => $sdbMedia->id]);
+
+    $this->actingAs($fremdUser)
+        ->get($url)
+        ->assertForbidden();
 });
 
 // ─── IDOR-Härtung: fremder Tenant ────────────────────────────────────────────
