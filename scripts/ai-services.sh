@@ -12,11 +12,12 @@
 #   scripts/ai-services.sh down           die opcare-ai-Container stoppen
 #   scripts/ai-services.sh logs [dienst…] Container-Logs
 #
-# dienst ∈ {ollama, whisperx}  (whisperx == whisperx-mcp)
+# dienst ∈ {ollama, whisperx, vision}  (whisperx == whisperx-mcp, vision == vision-mcp)
 set -euo pipefail
 
 OLLAMA_URL="${OLLAMA_URL:-http://localhost:11434}"
 WHISPER_URL="${WHISPER_URL:-http://localhost:8000}"
+VISION_URL="${VISION_URL:-http://localhost:8001}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AI_DIR="$SCRIPT_DIR/../docker/ai-services"
@@ -29,6 +30,7 @@ port_of() { local p="${1##*:}"; printf '%s' "${p%%/*}"; }
 probe_ollama()  { curl -fsS --max-time 4 "$OLLAMA_URL/api/version" >/dev/null 2>&1; }
 # /health meldet ready:true, sobald der Dienst lauscht (Modell ggf. idle aus dem VRAM entladen).
 probe_whisper() { curl -fsS --max-time 4 "$WHISPER_URL/health" >/dev/null 2>&1; }
+probe_vision()  { curl -fsS --max-time 4 "$VISION_URL/health" >/dev/null 2>&1; }
 
 # GPU nutzbar? nvidia-container-toolkit + eine CDI-Spec müssen vorhanden sein.
 gpu_available() {
@@ -68,6 +70,8 @@ cmd_check() {
   else echo "✗ Ollama NICHT erreichbar ($OLLAMA_URL)"; diagnose ollama "$OLLAMA_URL"; rc=1; fi
   if probe_whisper; then echo "✓ whisperX-mcp erreichbar ($WHISPER_URL)"
   else echo "✗ whisperX-mcp NICHT erreichbar ($WHISPER_URL)"; diagnose whisperx "$WHISPER_URL"; rc=1; fi
+  if probe_vision; then echo "✓ vision-mcp erreichbar   ($VISION_URL)"
+  else echo "✗ vision-mcp NICHT erreichbar ($VISION_URL)"; diagnose vision "$VISION_URL"; rc=1; fi
   if [ "$rc" -ne 0 ]; then
     echo
     echo "Hinweis: erst Aufruf/Port/Prozess prüfen — nicht vorschnell Container bauen."
@@ -76,17 +80,18 @@ cmd_check() {
 }
 
 # normalisiert ein Alias auf den Compose-Service-Namen
-service_name() { case "$1" in whisperx|whisperx-mcp) echo whisperx-mcp ;; ollama) echo ollama ;; *) return 1 ;; esac; }
+service_name() { case "$1" in whisperx|whisperx-mcp) echo whisperx-mcp ;; ollama) echo ollama ;; vision|vision-mcp) echo vision-mcp ;; *) return 1 ;; esac; }
 
-reachable() { case "$1" in ollama) probe_ollama ;; whisperx-mcp) probe_whisper ;; esac; }
+reachable() { case "$1" in ollama) probe_ollama ;; whisperx-mcp) probe_whisper ;; vision-mcp) probe_vision ;; esac; }
 
 cmd_up() {
   local requested=("$@") targets=() svc
   if [ "${#requested[@]}" -eq 0 ]; then
     probe_ollama  || targets+=(ollama)
     probe_whisper || targets+=(whisperx-mcp)
+    probe_vision  || targets+=(vision-mcp)
     if [ "${#targets[@]}" -eq 0 ]; then
-      echo "Beide Dienste laufen bereits — nichts zu bauen."
+      echo "Alle Dienste laufen bereits — nichts zu bauen."
       return 0
     fi
   else

@@ -8,6 +8,7 @@ use App\Domains\Identity\Support\CurrentTenant;
 use App\Domains\Import\Models\ImportBatch;
 use App\Domains\Masterdata\Models\MediaShare;
 use App\Domains\Masterdata\Models\Resident;
+use App\Domains\Vision\Models\RegalAufnahme;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -30,6 +31,7 @@ class MediaDownloadController extends Controller
             $owner instanceof Gefahrstoff => $owner->tenant_id,
             $owner instanceof LieferscheinAnalyse => $owner->tenant_id,
             $owner instanceof ImportBatch => $owner->tenant_id,
+            $owner instanceof RegalAufnahme => $owner->tenant_id,
             default => null,
         };
         abort_unless($ownerTenantId !== null && (int) $ownerTenantId === (int) app(CurrentTenant::class)->id(), 403);
