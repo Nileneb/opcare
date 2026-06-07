@@ -14,6 +14,7 @@ use App\Domains\Accounting\Models\Konto;
 use App\Domains\Accounting\Support\AccountingDefaults;
 use App\Domains\Accounting\Support\BudgetGuard;
 use App\Domains\Accounting\Support\KontoBudgetMonitor;
+use App\Domains\Accounting\Support\Lagerwert;
 use App\Domains\Identity\Support\CurrentTenant;
 use App\Support\Concerns\ScopesTenantValidation;
 use InvalidArgumentException;
@@ -188,11 +189,14 @@ class Buchhaltung extends Component
         session()->flash('status', 'Verbrauch gebucht.');
     }
 
-    public function render()
+    public function render(Lagerwert $lagerwert)
     {
         $tenantId = app(CurrentTenant::class)->id();
         $konten = Konto::where('tenant_id', $tenantId)->orderBy('nummer')->get();
         $salden = $konten->groupBy(fn (Konto $k) => $k->typ->value);
+
+        $artikel = Artikel::where('tenant_id', $tenantId)->orderBy('abteilung')->orderBy('name')->get();
+        $artikelwerte = $artikel->mapWithKeys(fn (Artikel $a) => [$a->id => $lagerwert->bestandswert($a)]);
 
         // Budget-Auslastung des laufenden Monats je budgetiertem Konto (Ampel/Rest).
         $monat = today()->toDateString();
@@ -204,7 +208,9 @@ class Buchhaltung extends Component
             'kontenNachTyp' => $salden,
             'konten' => $konten,
             'kontoTypen' => KontoTyp::cases(),
-            'artikel' => Artikel::where('tenant_id', $tenantId)->orderBy('abteilung')->orderBy('name')->get(),
+            'artikel' => $artikel,
+            'artikelwerte' => $artikelwerte,
+            'lagerwertSumme' => round((float) $artikelwerte->sum(), 2),
             'buchungen' => Buchung::with(['sollKonto', 'habenKonto'])->orderByDesc('datum')->orderByDesc('id')->limit(40)->get(),
             'abteilungen' => Abteilung::cases(),
             'budgetKonten' => $budgetKonten,
