@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Domains\Accounting\Models\Gefahrstoff;
 use App\Domains\Capture\Models\LieferscheinAnalyse;
 use App\Domains\Identity\Support\CurrentTenant;
+use App\Domains\Import\Models\ImportBatch;
 use App\Domains\Masterdata\Models\MediaShare;
 use App\Domains\Masterdata\Models\Resident;
 use Illuminate\Http\Request;
@@ -28,6 +29,7 @@ class MediaDownloadController extends Controller
             $owner instanceof Resident => $owner->tenant_id,
             $owner instanceof Gefahrstoff => $owner->tenant_id,
             $owner instanceof LieferscheinAnalyse => $owner->tenant_id,
+            $owner instanceof ImportBatch => $owner->tenant_id,
             default => null,
         };
         abort_unless($ownerTenantId !== null && (int) $ownerTenantId === (int) app(CurrentTenant::class)->id(), 403);
