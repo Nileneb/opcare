@@ -28,6 +28,7 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 /database/*.sqlite
+/*.sqlite
 /storage/app/shots
 /build
 .env.shots
