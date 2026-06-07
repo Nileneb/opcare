@@ -57,6 +57,10 @@ use App\Domains\Hygiene\Models\InfektionsBefund;
 use App\Domains\Identity\Models\Tenant;
 use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Support\CurrentTenant;
+use App\Domains\Import\Enums\ImportAktion;
+use App\Domains\Import\Enums\ImportZeileStatus;
+use App\Domains\Import\Models\ImportBatch;
+use App\Domains\Import\Services\ImportCommit;
 use App\Domains\Masterdata\Enums\Aufgabenkreis;
 use App\Domains\Masterdata\Enums\EreignisKategorie;
 use App\Domains\Masterdata\Enums\VertretungTyp;
@@ -565,6 +569,26 @@ class DemoSeeder extends Seeder
             'matched_artikel_id' => $butter->id, 'konfidenz' => 0.88,
             'kandidaten' => [['artikel_id' => $butter->id, 'name' => $butter->name, 'score' => 0.92, 'quelle' => 'embedding']],
             'status' => PositionStatus::Vorgeschlagen,
+        ]);
+
+        // WaWi-Stammdaten-Datenimport (Onboarding): ein importierter (gebuchter Anfangsbestand) + eine offene Zeile.
+        $importBatch = ImportBatch::create([
+            'tenant_id' => $tenant->id, 'dateiname' => 'hauswirtschaft-stamm.csv', 'anfangsbestand_modus' => 'ebk',
+            'mapping' => ['name' => 'Bezeichnung', 'einheit' => 'Einheit', 'bestand' => 'Anfangsbestand', 'einstandspreis' => 'EK'],
+            'status' => 'offen', 'erstellt_von' => $buchhalterin->id,
+        ]);
+        $importZeile = $importBatch->zeilen()->create([
+            'tenant_id' => $tenant->id, 'ziel_typ' => 'artikel', 'name' => 'Spülmittel 1L', 'einheit' => 'Flasche',
+            'abteilung' => 'hauswirtschaft', 'bestand' => 24, 'einstandspreis' => 1.20,
+            'roh' => ['Bezeichnung' => 'Spülmittel 1L', 'Einheit' => 'Flasche', 'Anfangsbestand' => '24', 'EK' => '1,20'],
+            'aktion' => ImportAktion::Anlegen, 'status' => ImportZeileStatus::Vorgeschlagen,
+        ]);
+        app(ImportCommit::class)->commit($importZeile, $tenant->id, $buchhalterin->id);
+        $importBatch->zeilen()->create([
+            'tenant_id' => $tenant->id, 'ziel_typ' => 'artikel', 'name' => 'Geschirrtücher 10er', 'einheit' => 'Pack',
+            'abteilung' => 'hauswirtschaft', 'bestand' => 15, 'einstandspreis' => 4.50,
+            'roh' => ['Bezeichnung' => 'Geschirrtücher 10er', 'Einheit' => 'Pack', 'Anfangsbestand' => '15', 'EK' => '4,50'],
+            'aktion' => ImportAktion::Anlegen, 'status' => ImportZeileStatus::Vorgeschlagen,
         ]);
 
         // Freie Hauptbuchung (GoB/PBV): generischer Buchungssatz, hier Bargeld-Aufnahme von der Bank in die Kasse.
