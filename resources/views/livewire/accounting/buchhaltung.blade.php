@@ -61,7 +61,24 @@
                     <div class="field"><label>Menge</label><input type="number" step="0.01" wire:model="beweg_menge" />@error('beweg_menge')<span class="err">{{ $message }}</span>@enderror</div>
                     <div class="field"><label>EK-Preis (optional)</label><input type="number" step="0.01" wire:model="beweg_preis" placeholder="je Einheit" /></div>
                 </div>
-                <div class="field"><label>Notiz</label><input type="text" wire:model="beweg_notiz" placeholder="z. B. Lieferant" /></div>
+                <div class="form-row-2">
+                    <div class="field"><label>Chargen-/Losnummer (Art. 18)</label>
+                        <input type="text" wire:model="beweg_charge" placeholder="z. B. L-123" />
+                        @error('beweg_charge')<span class="err">{{ $message }}</span>@enderror
+                    </div>
+                    <div class="field"><label>MHD</label>
+                        <input type="date" wire:model="beweg_mhd" />
+                        @error('beweg_mhd')<span class="err">{{ $message }}</span>@enderror
+                    </div>
+                </div>
+                <div class="field"><label>Lieferant <span class="muted">(„eine Stufe zurück", Art. 18 Pflicht)</span></label>
+                    <select wire:model="beweg_lieferant">
+                        <option value="">— kein Lieferant —</option>
+                        @foreach ($lieferanten as $lf)<option value="{{ $lf->id }}">{{ $lf->name }}@if($lf->lieferantennr) · {{ $lf->lieferantennr }}@endif</option>@endforeach
+                    </select>
+                    @error('beweg_lieferant')<span class="err">{{ $message }}</span>@enderror
+                </div>
+                <div class="field"><label>Notiz</label><input type="text" wire:model="beweg_notiz" placeholder="z. B. Lieferschein-Nr." /></div>
                 <button class="btn btn-primary btn-sm">+ Eingang buchen</button>
             </form>
 
@@ -72,6 +89,13 @@
                     @error('beweg_artikel')<span class="err">{{ $message }}</span>@enderror
                 </div>
                 <div class="field"><label>Menge</label><input type="number" step="0.01" wire:model="beweg_menge" />@error('beweg_menge')<span class="err">{{ $message }}</span>@enderror</div>
+                <div class="field"><label>Bewohner (optional, für § 40 SGB XI)</label>
+                    <select wire:model="beweg_resident">
+                        <option value="">— ohne Bewohner —</option>
+                        @foreach ($bewohner as $bw)<option value="{{ $bw->id }}">{{ $bw->name }}</option>@endforeach
+                    </select>
+                    @error('beweg_resident')<span class="err">{{ $message }}</span>@enderror
+                </div>
                 <div class="field"><label>Notiz</label><input type="text" wire:model="beweg_notiz" placeholder="z. B. Wohnbereich 2" /></div>
                 <button class="btn btn-ghost btn-sm">– Verbrauch buchen</button>
             </form>
@@ -90,6 +114,45 @@
             </div>
             <button class="btn btn-ghost btn-sm">+ Artikel</button>
         </form>
+
+        {{-- Lieferanten-Liste --}}
+        <div style="margin-top:14px;border-top:1px solid var(--line-cool);padding-top:14px">
+            <p class="kicker">Lieferanten <span class="muted">(Art. 18 VO 178/2002 — „eine Stufe zurück")</span></p>
+            @if ($lieferanten->isEmpty())
+                <p class="empty">Noch keine Lieferanten angelegt.</p>
+            @else
+                <table class="data-table">
+                    <thead><tr><th>Name</th><th>Lief.-Nr.</th><th>Kontakt</th><th>Anschrift</th></tr></thead>
+                    <tbody>
+                        @foreach ($lieferanten as $lf)
+                            <tr>
+                                <td><b>{{ $lf->name }}</b></td>
+                                <td>{{ $lf->lieferantennr ?? '–' }}</td>
+                                <td>{{ $lf->kontakt ?? '–' }}</td>
+                                <td>{{ $lf->anschrift ?? '–' }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
+            <form wire:submit="lieferantAnlegen" style="margin-top:10px">
+                <p class="kicker" style="margin-bottom:6px">Neuen Lieferanten anlegen</p>
+                <div class="form-row-2">
+                    <div class="field"><label>Name *</label>
+                        <input type="text" wire:model="lief_name" placeholder="z. B. Frische-Depot GmbH" />
+                        @error('lief_name')<span class="err">{{ $message }}</span>@enderror
+                    </div>
+                    <div class="field"><label>Lieferanten-Nr.</label>
+                        <input type="text" wire:model="lief_nr" placeholder="intern oder des Lieferanten" />
+                    </div>
+                </div>
+                <div class="form-row-2">
+                    <div class="field"><label>Anschrift</label><input type="text" wire:model="lief_anschrift" placeholder="Straße, PLZ Ort" /></div>
+                    <div class="field"><label>Kontakt</label><input type="text" wire:model="lief_kontakt" placeholder="Telefon / E-Mail" /></div>
+                </div>
+                <button class="btn btn-ghost btn-sm">+ Lieferant</button>
+            </form>
+        </div>
     </div>
 
     <div class="card">

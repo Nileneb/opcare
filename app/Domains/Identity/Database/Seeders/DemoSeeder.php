@@ -2,6 +2,8 @@
 
 namespace App\Domains\Identity\Database\Seeders;
 
+use App\Domains\Accounting\Actions\BestellungAnlegen;
+use App\Domains\Accounting\Actions\BestellungWareneingang;
 use App\Domains\Accounting\Actions\Buchen;
 use App\Domains\Accounting\Actions\InventurAbschliessen;
 use App\Domains\Accounting\Actions\InventurStarten;
@@ -13,6 +15,8 @@ use App\Domains\Accounting\Enums\BarbetragKategorie;
 use App\Domains\Accounting\Enums\TreuhandVorgang;
 use App\Domains\Accounting\Models\Artikel;
 use App\Domains\Accounting\Models\Budget;
+use App\Domains\Accounting\Models\Gefahrstoff;
+use App\Domains\Accounting\Models\Lieferant;
 use App\Domains\Accounting\Models\Treuhandbudget;
 use App\Domains\Accounting\Models\Treuhandkonto;
 use App\Domains\Accounting\Support\AccountingDefaults;
@@ -503,6 +507,41 @@ class DemoSeeder extends Seeder
         $mehlPos = $inventur->positionen->firstWhere('artikel_id', $mehl->id);
         $mehlPos?->update(['ist_menge' => (float) $mehlPos->soll_menge - 2, 'gezaehlt_von' => $buchhalterin->id, 'gezaehlt_am' => now()]);
         app(InventurAbschliessen::class)->handle($inventur->fresh(), $buchhalterin->id);
+
+        // #5 Rückverfolgung (Art. 18 VO 178/2002): Lieferanten-Stammdaten + Lebensmittel-Lieferung mit Charge/MHD.
+        $grosshandel = Lieferant::create(['tenant_id' => $tenant->id, 'name' => 'Großhandel Bergisch GmbH', 'anschrift' => 'Industriestr. 4, 51789 Lindlar', 'kontakt' => 'bestellung@gh-bergisch.example', 'lieferantennr' => 'L-1001']);
+        Lieferant::create(['tenant_id' => $tenant->id, 'name' => 'Medizinbedarf GmbH', 'anschrift' => 'Am Hafen 12, 50678 Köln', 'kontakt' => 'service@medbedarf.example', 'lieferantennr' => 'L-1002']);
+        $butter = Artikel::create(['tenant_id' => $tenant->id, 'name' => 'Markenbutter 250g', 'einheit' => 'Stück', 'abteilung' => Abteilung::Kueche, 'bestand' => 0, 'mindestbestand' => 40, 'einkaufspreis' => 1.79]);
+        app(Wareneingang::class)->handle($butter, 60, 1.79, now()->subDays(2)->toDateString(), 'Wareneingang KW', 'CH-2026-0612', now()->addDays(18)->toDateString(), $grosshandel->id);
+
+        // #2 Pflegehilfsmittel (§ 40 Abs. 2 SGB XI, PG 54): bewohnerbezogener Verbrauch — interne Kostentransparenz (stationär).
+        $handschuhe->update(['pflegehilfsmittel' => true, 'pg_nummer' => '54.45.01']);
+        $desinfektion = Artikel::create(['tenant_id' => $tenant->id, 'name' => 'Händedesinfektion 500ml', 'einheit' => 'Flasche', 'abteilung' => Abteilung::Pflege, 'bestand' => 0, 'mindestbestand' => 20, 'einkaufspreis' => 3.40, 'pflegehilfsmittel' => true, 'pg_nummer' => '54.99.01']);
+        app(Wareneingang::class)->handle($desinfektion, 30, 3.40, now()->subDays(2)->toDateString(), 'Verbrauchspflegehilfsmittel');
+        $bewohnerA = $aktive->first();
+        $bewohnerB = $aktive->skip(1)->first();
+        if ($bewohnerA !== null) {
+            app(Warenverbrauch::class)->handle($desinfektion->fresh(), 6, now()->toDateString(), 'Bewohnerbezogen', $bewohnerA->id);
+            app(Warenverbrauch::class)->handle($handschuhe->fresh(), 5, now()->toDateString(), 'Bewohnerbezogen', $bewohnerA->id);
+        }
+        if ($bewohnerB !== null) {
+            app(Warenverbrauch::class)->handle($desinfektion->fresh(), 2, now()->toDateString(), 'Bewohnerbezogen', $bewohnerB->id);
+        }
+
+        // #1 Gefahrstoffverzeichnis (§ 6 Abs. 12 GefStoffV): Flächendesinfektion mit GHS/CLP-Einstufung + SDB-Verweis.
+        $flaeche = Artikel::create(['tenant_id' => $tenant->id, 'name' => 'Flächendesinfektion Konzentrat 5L', 'einheit' => 'Kanister', 'abteilung' => Abteilung::Hauswirtschaft, 'bestand' => 0, 'mindestbestand' => 4, 'einkaufspreis' => 24.90, 'gefahrstoff' => true]);
+        app(Wareneingang::class)->handle($flaeche, 6, 24.90, now()->subDays(2)->toDateString(), 'Hauswirtschaft', null, null, $grosshandel->id);
+        Gefahrstoff::create(['tenant_id' => $tenant->id, 'artikel_id' => $flaeche->id, 'signalwort' => 'gefahr', 'h_saetze' => ['H290', 'H314', 'H335'], 'p_saetze' => ['P280', 'P305+P351+P338', 'P303+P361+P353'], 'ghs_piktogramme' => ['GHS05', 'GHS07'], 'mengenbereich' => '10–50 l', 'arbeitsbereiche' => 'Hauswirtschaft, Sanitärräume', 'lagerort' => 'Chemikalienschrank HW-Lager (abschließbar)', 'betriebsanweisung' => 'BA-HW-014 (Stand 2026-01), jährliche Unterweisung', 'sdb_version_datum' => now()->subMonths(4)->toDateString()]);
+
+        // #3 Beschaffung: Wochenbestellung beim Lieferanten, Mehl voll geliefert → Bestellung teilweise geliefert (Butter offen).
+        $bestellung = app(BestellungAnlegen::class)->handle($grosshandel->id, [
+            ['artikel_id' => $mehl->id, 'menge' => 30, 'preis' => 1.10],
+            ['artikel_id' => $butter->id, 'menge' => 40, 'preis' => 1.79],
+        ], $buchhalterin->id, 'Wochenbestellung Küche');
+        $mehlBestellPos = $bestellung->positionen->firstWhere('artikel_id', $mehl->id);
+        if ($mehlBestellPos !== null) {
+            app(BestellungWareneingang::class)->handle($mehlBestellPos, 30, 1.10, now()->toDateString(), 'CH-2026-0615', now()->addDays(60)->toDateString());
+        }
 
         // Freie Hauptbuchung (GoB/PBV): generischer Buchungssatz, hier Bargeld-Aufnahme von der Bank in die Kasse.
         app(Buchen::class)->handle(

@@ -91,8 +91,12 @@
             <nav class="app-nav app-nav-finanzen">
                 <a href="{{ route('buchhaltung') }}" @class(['is-active' => request()->routeIs('buchhaltung')])>Buchhaltung</a>
                 <a href="{{ route('inventur') }}" @class(['is-active' => request()->routeIs('inventur')])>Inventur</a>
+                <a href="{{ route('pflegehilfsmittel') }}" @class(['is-active' => request()->routeIs('pflegehilfsmittel')])>Pflegehilfsmittel</a>
+                <a href="{{ route('gefahrstoffe') }}" @class(['is-active' => request()->routeIs('gefahrstoffe')])>Gefahrstoffe</a>
                 <a href="{{ route('belegerfassung') }}" @class(['is-active' => request()->routeIs('belegerfassung')])>Beleg-Capture</a>
+                <a href="{{ route('rueckverfolgung') }}" @class(['is-active' => request()->routeIs('rueckverfolgung')])>Rückverfolgung</a>
                 <a href="{{ route('taschengeld') }}" @class(['is-active' => request()->routeIs('taschengeld')])>Taschengeldkasse</a>
+                <a href="{{ route('beschaffung') }}" @class(['is-active' => request()->routeIs('beschaffung')])>Beschaffung</a>
             </nav>
         @endif
         @if (auth()->user()?->hasAnyRole(['admin', 'super-admin']))

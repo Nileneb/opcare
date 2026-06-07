@@ -11,11 +11,13 @@ use App\Domains\Accounting\Models\Artikel;
 use App\Domains\Accounting\Models\Buchung;
 use App\Domains\Accounting\Models\Budget;
 use App\Domains\Accounting\Models\Konto;
+use App\Domains\Accounting\Models\Lieferant;
 use App\Domains\Accounting\Support\AccountingDefaults;
 use App\Domains\Accounting\Support\BudgetGuard;
 use App\Domains\Accounting\Support\KontoBudgetMonitor;
 use App\Domains\Accounting\Support\Lagerwert;
 use App\Domains\Identity\Support\CurrentTenant;
+use App\Domains\Masterdata\Models\Resident;
 use App\Support\Concerns\ScopesTenantValidation;
 use InvalidArgumentException;
 use Livewire\Attributes\Layout;
@@ -69,6 +71,22 @@ class Buchhaltung extends Component
     public ?float $beweg_preis = null;
 
     public string $beweg_notiz = '';
+
+    public ?int $beweg_resident = null;
+
+    public ?string $beweg_charge = null;
+
+    public ?string $beweg_mhd = null;
+
+    public ?int $beweg_lieferant = null;
+
+    public string $lief_name = '';
+
+    public string $lief_anschrift = '';
+
+    public string $lief_kontakt = '';
+
+    public string $lief_nr = '';
 
     public function mount(): void
     {
@@ -166,26 +184,60 @@ class Buchhaltung extends Component
     {
         abort_unless($this->darfSehen(), 403);
         $data = $this->validate([
-            'beweg_artikel' => ['required', 'integer', 'exists:artikel,id'],
+            'beweg_artikel' => ['required', 'integer', $this->tenantExists('artikel')],
             'beweg_menge' => ['required', 'numeric', 'gt:0'],
             'beweg_preis' => ['nullable', 'numeric', 'min:0'],
+            'beweg_charge' => ['nullable', 'string', 'max:120'],
+            'beweg_mhd' => ['nullable', 'date'],
+            'beweg_lieferant' => ['nullable', 'integer', $this->tenantExists('lieferanten')],
         ]);
         $artikel = Artikel::findOrFail($data['beweg_artikel']);
-        $action->handle($artikel, (float) $data['beweg_menge'], $data['beweg_preis'] !== null ? (float) $data['beweg_preis'] : null, today()->toDateString(), $this->beweg_notiz ?: null);
-        $this->reset('beweg_menge', 'beweg_preis', 'beweg_notiz');
+        $action->handle(
+            $artikel,
+            (float) $data['beweg_menge'],
+            $data['beweg_preis'] !== null ? (float) $data['beweg_preis'] : null,
+            today()->toDateString(),
+            $this->beweg_notiz ?: null,
+            $data['beweg_charge'] ?: null,
+            $data['beweg_mhd'] ?: null,
+            $data['beweg_lieferant'] ?? null,
+        );
+        $this->reset('beweg_menge', 'beweg_preis', 'beweg_notiz', 'beweg_charge', 'beweg_mhd', 'beweg_lieferant');
         session()->flash('status', 'Wareneingang gebucht.');
+    }
+
+    public function lieferantAnlegen(): void
+    {
+        abort_unless($this->darfSehen(), 403);
+        $data = $this->validate([
+            'lief_name' => ['required', 'string', 'max:160'],
+            'lief_anschrift' => ['nullable', 'string', 'max:255'],
+            'lief_kontakt' => ['nullable', 'string', 'max:255'],
+            'lief_nr' => ['nullable', 'string', 'max:80'],
+        ]);
+
+        Lieferant::create([
+            'tenant_id' => app(CurrentTenant::class)->id(),
+            'name' => $data['lief_name'],
+            'anschrift' => $data['lief_anschrift'] ?: null,
+            'kontakt' => $data['lief_kontakt'] ?: null,
+            'lieferantennr' => $data['lief_nr'] ?: null,
+        ]);
+        $this->reset('lief_name', 'lief_anschrift', 'lief_kontakt', 'lief_nr');
+        session()->flash('status', 'Lieferant angelegt.');
     }
 
     public function verbrauch(Warenverbrauch $action): void
     {
         abort_unless($this->darfSehen(), 403);
         $data = $this->validate([
-            'beweg_artikel' => ['required', 'integer', 'exists:artikel,id'],
+            'beweg_artikel' => ['required', 'integer', $this->tenantExists('artikel')],
             'beweg_menge' => ['required', 'numeric', 'gt:0'],
+            'beweg_resident' => ['nullable', 'integer', $this->tenantExists('residents')],
         ]);
         $artikel = Artikel::findOrFail($data['beweg_artikel']);
-        $action->handle($artikel, (float) $data['beweg_menge'], today()->toDateString(), $this->beweg_notiz ?: null);
-        $this->reset('beweg_menge', 'beweg_preis', 'beweg_notiz');
+        $action->handle($artikel, (float) $data['beweg_menge'], today()->toDateString(), $this->beweg_notiz ?: null, $data['beweg_resident'] ?? null);
+        $this->reset('beweg_menge', 'beweg_preis', 'beweg_notiz', 'beweg_resident');
         session()->flash('status', 'Verbrauch gebucht.');
     }
 
@@ -197,6 +249,8 @@ class Buchhaltung extends Component
 
         $artikel = Artikel::where('tenant_id', $tenantId)->orderBy('abteilung')->orderBy('name')->get();
         $artikelwerte = $artikel->mapWithKeys(fn (Artikel $a) => [$a->id => $lagerwert->bestandswert($a)]);
+        $bewohner = Resident::where('tenant_id', $tenantId)->orderBy('name')->get();
+        $lieferanten = Lieferant::where('tenant_id', $tenantId)->orderBy('name')->get();
 
         // Budget-Auslastung des laufenden Monats je budgetiertem Konto (Ampel/Rest).
         $monat = today()->toDateString();
@@ -215,6 +269,8 @@ class Buchhaltung extends Component
             'abteilungen' => Abteilung::cases(),
             'budgetKonten' => $budgetKonten,
             'budgetStatus' => $budgetStatus,
+            'bewohner' => $bewohner,
+            'lieferanten' => $lieferanten,
         ]);
     }
 }
