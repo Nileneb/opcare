@@ -6,10 +6,15 @@ use App\Domains\Accounting\Actions\Wareneingang;
 use App\Domains\Accounting\Enums\Abteilung;
 use App\Domains\Accounting\Enums\InventurStatus;
 use App\Domains\Accounting\Models\Artikel;
+use App\Domains\Accounting\Models\Inventur;
 use App\Domains\Accounting\Support\AccountingDefaults;
 use App\Domains\Accounting\Support\Lagerwert;
 use App\Domains\Identity\Models\Tenant;
+use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Support\CurrentTenant;
+use App\Livewire\Accounting\Inventur as InventurLivewire;
+use Livewire\Livewire;
+use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
     $this->tenant = Tenant::create(['name' => 'A', 'slug' => 'a']);
@@ -84,4 +89,29 @@ it('friert den Bestandswert beim Abschluss ein', function () {
     app(InventurAbschliessen::class)->handle($inventur->fresh(), null);
 
     expect((float) $inventur->fresh()->bestandswert_summe)->toBe(20.0);
+});
+
+it('startet, zählt und schließt eine Inventur über die Livewire-Komponente ab', function () {
+    Role::findOrCreate('buchhaltung');
+    $user = User::create(['name' => 'Anke', 'email' => 'a@a.de', 'password' => bcrypt('x'), 'tenant_id' => $this->tenant->id]);
+    $user->assignRole('buchhaltung');
+    $this->actingAs($user);
+    app(Wareneingang::class)->handle($this->mehl, 10, 2.00, '2026-06-08');
+
+    Livewire::test(InventurLivewire::class)
+        ->set('neu_stichtag', '2026-06-30')
+        ->call('starten')
+        ->assertHasNoErrors();
+
+    $inventur = Inventur::firstOrFail();
+    $posId = $inventur->positionen[0]->id;
+
+    Livewire::test(InventurLivewire::class)
+        ->set("ist.{$posId}", 8)
+        ->call('zaehlen', $posId)
+        ->call('abschliessen', $inventur->id)
+        ->assertHasNoErrors();
+
+    expect($inventur->fresh()->status->value)->toBe('abgeschlossen')
+        ->and((float) $this->mehl->fresh()->bestand)->toBe(8.0);
 });
