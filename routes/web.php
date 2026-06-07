@@ -32,6 +32,7 @@ use App\Livewire\Compliance\Datenschutz;
 use App\Livewire\Facility;
 use App\Livewire\Facility\Haustechnik;
 use App\Livewire\Facility\Medizinprodukte;
+use App\Livewire\Facility\Trinkwasser;
 use App\Livewire\Hygiene\Hygiene;
 use App\Livewire\Import\Datenimport;
 use App\Livewire\Masterdata\Portal;
@@ -136,6 +137,7 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class, Restrict
     Route::get('/kalender', Kalender::class)->name('kalender');
     Route::get('/haustechnik', Haustechnik::class)->name('haustechnik');
     Route::get('/medizinprodukte', Medizinprodukte::class)->name('medizinprodukte');
+    Route::get('/trinkwasser', Trinkwasser::class)->name('trinkwasser');
     Route::get('/kueche', Kueche::class)->name('kueche');
     Route::get('/zeiterfassung', Zeiterfassung::class)->name('zeiterfassung');
     Route::get('/wunschdienstplan', Wunschdienstplan::class)->name('wunschdienstplan');

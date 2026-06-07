@@ -76,6 +76,9 @@
             <a href="{{ route('energiebarometer') }}" @class(['is-active' => request()->routeIs('energiebarometer')])>Energie</a>
             <a href="{{ route('haustechnik') }}" @class(['is-active' => request()->routeIs('haustechnik')])>Haustechnik</a>
             <a href="{{ route('medizinprodukte') }}" @class(['is-active' => request()->routeIs('medizinprodukte')])>Medizinprodukte</a>
+            @if (auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'haustechnik']))
+                <a href="{{ route('trinkwasser') }}" @class(['is-active' => request()->routeIs('trinkwasser')])>Trinkwasser</a>
+            @endif
             @if (auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'pflegefachkraft', 'pflegehilfskraft', 'betreuungskraft', 'kueche', 'haustechnik', 'buchhaltung']))
                 <a href="{{ route('quality.beschwerden') }}" @class(['is-active' => request()->routeIs('quality.beschwerden')])>Beschwerden</a>
             @endif

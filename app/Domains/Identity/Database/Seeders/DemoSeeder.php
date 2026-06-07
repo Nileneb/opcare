@@ -47,9 +47,12 @@ use App\Domains\Facility\Enums\MpAnlage;
 use App\Domains\Facility\Enums\MpVorkommnisArt;
 use App\Domains\Facility\Models\FacilityAsset;
 use App\Domains\Facility\Models\FacilityMeldung;
+use App\Domains\Facility\Models\Legionellenbefund;
 use App\Domains\Facility\Models\Medizinprodukt;
 use App\Domains\Facility\Models\MedizinproduktEinweisung;
 use App\Domains\Facility\Models\MedizinproduktVorkommnis;
+use App\Domains\Facility\Models\Probenahmestelle;
+use App\Domains\Facility\Models\Trinkwasseranlage;
 use App\Domains\Hygiene\Enums\BefundArt;
 use App\Domains\Hygiene\Enums\Erreger;
 use App\Domains\Hygiene\Models\Hygieneplan;
@@ -466,6 +469,12 @@ class DemoSeeder extends Seeder
         MedizinproduktEinweisung::create(['medizinprodukt_id' => $defi->id, 'user_id' => $sandra->id, 'eingewiesen_am' => '2021-03-02', 'eingewiesen_durch' => 'Philips-Medizintechnik', 'art' => 'ersteinweisung']);
         MedizinproduktEinweisung::create(['medizinprodukt_id' => $bz->id, 'user_id' => $sandra->id, 'eingewiesen_am' => '2023-06-16', 'eingewiesen_durch' => 'QMB', 'art' => 'ersteinweisung']);
         MedizinproduktVorkommnis::create(['medizinprodukt_id' => $bz->id, 'datum' => now()->subDays(20)->toDateString(), 'art' => MpVorkommnisArt::Funktionsstoerung, 'beschreibung' => 'Display zeitweise nicht ablesbar.', 'massnahme' => 'Akku getauscht, Funktionsprüfung ok.', 'gemeldet_von' => $sandra->id, 'behoben_am' => now()->subDays(19)->toDateString()]);
+
+        // Trinkwasser-Überwachung (TrinkwV 2023 § 31): Anlage überfällig → rot (letzte Untersuchung vor 13 Monaten).
+        $twAnlage = Trinkwasseranlage::create(['tenant_id' => $tenant->id, 'bezeichnung' => 'Zentrale Warmwasserbereitung Haus 1', 'gebaeude' => 'Haus 1', 'ist_grossanlage' => true, 'untersuchungsintervall_monate' => 12, 'letzte_untersuchung_am' => now()->subMonths(13)->toDateString()]);
+        $stelleErwaermer = Probenahmestelle::create(['tenant_id' => $tenant->id, 'trinkwasseranlage_id' => $twAnlage->id, 'bezeichnung' => 'Austritt Warmwassererwärmer', 'ort' => 'Technikraum EG']);
+        Probenahmestelle::create(['tenant_id' => $tenant->id, 'trinkwasseranlage_id' => $twAnlage->id, 'bezeichnung' => 'Entferntester Zapfpunkt OG 2', 'ort' => 'Zimmer 24']);
+        Legionellenbefund::create(['tenant_id' => $tenant->id, 'trinkwasseranlage_id' => $twAnlage->id, 'probenahmestelle_id' => $stelleErwaermer->id, 'untersucht_am' => now()->subMonths(13)->toDateString(), 'labor' => 'Hygienelab Muster GmbH', 'kbe_pro_100ml' => 12, 'ueberschreitung' => false]);
 
         // Küche/Verpflegung (LMIV): Köchin + Lebensmittelallergie + Speiseplan mit Allergen-Warnung.
         $koechin = User::create(['name' => 'Rita Hoffmann', 'email' => 'kueche@opcare.local', 'password' => Hash::make('password'), 'tenant_id' => $tenant->id]);
