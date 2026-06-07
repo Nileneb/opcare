@@ -28,3 +28,13 @@ services:
               device_ids:
                 - nvidia.com/gpu=all
               capabilities: [gpu]
+
+  vision-mcp:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: cdi
+              device_ids:
+                - nvidia.com/gpu=all
+              capabilities: [gpu]

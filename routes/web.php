@@ -70,6 +70,7 @@ use App\Livewire\Scheduling\Zeiterfassung;
 use App\Livewire\SocialCare\Betreuung;
 use App\Livewire\SocialCare\Praevention;
 use App\Livewire\Speech;
+use App\Livewire\Vision\Regalzaehlung;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -145,6 +146,7 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class, Restrict
     Route::get('/gefahrstoffe', Gefahrstoffverzeichnis::class)->name('gefahrstoffe');
     Route::get('/beleg-capture', Belegerfassung::class)->name('belegerfassung');
     Route::get('/wareneingang-capture', Wareneingangerfassung::class)->name('wareneingang-capture');
+    Route::get('/regalzaehlung', Regalzaehlung::class)->name('regalzaehlung');
     Route::get('/rueckverfolgung', Rueckverfolgung::class)->name('rueckverfolgung');
     Route::get('/taschengeld', Taschengeldkasse::class)->name('taschengeld');
     Route::get('/dokumente/{media}', MediaDownloadController::class)->name('media.download')->middleware('signed');

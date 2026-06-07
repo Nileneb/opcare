@@ -53,6 +53,27 @@ services:
       start_period: 30s
     restart: unless-stopped
 
+  vision-mcp:
+    # Baut aus dem Schwester-Repo (Vorlage). Pfad überschreibbar via VISION_MCP_CONTEXT.
+    build:
+      context: ${VISION_MCP_CONTEXT:-../../../vision-mcp}
+    image: vision-mcp:latest
+    environment:
+      API_TOKEN: ${VISION_MCP_TOKEN:-}
+      MODEL_DIR: ${VISION_MODEL_DIR:-/models}
+    ports:
+      - "${VISION_PORT:-8001}:8001"
+    volumes:
+      - vision-models:/models
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if __import__('json').load(urllib.request.urlopen('http://localhost:8001/health')).get('ready') else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
 volumes:
   ollama-models:
   whisperx-cache:
+  vision-models:
