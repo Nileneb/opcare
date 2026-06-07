@@ -25,6 +25,7 @@ use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Capture\Belegerfassung;
+use App\Livewire\Capture\Wareneingangerfassung;
 use App\Livewire\Catering\Kueche;
 use App\Livewire\Compliance\Datenschutz;
 use App\Livewire\Facility;
@@ -141,6 +142,7 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class, Restrict
     Route::get('/pflegehilfsmittel', Pflegehilfsmittel::class)->name('pflegehilfsmittel');
     Route::get('/gefahrstoffe', Gefahrstoffverzeichnis::class)->name('gefahrstoffe');
     Route::get('/beleg-capture', Belegerfassung::class)->name('belegerfassung');
+    Route::get('/wareneingang-capture', Wareneingangerfassung::class)->name('wareneingang-capture');
     Route::get('/rueckverfolgung', Rueckverfolgung::class)->name('rueckverfolgung');
     Route::get('/taschengeld', Taschengeldkasse::class)->name('taschengeld');
     Route::get('/dokumente/{media}', MediaDownloadController::class)->name('media.download')->middleware('signed');

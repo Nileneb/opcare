@@ -24,9 +24,12 @@ use App\Domains\Assessment\Actions\ConductAssessment;
 use App\Domains\Assessment\Data\AssessmentInputData;
 use App\Domains\Assessment\Database\Seeders\InstrumentSeeder;
 use App\Domains\Assessment\Models\Instrument;
+use App\Domains\Capture\Enums\PositionStatus;
 use App\Domains\Capture\Enums\VorschlagStatus;
 use App\Domains\Capture\Enums\ZielTyp;
 use App\Domains\Capture\Models\BelegAnalyse;
+use App\Domains\Capture\Models\LieferscheinAnalyse;
+use App\Domains\Capture\Services\CaptureWareneingang;
 use App\Domains\CarePlanning\Models\CareMeasure;
 use App\Domains\CarePlanning\Models\SisAssessment;
 use App\Domains\Catering\Enums\EssenswunschArt;
@@ -542,6 +545,27 @@ class DemoSeeder extends Seeder
         if ($mehlBestellPos !== null) {
             app(BestellungWareneingang::class)->handle($mehlBestellPos, 30, 1.10, now()->toDateString(), 'CH-2026-0615', now()->addDays(60)->toDateString());
         }
+
+        // KI-WaWi Inkrement 1: Lieferschein-Capture — eine bestätigte (gebuchte) + eine offene Position.
+        $lsAnalyse = LieferscheinAnalyse::create([
+            'tenant_id' => $tenant->id, 'lieferant_text' => 'Großhandel Bergisch GmbH', 'lieferant_id' => $grosshandel->id,
+            'datum' => now()->subDay()->toDateString(), 'lieferschein_nr' => 'LS-2026-0815',
+            'modell' => 'demo', 'konfidenz' => 0.91, 'erstellt_von' => $buchhalterin->id,
+        ]);
+        $lsMehl = $lsAnalyse->positionen()->create([
+            'tenant_id' => $tenant->id, 'text' => 'Weizenmehl Type 405 25kg', 'menge' => 20, 'einheit' => 'Sack',
+            'einzelpreis' => 1.05, 'matched_artikel_id' => $mehl->id, 'konfidenz' => 0.96,
+            'kandidaten' => [['artikel_id' => $mehl->id, 'name' => $mehl->name, 'score' => 1.0, 'quelle' => 'gedaechtnis']],
+            'status' => PositionStatus::Vorgeschlagen,
+        ]);
+        app(CaptureWareneingang::class)->bestaetige($lsMehl, $mehl->id, 20, 1.05, null, null, null, $tenant->id, $buchhalterin->id);
+        $lsAnalyse->positionen()->create([
+            'tenant_id' => $tenant->id, 'text' => 'Markenbutter 250g', 'menge' => 40, 'einheit' => 'Stück',
+            'einzelpreis' => 1.79, 'charge_nr' => 'CH-B7', 'mhd' => now()->addDays(25)->toDateString(),
+            'matched_artikel_id' => $butter->id, 'konfidenz' => 0.88,
+            'kandidaten' => [['artikel_id' => $butter->id, 'name' => $butter->name, 'score' => 0.92, 'quelle' => 'embedding']],
+            'status' => PositionStatus::Vorgeschlagen,
+        ]);
 
         // Freie Hauptbuchung (GoB/PBV): generischer Buchungssatz, hier Bargeld-Aufnahme von der Bank in die Kasse.
         app(Buchen::class)->handle(
