@@ -14,6 +14,7 @@ use App\Domains\Import\Services\ImportMatching;
 use App\Domains\Import\Support\SpaltenAlias;
 use App\Domains\Import\Support\StammdatenParser;
 use App\Support\Concerns\ScopesTenantValidation;
+use Illuminate\Support\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -134,7 +135,7 @@ class Datenimport extends Component
             $zeile->lieferant_text = $this->feld($roh, $this->mapping, 'lieferant');
             $zeile->charge_nr = $this->feld($roh, $this->mapping, 'charge_nr');
             $mhdWert = $this->feld($roh, $this->mapping, 'mhd');
-            $zeile->mhd = $mhdWert ? \Illuminate\Support\Carbon::parse($mhdWert) : null;
+            $zeile->mhd = $mhdWert ? Carbon::parse($mhdWert) : null;
             $zeile->save();
 
             $matching->fuerZeile($zeile, $tenantId);

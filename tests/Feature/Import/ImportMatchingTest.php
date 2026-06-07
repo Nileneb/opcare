@@ -2,6 +2,7 @@
 
 use App\Domains\Accounting\Enums\Abteilung;
 use App\Domains\Accounting\Models\Artikel;
+use App\Domains\Accounting\Models\Lieferant;
 use App\Domains\Accounting\Support\AccountingDefaults;
 use App\Domains\Capture\Contracts\ArtikelMatcher;
 use App\Domains\Identity\Models\Tenant;
@@ -87,7 +88,7 @@ it('befüllt kandidaten auch beim Anlegen-Fall', function () {
 });
 
 it('schlägt Mergen vor für Lieferant-Zeile wenn Lieferant existiert', function () {
-    $lief = \App\Domains\Accounting\Models\Lieferant::create([
+    $lief = Lieferant::create([
         'tenant_id' => $this->tenant->id,
         'name' => 'Metro Cash',
     ]);
