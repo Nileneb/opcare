@@ -148,9 +148,9 @@
                                 @if ($pos->offen())
                                     <select wire:model="ist.{{ $pos->id }}.bestellposition_id" style="width:100%">
                                         <option value="">Standalone</option>
-                                        @foreach ($bestellpositionen as $bp)
+                                        @foreach ($bestellpositionen->filter(fn ($bp) => $bp->artikel_id == ($ist[$pos->id]['artikel_id'] ?? null)) as $bp)
                                             <option value="{{ $bp->id }}">
-                                                {{ $bp->artikel?->name }} ({{ $bp->menge_offen }} offen)
+                                                {{ $bp->artikel?->name }} ({{ number_format($bp->restMenge(), 2, ',', '.') }} offen)
                                             </option>
                                         @endforeach
                                     </select>

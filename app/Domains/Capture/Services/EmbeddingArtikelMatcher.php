@@ -19,6 +19,11 @@ class EmbeddingArtikelMatcher implements ArtikelMatcher
     {
         $norm = TextNorm::norm($positionsText);
 
+        // WHY(A2): leerer Normtext matcht via str_contains(x,'')===true jeden Alias — kein sinnvolles Ergebnis
+        if ($norm === '') {
+            return [];
+        }
+
         $kandidaten = [];
 
         // Primär: Lerngedächtnis
@@ -36,7 +41,8 @@ class EmbeddingArtikelMatcher implements ArtikelMatcher
             if ($aliasNorm === $norm) {
                 $score = 1.0 + min(0.2, $alias->treffer * 0.02);
             } elseif (str_contains($aliasNorm, $norm) || str_contains($norm, $aliasNorm)) {
-                $score = 0.8;
+                // WHY(B1): 0.75 statt 0.8 damit starker Embedding-Match (cosine≥0.75) Substring schlagen kann
+                $score = 0.75;
             }
 
             if ($score !== null) {
@@ -70,11 +76,12 @@ class EmbeddingArtikelMatcher implements ArtikelMatcher
                 }
 
                 $cosine = $this->cosine($queryVec, $embedding);
-                if ($cosine < 0.5) {
+                // WHY(B1): Schwelle 0.6 statt 0.5 + kein *0.6-Faktor → Embedding(cosine 0.9)=0.9 > Substring(0.75)
+                if ($cosine < 0.6) {
                     continue;
                 }
 
-                $score = $cosine * 0.6;
+                $score = $cosine;
                 $id = $a->id;
 
                 if (! isset($kandidaten[$id]) || $kandidaten[$id]->score < $score) {

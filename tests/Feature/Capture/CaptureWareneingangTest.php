@@ -215,3 +215,71 @@ it('bestaetige auf bereits bestätigter Position wirft Exception', function () {
     expect(fn () => $this->service->bestaetige($pos, $this->mehl->id, 5.0, null, null, null, null, $this->tenantId))
         ->toThrow(InvalidArgumentException::class);
 });
+
+// --- Regressionstests Final-Review ---
+
+it('A1: bestaetige mit Bestellposition deren artikel_id ≠ gewähltem Artikel wirft Exception und bucht nicht', function () {
+    $lieferant = Lieferant::create(['tenant_id' => $this->tenantId, 'name' => 'Großhandel Bergisch GmbH']);
+
+    $bestellung = app(BestellungAnlegen::class)->handle(
+        $lieferant->id,
+        [['artikel_id' => $this->mehl->id, 'menge' => 10.0]],
+        null,
+    );
+    $bestellposition = $bestellung->positionen->first();
+
+    // Analyse mit bekanntem Lieferanten, damit lieferant_id gesetzt wird
+    $analyse = $this->service->erfasse(base64_encode('img'), 'image/jpeg', $this->tenantId);
+    $analyse->update(['lieferant_id' => $lieferant->id]);
+    $pos = $analyse->positionen->first();
+
+    // Mismatch: Bestellposition gehört zu Mehl, aber Bediener wählt Butter
+    expect(fn () => $this->service->bestaetige(
+        $pos->fresh(),
+        $this->butter->id,
+        5.0,
+        null, null, null,
+        $bestellposition->id,
+        $this->tenantId,
+    ))->toThrow(InvalidArgumentException::class, 'Gewählter Artikel passt nicht zur Bestellposition.');
+
+    // Kein Wareneingang gebucht
+    $this->mehl->refresh();
+    $this->butter->refresh();
+    expect((float) $this->mehl->bestand)->toBe(0.0)
+        ->and((float) $this->butter->bestand)->toBe(0.0);
+
+    // Kein Alias gelernt
+    $alias = LieferantArtikelAlias::withoutGlobalScopes()
+        ->where('tenant_id', $this->tenantId)
+        ->first();
+    expect($alias)->toBeNull();
+});
+
+it('B2: bestaetige mit Bestellposition eines anderen Lieferanten wirft Exception', function () {
+    $lieferantA = Lieferant::create(['tenant_id' => $this->tenantId, 'name' => 'Großhandel Bergisch GmbH']);
+    $lieferantB = Lieferant::create(['tenant_id' => $this->tenantId, 'name' => 'Anderer Lieferant GmbH']);
+
+    // Bestellung unter Lieferant B
+    $bestellungB = app(BestellungAnlegen::class)->handle(
+        $lieferantB->id,
+        [['artikel_id' => $this->mehl->id, 'menge' => 10.0]],
+        null,
+    );
+    $bestellpositionB = $bestellungB->positionen->first();
+
+    // Analyse gehört zu Lieferant A
+    $analyse = $this->service->erfasse(base64_encode('img'), 'image/jpeg', $this->tenantId);
+    $analyse->update(['lieferant_id' => $lieferantA->id]);
+    $pos = $analyse->positionen->first();
+
+    // Bestellposition von Lieferant B gegen Lieferschein von Lieferant A
+    expect(fn () => $this->service->bestaetige(
+        $pos->fresh(),
+        $this->mehl->id,
+        5.0,
+        null, null, null,
+        $bestellpositionB->id,
+        $this->tenantId,
+    ))->toThrow(InvalidArgumentException::class, 'Bestellposition gehört nicht zum Lieferanten des Belegs.');
+});

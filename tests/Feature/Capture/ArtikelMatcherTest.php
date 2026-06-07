@@ -7,6 +7,7 @@ use App\Domains\Capture\Contracts\TextEmbedder;
 use App\Domains\Capture\Models\LieferantArtikelAlias;
 use App\Domains\Capture\Services\ArtikelEmbedder;
 use App\Domains\Capture\Services\EmbeddingArtikelMatcher;
+use App\Domains\Capture\Support\LieferantMatch;
 use App\Domains\Capture\Support\TextNorm;
 use App\Domains\Capture\Testing\FakeTextEmbedder;
 use App\Domains\Identity\Models\Tenant;
@@ -154,4 +155,70 @@ it('merke lernt: zweimal aufrufen → treffer == 2', function () {
         ->first();
 
     expect($alias->treffer)->toBe(2);
+});
+
+// --- Regressionstests Final-Review ---
+
+it('A2: leerer Normtext (Sonderzeichen) liefert leeres Ergebnis ohne Pseudo-Match auf Aliasse', function () {
+    $mehl = artikelAnlegen('Weizenmehl Type 405', $this->tenant);
+
+    // Alias anlegen, der via str_contains('', '') treffen würde
+    LieferantArtikelAlias::create([
+        'tenant_id' => $this->tenant->id,
+        'lieferant_id' => null,
+        'norm_text' => TextNorm::norm('Weizenmehl Type 405'),
+        'artikel_id' => $mehl->id,
+        'treffer' => 5,
+    ]);
+
+    $matcher = new EmbeddingArtikelMatcher(app(TextEmbedder::class));
+
+    // Nur Sonderzeichen → norm === '' → muss [] zurückgeben
+    expect($matcher->match('---', null, $this->tenant->id))->toBeEmpty();
+    expect($matcher->match('   ', null, $this->tenant->id))->toBeEmpty();
+    expect($matcher->match('!@#$%', null, $this->tenant->id))->toBeEmpty();
+});
+
+it('B1: starkes Embedding (cosine≈1.0) schlägt Substring-Alias eines anderen Artikels', function () {
+    // Artikel A: hat Alias mit Substring-Match (Score 0.75)
+    $artikelA = artikelAnlegen('Meersalz fein', $this->tenant);
+
+    // Artikel B: kein Alias, aber identischer Text → FakeEmbedder → cosine 1.0 → Score 1.0
+    $artikelB = artikelAnlegen('Weizenmehl Type 405', $this->tenant);
+
+    // Embeddings setzen
+    $embedder = app(ArtikelEmbedder::class);
+    $embedder->aktualisiere($artikelA);
+    $embedder->aktualisiere($artikelB);
+
+    // Substring-Alias für Artikel A: 'weizenmehl' ⊂ 'weizenmehl type 405' → str_contains → 0.75
+    LieferantArtikelAlias::create([
+        'tenant_id' => $this->tenant->id,
+        'lieferant_id' => null,
+        'norm_text' => 'weizenmehl',
+        'artikel_id' => $artikelA->id,
+        'treffer' => 1,
+    ]);
+
+    $matcher = new EmbeddingArtikelMatcher(app(TextEmbedder::class));
+    // Suchtext = exakt Artikel-B-Name → FakeEmbedder gibt gleichen Vektor → cosine 1.0 → Score 1.0
+    $kandidaten = $matcher->match('Weizenmehl Type 405', null, $this->tenant->id);
+
+    expect($kandidaten)->not->toBeEmpty();
+    // Artikel B (Embedding cosine 1.0) muss vor Artikel A (Substring 0.75) stehen
+    expect($kandidaten[0]->artikel_id)->toBe($artikelB->id);
+    expect($kandidaten[0]->quelle)->toBe('embedding');
+    expect($kandidaten[0]->score)->toBeGreaterThan(0.75);
+});
+
+it('C3: LieferantMatch::finde mit Whitespace-only-Text gibt null zurück', function () {
+    // Lieferant anlegen — würde bei norm==='' via str_contains matchen
+    Lieferant::create([
+        'tenant_id' => $this->tenant->id,
+        'name' => 'Irgendein Lieferant',
+    ]);
+
+    expect(LieferantMatch::finde('   ', $this->tenant->id))->toBeNull();
+    expect(LieferantMatch::finde("\t\n", $this->tenant->id))->toBeNull();
+    expect(LieferantMatch::finde('---', $this->tenant->id))->toBeNull();
 });

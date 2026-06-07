@@ -24,12 +24,30 @@ class CaptureWareneingang
 
     public function erfasse(string $imageBase64, string $mimeType, int $tenantId, ?int $userId = null): LieferscheinAnalyse
     {
-        return DB::transaction(function () use ($imageBase64, $mimeType, $tenantId, $userId) {
-            $ext = $this->analyzer->analysiere($imageBase64, $mimeType);
+        // WHY(C1): VLM-Analyse + Embedding-Calls (Ollama HTTP) vor der Transaktion ausführen,
+        // damit keine Netzwerk-Latenz die DB-Transaktion offen hält
+        $ext = $this->analyzer->analysiere($imageBase64, $mimeType);
 
-            $lieferant = LieferantMatch::finde($ext->lieferant ?? '', $tenantId);
-            $lieferantId = $lieferant?->id;
+        $lieferant = LieferantMatch::finde($ext->lieferant ?? '', $tenantId);
+        $lieferantId = $lieferant?->id;
 
+        $positionenDaten = [];
+        foreach ($ext->positionen as $pos) {
+            $kandidaten = $this->matcher->match($pos->text, $lieferantId, $tenantId);
+            $besterKandidat = $kandidaten[0] ?? null;
+            $matchedArtikelId = $besterKandidat?->artikel_id;
+            $bestellpositionId = $this->findeOffeneBestellposition($lieferantId, $matchedArtikelId, $tenantId);
+
+            $positionenDaten[] = [
+                'pos' => $pos,
+                'kandidaten' => $kandidaten,
+                'matchedArtikelId' => $matchedArtikelId,
+                'bestellpositionId' => $bestellpositionId,
+                'konfidenz' => $besterKandidat?->score,
+            ];
+        }
+
+        return DB::transaction(function () use ($imageBase64, $tenantId, $userId, $ext, $lieferantId, $positionenDaten) {
             $analyse = LieferscheinAnalyse::create([
                 'tenant_id' => $tenantId,
                 'lieferant_text' => $ext->lieferant,
@@ -46,25 +64,19 @@ class CaptureWareneingang
                 ->usingFileName('lieferschein_'.$analyse->id.'.jpg')
                 ->toMediaCollection('lieferschein');
 
-            foreach ($ext->positionen as $pos) {
-                $kandidaten = $this->matcher->match($pos->text, $lieferantId, $tenantId);
-                $besterKandidat = $kandidaten[0] ?? null;
-                $matchedArtikelId = $besterKandidat?->artikel_id;
-
-                $bestellpositionId = $this->findeOffeneBestellposition($lieferantId, $matchedArtikelId, $tenantId);
-
+            foreach ($positionenDaten as $pd) {
                 $analyse->positionen()->create([
                     'tenant_id' => $tenantId,
-                    'text' => $pos->text,
-                    'menge' => $pos->menge,
-                    'einheit' => $pos->einheit,
-                    'einzelpreis' => $pos->einzelpreis,
-                    'charge_nr' => $pos->charge_nr,
-                    'mhd' => $pos->mhd,
-                    'matched_artikel_id' => $matchedArtikelId,
-                    'matched_bestellposition_id' => $bestellpositionId,
-                    'kandidaten' => array_map(fn ($k) => $k->toArray(), $kandidaten),
-                    'konfidenz' => $besterKandidat?->score,
+                    'text' => $pd['pos']->text,
+                    'menge' => $pd['pos']->menge,
+                    'einheit' => $pd['pos']->einheit,
+                    'einzelpreis' => $pd['pos']->einzelpreis,
+                    'charge_nr' => $pd['pos']->charge_nr,
+                    'mhd' => $pd['pos']->mhd,
+                    'matched_artikel_id' => $pd['matchedArtikelId'],
+                    'matched_bestellposition_id' => $pd['bestellpositionId'],
+                    'kandidaten' => array_map(fn ($k) => $k->toArray(), $pd['kandidaten']),
+                    'konfidenz' => $pd['konfidenz'],
                     'status' => PositionStatus::Vorgeschlagen,
                 ]);
             }
@@ -95,6 +107,19 @@ class CaptureWareneingang
         return DB::transaction(function () use ($p, $artikelId, $menge, $preis, $chargeNr, $mhd, $bestellpositionId, $tenantId, $userId) {
             if ($bestellpositionId !== null) {
                 $pos = Bestellposition::findOrFail($bestellpositionId);
+
+                // WHY(A1): Bediener könnte Artikel X wählen, Bestellposition gehört zu Artikel Y →
+                // Bestand Y steigt, X wird gelernt — Datenintegritätsfehler
+                if ((int) $pos->artikel_id !== (int) $artikelId) {
+                    throw new InvalidArgumentException('Gewählter Artikel passt nicht zur Bestellposition.');
+                }
+
+                // WHY(B2): Lieferant-Bindung sicherstellen — Bestellposition eines anderen Lieferanten
+                // darf nicht gegen diesen Lieferschein gebucht werden
+                if ((int) $pos->bestellung->lieferant_id !== (int) $p->analyse->lieferant_id) {
+                    throw new InvalidArgumentException('Bestellposition gehört nicht zum Lieferanten des Belegs.');
+                }
+
                 $bewegung = app(BestellungWareneingang::class)->handle($pos, $menge, $preis, today()->toDateString(), $chargeNr, $mhd);
             } else {
                 $artikel = Artikel::findOrFail($artikelId);

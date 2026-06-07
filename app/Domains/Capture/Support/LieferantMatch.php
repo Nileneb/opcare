@@ -14,6 +14,11 @@ class LieferantMatch
 
         $norm = TextNorm::norm($text);
 
+        // WHY(C3): $text==='' fängt nur exakt leere Strings; Whitespace/Sonderzeichen-Strings ergeben norm='' → Pseudo-Match
+        if ($norm === '') {
+            return null;
+        }
+
         $lieferanten = Lieferant::withoutGlobalScopes()
             ->where('tenant_id', $tenantId)
             ->get();
