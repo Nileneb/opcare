@@ -211,6 +211,26 @@ it('B1: starkes Embedding (cosine≈1.0) schlägt Substring-Alias eines anderen 
     expect($kandidaten[0]->score)->toBeGreaterThan(0.75);
 });
 
+it('B2: merke mit leerem/Whitespace-Text legt keinen LieferantArtikelAlias an', function () {
+    $artikel = artikelAnlegen('Verbandsmaterial', $this->tenant);
+
+    $matcher = new EmbeddingArtikelMatcher(app(TextEmbedder::class));
+
+    $vorher = LieferantArtikelAlias::withoutGlobalScopes()
+        ->where('tenant_id', $this->tenant->id)
+        ->count();
+
+    $matcher->merke('   ', null, $this->tenant->id, $artikel->id);
+    $matcher->merke('', null, $this->tenant->id, $artikel->id);
+    $matcher->merke('---', null, $this->tenant->id, $artikel->id);
+
+    // Sonderzeichen → norm === '' → nichts gespeichert
+    expect(LieferantArtikelAlias::withoutGlobalScopes()
+        ->where('tenant_id', $this->tenant->id)
+        ->count()
+    )->toBe($vorher);
+});
+
 it('C3: LieferantMatch::finde mit Whitespace-only-Text gibt null zurück', function () {
     // Lieferant anlegen — würde bei norm==='' via str_contains matchen
     Lieferant::create([

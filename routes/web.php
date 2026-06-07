@@ -32,6 +32,7 @@ use App\Livewire\Facility;
 use App\Livewire\Facility\Haustechnik;
 use App\Livewire\Facility\Medizinprodukte;
 use App\Livewire\Hygiene\Hygiene;
+use App\Livewire\Import\Datenimport;
 use App\Livewire\Masterdata\Portal;
 use App\Livewire\Masterdata\Vertretungen;
 use App\Livewire\Medication\BtmNachweis;
@@ -137,6 +138,7 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class, Restrict
     Route::get('/wunschdienstplan', Wunschdienstplan::class)->name('wunschdienstplan');
     Route::get('/tauschboerse', Tauschboerse::class)->name('tauschboerse');
     Route::get('/buchhaltung', Buchhaltung::class)->name('buchhaltung');
+    Route::get('/datenimport', Datenimport::class)->name('datenimport');
     Route::get('/beschaffung', Beschaffung::class)->name('beschaffung');
     Route::get('/inventur', Inventur::class)->name('inventur');
     Route::get('/pflegehilfsmittel', Pflegehilfsmittel::class)->name('pflegehilfsmittel');

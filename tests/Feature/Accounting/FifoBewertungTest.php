@@ -61,3 +61,38 @@ it('berechnet den FIFO-Bestandswert aus den Restschichten', function () {
 
     expect(app(Lagerwert::class)->bestandswert($this->mehl->fresh()))->toBe(15.0); // 5 × 3,00
 });
+
+it('Wareneingang mit gegenkonto=ANFANGSBESTAND bucht an Konto 9000', function () {
+    $menge = 5.0;
+    $preis = 4.00;
+    $betrag = $menge * $preis; // 20.00
+
+    app(Wareneingang::class)->handle($this->mehl, $menge, $preis, '2026-06-10', null, null, null, null, AccountingDefaults::ANFANGSBESTAND);
+
+    $anfangsbestandKonto = AccountingDefaults::konto(AccountingDefaults::ANFANGSBESTAND);
+    $warenbestandKonto = AccountingDefaults::konto(AccountingDefaults::WARENBESTAND);
+
+    // Warenbestand im Soll → saldo positiv; Anfangsbestand im Haben → saldo positiv (Passivkonto)
+    expect($anfangsbestandKonto->saldo())->toBe((float) $betrag)
+        ->and($warenbestandKonto->saldo())->toBeGreaterThanOrEqual((float) $betrag);
+
+    // FIFO-Schicht wurde angelegt
+    $schichten = Lagerschicht::where('artikel_id', $this->mehl->id)->get();
+    expect($schichten)->toHaveCount(1)
+        ->and((float) $schichten[0]->menge_rest)->toBe($menge)
+        ->and((float) $schichten[0]->einstandspreis)->toBe($preis);
+
+    // Bestand gestiegen
+    expect((float) $this->mehl->fresh()->bestand)->toBe($menge);
+});
+
+it('Wareneingang ohne gegenkonto bucht weiterhin an Verbindlichkeiten', function () {
+    app(Wareneingang::class)->handle($this->mehl, 10, 2.00, '2026-06-11');
+
+    $verbindlichkeiten = AccountingDefaults::konto(AccountingDefaults::VERBINDLICHKEITEN);
+    expect($verbindlichkeiten->saldo())->toBe(20.0);
+
+    // Anfangsbestand-Konto unberührt
+    $anfangsbestand = AccountingDefaults::konto(AccountingDefaults::ANFANGSBESTAND);
+    expect($anfangsbestand->saldo())->toBe(0.0);
+});

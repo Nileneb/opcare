@@ -16,9 +16,9 @@ class Wareneingang
 {
     public function __construct(private readonly Buchen $buchen) {}
 
-    public function handle(Artikel $artikel, float $menge, ?float $preis, string $datum, ?string $notiz = null, ?string $chargeNr = null, ?string $mhd = null, ?int $lieferantId = null): Lagerbewegung
+    public function handle(Artikel $artikel, float $menge, ?float $preis, string $datum, ?string $notiz = null, ?string $chargeNr = null, ?string $mhd = null, ?int $lieferantId = null, ?string $gegenkonto = null): Lagerbewegung
     {
-        return DB::transaction(function () use ($artikel, $menge, $preis, $datum, $notiz, $chargeNr, $mhd, $lieferantId) {
+        return DB::transaction(function () use ($artikel, $menge, $preis, $datum, $notiz, $chargeNr, $mhd, $lieferantId, $gegenkonto) {
             AccountingDefaults::ensureFor($artikel->tenant_id);
             $stueckpreis = $preis ?? (float) ($artikel->einkaufspreis ?? 0);
 
@@ -33,7 +33,7 @@ class Wareneingang
             if ($betrag > 0) {
                 $buchung = $this->buchen->handle(
                     AccountingDefaults::konto(AccountingDefaults::WARENBESTAND)->id,
-                    AccountingDefaults::konto(AccountingDefaults::VERBINDLICHKEITEN)->id,
+                    AccountingDefaults::konto($gegenkonto ?? AccountingDefaults::VERBINDLICHKEITEN)->id,
                     $betrag, 'Wareneingang: '.$artikel->name, $datum,
                 );
             }

@@ -124,6 +124,11 @@ class EmbeddingArtikelMatcher implements ArtikelMatcher
     {
         $norm = TextNorm::norm($positionsText);
 
+        // WHY(B2): leerer Norm würde Alias mit norm_text='' anlegen — Gift fürs Gedächtnis (str_contains-Alles-Treffer)
+        if ($norm === '') {
+            return;
+        }
+
         $existing = LieferantArtikelAlias::withoutGlobalScopes()
             ->where('tenant_id', $tenantId)
             ->where('lieferant_id', $lieferantId)

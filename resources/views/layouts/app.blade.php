@@ -98,6 +98,7 @@
                 <a href="{{ route('rueckverfolgung') }}" @class(['is-active' => request()->routeIs('rueckverfolgung')])>Rückverfolgung</a>
                 <a href="{{ route('taschengeld') }}" @class(['is-active' => request()->routeIs('taschengeld')])>Taschengeldkasse</a>
                 <a href="{{ route('beschaffung') }}" @class(['is-active' => request()->routeIs('beschaffung')])>Beschaffung</a>
+                <a href="{{ route('datenimport') }}" @class(['is-active' => request()->routeIs('datenimport')])>Datenimport</a>
             </nav>
         @endif
         @if (auth()->user()?->hasAnyRole(['admin', 'super-admin']))
