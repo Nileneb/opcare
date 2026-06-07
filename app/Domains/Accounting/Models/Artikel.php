@@ -28,6 +28,8 @@ use Spatie\Activitylog\Models\Activity;
  * @property-read int|null $activities_as_subject_count
  * @property-read Collection<int, Lagerbewegung> $bewegungen
  * @property-read int|null $bewegungen_count
+ * @property-read Collection<int, Lagerschicht> $schichten
+ * @property-read int|null $schichten_count
  * @property-read Tenant $tenant
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Artikel newModelQuery()
@@ -67,6 +69,14 @@ class Artikel extends BaseModel
     public function bewegungen(): HasMany
     {
         return $this->hasMany(Lagerbewegung::class);
+    }
+
+    /**
+     * @return HasMany<Lagerschicht, $this>
+     */
+    public function schichten(): HasMany
+    {
+        return $this->hasMany(Lagerschicht::class);
     }
 
     public function unterbestand(): bool

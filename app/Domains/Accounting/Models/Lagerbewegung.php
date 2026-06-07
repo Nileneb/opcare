@@ -6,6 +6,7 @@ use App\Domains\Identity\Models\Tenant;
 use App\Support\Models\BaseModel;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Spatie\Activitylog\Models\Activity;
 
@@ -22,6 +23,8 @@ use Spatie\Activitylog\Models\Activity;
  * @property int|null $buchung_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property-read Collection<int, Schichtabgang> $abgaenge
+ * @property-read int|null $abgaenge_count
  * @property-read Collection<int, Activity> $activitiesAsSubject
  * @property-read int|null $activities_as_subject_count
  * @property-read Artikel $artikel
@@ -60,5 +63,11 @@ class Lagerbewegung extends BaseModel
     public function buchung(): BelongsTo
     {
         return $this->belongsTo(Buchung::class);
+    }
+
+    /** @return HasMany<Schichtabgang, $this> */
+    public function abgaenge(): HasMany
+    {
+        return $this->hasMany(Schichtabgang::class, 'bewegung_id');
     }
 }
