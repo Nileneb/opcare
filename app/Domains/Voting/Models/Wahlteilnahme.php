@@ -35,6 +35,9 @@ class Wahlteilnahme extends Model
 
     protected $table = 'wahlteilnahmen';
 
+    // WHY: keine timestamps in der Migration → Eloquent darf nicht versuchen created_at/updated_at zu schreiben.
+    public $timestamps = false;
+
     protected $fillable = [
         'tenant_id',
         'abstimmung_id',

@@ -154,6 +154,18 @@
                 @enderror
 
                 {{-- Beleg-Box (einmalig nach Abstimmung) --}}
+                {{-- Bewohner-Kiosk-Hinweis: Bewohner haben i.d.R. keinen User-Login --}}
+                @if ($a->elektorat->value === 'bewohner')
+                    <div class="alert alert-warning small mb-3" role="alert">
+                        <strong>Bewohner-Stimmabgabe:</strong>
+                        Diese Abstimmung richtet sich an Bewohner. Die Stimmabgabe durch Bewohner
+                        erfolgt assistiert über den Kiosk-Pfad — dieser ist als Folge-Inkrement
+                        vorgesehen und hier noch nicht verfügbar.
+                        Eingeloggte Mitarbeitende/Gremiumsmitglieder können ggf. stellvertretend
+                        laut Vollmacht abstimmen, sofern Sie stimmberechtigt sind.
+                    </div>
+                @endif
+
                 @if ($belegToken && $belegFuerAbstimmungId === $a->id)
                     <div class="alert alert-success">
                         <strong>Ihre Stimme wurde erfasst.</strong><br>

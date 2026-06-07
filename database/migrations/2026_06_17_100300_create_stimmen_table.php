@@ -15,7 +15,9 @@ return new class extends Migration
             $table->foreignId('tenant_id')->constrained('tenants')->cascadeOnDelete();
             $table->foreignId('abstimmung_id')->constrained('abstimmungen')->cascadeOnDelete();
             $table->foreignId('option_id')->nullable()->constrained('abstimmung_optionen')->nullOnDelete();
-            $table->string('beleg_token')->unique();
+            // WHY: KEIN ->unique() — bei Mehrfachauswahl teilen alle Stimmen einer Abgabe denselben
+            // beleg_token (Abgabe-Beleg, kein Zeilen-Schlüssel). Index für Token-Suche reicht aus.
+            $table->string('beleg_token')->index();
             // WHY: waehler_*-Felder NUR bei modus=Namentlich befüllt; bei Geheim bleiben sie NULL
             // (kein Personenbezug an der Stimme → echte Anonymität, nicht nur Pseudonymisierung).
             $table->foreignId('waehler_user_id')->nullable()->constrained('users')->nullOnDelete();

@@ -51,6 +51,12 @@ class AbstimmungStarten
     public function eroeffne(Abstimmung $abstimmung): void
     {
         DB::transaction(function () use ($abstimmung) {
+            // WHY: Datenminimierung — keine personenbezogene Wählerliste für gesperrte Wahlen anlegen.
+            // Inbetriebnahme-Schalter-Regel (docs/INBETRIEBNAHME.md §6).
+            if ($abstimmung->art === Abstimmungsart::Wahl && ! config('voting.online_wahl_aktiv')) {
+                throw new InvalidArgumentException('Bindende Online-Wahl nicht freigegeben (Inbetriebnahme) — Eröffnung blockiert.');
+            }
+
             if ($abstimmung->status !== AbstimmungStatus::Offen) {
                 $abstimmung->update(['status' => AbstimmungStatus::Offen]);
             }

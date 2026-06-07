@@ -15,7 +15,9 @@ return new class extends Migration
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('resident_id')->nullable()->constrained('residents')->nullOnDelete();
             $table->boolean('hat_abgestimmt')->default(false);
-            $table->timestamps();
+            // WHY: KEINE timestamps() — updated_at würde die personenbezogene Stimmabgabe-Sekunde
+            // rekonstruierbar machen (Timing-Korrelation, Spec §3 / DSGVO Art. 5(1)(c)).
+            // Nur das Boolean hat_abgestimmt ist erlaubt; kein Zeitstempel, kein Kanal, kein Gerät.
 
             // one-person-one-vote: verhindert Doppeleintrag (null-Einträge werden je DB-Standard ignoriert)
             $table->unique(['abstimmung_id', 'user_id']);
