@@ -46,6 +46,7 @@ const pages = [
     ['wareneingang-capture', '/wareneingang-capture', true],
     ['datenimport', '/datenimport', true],
     ['regalzaehlung', '/regalzaehlung', true],
+    ['abstimmungen', '/abstimmungen', true],
     ['taschengeld', '/taschengeld', true],
     ['skill-baum', '/personal/kompetenzen', true],
     ['berechtigungen', '/personal/berechtigungen', true],
