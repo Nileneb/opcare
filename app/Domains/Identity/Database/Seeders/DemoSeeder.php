@@ -140,6 +140,8 @@ use App\Domains\SocialCare\Enums\BetreuungsTyp;
 use App\Domains\SocialCare\Enums\Handlungsfeld;
 use App\Domains\SocialCare\Models\Betreuungsangebot;
 use App\Domains\SocialCare\Models\Praeventionsprogramm;
+use App\Domains\Vision\Models\ProductLabel;
+use App\Domains\Vision\Models\RegalAufnahme;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
@@ -589,6 +591,14 @@ class DemoSeeder extends Seeder
             'abteilung' => 'hauswirtschaft', 'bestand' => 15, 'einstandspreis' => 4.50,
             'roh' => ['Bezeichnung' => 'Geschirrtücher 10er', 'Einheit' => 'Pack', 'Anfangsbestand' => '15', 'EK' => '4,50'],
             'aktion' => ImportAktion::Anlegen, 'status' => ImportZeileStatus::Vorgeschlagen,
+        ]);
+
+        // Vision-MCP Regalzählung: ProductLabel-Mapping + eine Demo-Regalaufnahme mit Detektion (Mengenvorschlag).
+        ProductLabel::create(['tenant_id' => $tenant->id, 'yolo_label' => 'box', 'artikel_id' => $handschuhe->id, 'multiplier' => 12]);
+        $regal = RegalAufnahme::create(['tenant_id' => $tenant->id, 'erstellt_von' => $buchhalterin->id, 'notiz' => 'Pflegelager Regal 2']);
+        $regal->detektionen()->create([
+            'tenant_id' => $tenant->id, 'label' => 'box', 'confidence' => 0.91,
+            'artikel_id' => $handschuhe->id, 'menge_vorschlag' => 36,
         ]);
 
         // Freie Hauptbuchung (GoB/PBV): generischer Buchungssatz, hier Bargeld-Aufnahme von der Bank in die Kasse.
