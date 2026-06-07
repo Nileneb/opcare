@@ -30,9 +30,11 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property int|null $lieferant_id
+ * @property int|null $bestellposition_id
  * @property-read Collection<int, Schichtabgang> $abgaenge
  * @property-read int|null $abgaenge_count
  * @property-read Artikel $artikel
+ * @property-read Bestellposition|null $bestellposition
  * @property-read Lieferant|null $lieferant
  * @property-read Tenant $tenant
  *
@@ -40,6 +42,7 @@ use Illuminate\Support\Carbon;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Lagerschicht newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Lagerschicht query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Lagerschicht whereArtikelId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Lagerschicht whereBestellpositionId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Lagerschicht whereChargeNr($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Lagerschicht whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Lagerschicht whereEingangBewegungId($value)
@@ -62,7 +65,7 @@ class Lagerschicht extends Model
     protected $table = 'lagerschichten';
 
     protected $fillable = ['tenant_id', 'artikel_id', 'eingang_bewegung_id', 'eingangsdatum',
-        'menge_eingang', 'menge_rest', 'einstandspreis', 'charge_nr', 'mhd', 'lieferant_id'];
+        'menge_eingang', 'menge_rest', 'einstandspreis', 'charge_nr', 'mhd', 'lieferant_id', 'bestellposition_id'];
 
     protected $casts = [
         'eingangsdatum' => 'date',
@@ -80,6 +83,11 @@ class Lagerschicht extends Model
     public function lieferant(): BelongsTo
     {
         return $this->belongsTo(Lieferant::class);
+    }
+
+    public function bestellposition(): BelongsTo
+    {
+        return $this->belongsTo(Bestellposition::class);
     }
 
     /** @return HasMany<Schichtabgang, $this> */
