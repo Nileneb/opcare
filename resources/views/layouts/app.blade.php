@@ -65,6 +65,9 @@
             </nav>
         @endcan
         @unless ($istPortal)
+        <nav class="app-nav app-nav-voting">
+            <a href="{{ route('abstimmungen') }}" @class(['is-active' => request()->routeIs('abstimmungen')])>Abstimmungen</a>
+        </nav>
         <nav class="app-nav app-nav-kalender">
             <a href="{{ route('kalender') }}" @class(['is-active' => request()->routeIs('kalender')])>Kalender</a>
             <a href="{{ route('zeiterfassung') }}" @class(['is-active' => request()->routeIs('zeiterfassung')])>Zeiterfassung</a>
