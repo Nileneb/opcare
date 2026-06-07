@@ -16,65 +16,119 @@ Vorlage, der Code ist von Grund auf neu.
 
 ## Was OPCare kann
 
-- **Stammdaten & Bewohnerverwaltung** — Gebäude/Etage/Station/Zimmer, Bewohner, Diagnosen (ICD-10-GM-Katalog,
-  ~16.000 Codes), Versicherungen, Betreuer:innen, Ärzt:innen, **Allergien**, **Medizinprodukte/Hilfsmittel**,
-  **Angehörige/Kontaktpersonen**, **pflegerische Einschätzungen** (Bewusstsein/Kontinenz/Ernährung/Atmung).
-- **SIS®-Pflegeplanung** — Strukturmodell: Informationssammlung → Maßnahmenplanung (Maßnahmen-Katalog,
-  ~230 Einträge) → Berichteblatt → Evaluation. Append-only/versioniert (manipulationssicher).
+Norm-verankerte Module für den gesamten Heimbetrieb — von der Pflegedokumentation über Personal, Qualität und
+Warenwirtschaft bis zu KI-Assistenz und TI-Anbindung. Nach Themen aufgeklappt:
+
+<details open>
+<summary><b>🩺 Pflege & Dokumentation</b></summary>
+
+- **Stammdaten & Bewohnerverwaltung** — Gebäude/Etage/Station/Zimmer, Bewohner, Diagnosen (ICD-10-GM, ~16.000 Codes),
+  Versicherungen, Betreuer:innen, Ärzt:innen, **Allergien**, **Medizinprodukte/Hilfsmittel**, **Angehörige**,
+  **pflegerische Einschätzungen** (Bewusstsein/Kontinenz/Ernährung/Atmung).
+- **SIS®-Pflegeplanung** — Strukturmodell: Informationssammlung → Maßnahmenplanung (Katalog ~230 Einträge) →
+  Berichteblatt → Evaluation. Append-only/versioniert (manipulationssicher).
 - **Assessments** — generische Instrument-Engine mit Scoring + Risiko-Bändern: **Braden** (Dekubitus),
-  **Sturzrisiko**, **BESD** (Schmerz), **Barthel-Index** (Funktion/ADL, mit LOINC-Codes).
-- **Medikation** — Verordnungen, Stellplan, Bestände, Gabe-Dokumentation.
-- **Dienstplan & Arbeitszeit-Compliance** — Wochen-Dienstplan mit arbeitsrechtlicher **Live-Prüfung
-  (ArbZG)**: editierbares, einrichtungseigenes Regelwerk (§ 3/4/5/9–11/14, je mit Link zum amtlichen
-  Gesetzestext) + dokumentierte **§ 14-Begründungen** für zwingende Abweichungen (z. B. ausbleibende
-  Nachfolgekraft). Soll-Ist-Stunden gegen das Vertrags-Pensum. **Wunschdienstplan**: Mitarbeitende geben
-  Dienstwünsche ab (Vorschlagscharakter), die dem PDL beim Erstellen direkt im Raster eingeblendet werden.
-- **Arbeitszeiterfassung (BAG/EuGH)** — Mitarbeitende **stempeln Kommen/Gehen** (oder erfassen manuell);
-  Wochen-**Ist gegen das geplante Dienstplan-Soll**, die Leitung sieht das gesamte Team.
-- **Mitarbeiterverwaltung** — vollständige **Personalakte** (Personalfragebogen: Person, Steuer/ELStAM,
-  Sozialversicherung, Bank, Vertrag/Pensum, Pflege-Compliance inkl. Masernschutz § 20 IfSG) 1:1 am
-  App-Benutzer, **an die Rollenverwaltung gekoppelt**; sensible Felder (Steuer-ID/SV-Nr/IBAN)
-  At-Rest-verschlüsselt.
-- **Qualität & Controlling** — Vorkommnis-Erfassung (Sturz strukturiert mit Folgen, Dekubitus mit Stadium,
-  FEM …), QS-Indikatoren, KPI-Dashboard sowie eine **QM-Norm-Checkliste**: norm-verankerte Anforderungen
-  (QPR-Qualitätsbereiche QB1–6 + Hygiene/IfSG, Datenschutz/DSGVO, Arbeitsschutz, Hauswirtschaft/LMIV,
-  Haustechnik/DIN 31051, Heimrecht) mit Erfüllungsgrad, Zuständigkeit und Gesetzeslink je Anforderung.
-- **Haustechnik & Instandhaltung (DIN 31051)** — jede:r Mitarbeitende **meldet Mängel**; die Haustechnik
-  arbeitet die Queue ab (offen → in Arbeit → erledigt) und führt den **Wartungsplan** mit Prüffristen
-  (überfällige Prüfungen rot; DGUV V3 / MPBetreibV / BetrSichV / TrinkwV).
-- **Medizinprodukte (MPBetreibV § 13/§ 14)** — Bestandsverzeichnis + Medizinproduktebuch mit
-  **STK/MTK-Prüffristen-Ampel**, dokumentierten **Einweisungen** und Funktionsstörungen/**Vorkommnissen**
-  (BfArM-Meldung). Siehe [docs/medizinprodukte.md](docs/medizinprodukte.md).
-- **Beschwerde- & Gewaltschutz-Management (§ 113 SGB XI / Landes-WTG / § 5 SGB XI)** — Eingang erfassen und an die
-  betroffene Abteilung **weiterleiten — anonym oder namentlich, je nach Wahl des Melders** (Bereichsrolle wird
-  benachrichtigt); Gewaltvorfälle bleiben bis zur Sofortmaßnahme rot. Plus **Gremien/Heimbeirat** (HeimmwV, § 10
-  WBVG, ASA § 11 ASiG) und **Betriebsarzt/Sifa-Stammdaten** (ASiG/DGUV V2).
-  Siehe [docs/beschwerden-gremien.md](docs/beschwerden-gremien.md).
-- **Betreuung/Vertretung als App-Logik (§§ 1814 ff. BGB)** — rechtliche Vertretungen mit **Aufgabenkreisen**
-  (§ 1815), eigenem **read-only Portal-Login** (Sicht nur auf die Daten ihrer Aufgabenkreise), **Pflicht-mit-Frist**
-  (§ 1863 Jahresbericht), und ein **Ereignis-Workflow** (§ 1821): bei MD-Begutachtung, Heilbehandlung, Krankenhaus,
-  Heimvertrag oder Posteingang werden genau die nach Aufgabenkreis **berechtigten** Vertretungen benachrichtigt und
-  die Pflichterfüllung dokumentiert. Siehe [docs/betreuungsrecht-vertretung.md](docs/betreuungsrecht-vertretung.md).
-- **Küche & Verpflegung (LMIV)** — die Küche sieht die **Lebensmittelallergien + Kostformen** der Bewohner
-  (aus den vorhandenen Pflegedaten) und pflegt den **Speiseplan mit Allergenkennzeichnung** (14 EU-Allergene);
-  je Gericht werden **betroffene Bewohner gewarnt**. **Essenswünsche** (Vorliebe/Abneigung) sind jederzeit
-  sichtbar; je Bewohner wird eine **Menüwahl pro Mahlzeit** festgehalten.
-- **Buchhaltung & Warenwirtschaft (HGB/PBV)** — **doppelte Buchführung** (Soll/Haben, Saldo je Kontoart)
-  mit Standard-Kontenrahmen je Einrichtung, **verzahnt mit der Lagerwirtschaft der Abteilungen**:
-  Wareneingang bucht *Soll Warenbestand · Haben Verbindlichkeiten*, Verbrauch *Soll Abteilungs-Aufwand ·
-  Haben Warenbestand* — jeder Materialfluss schlägt automatisch in der Finanzbuchhaltung durch; Unterbestand
-  wird markiert. Siehe [`docs/buchhaltung-warenwirtschaft.md`](docs/buchhaltung-warenwirtschaft.md).
-- **Soziale Betreuung (§ 43b SGB XI)** — Betreuungs-/Aktivierungsangebote planen, **Teilnahme je Bewohner
-  dokumentieren** und den **Betreuungs-Nachweis** (Einheiten + Minuten/Monat) je Bewohner führen.
-- **QDVS / DAS-Pflege** — datengetriebene **Plausibilitäts-Regel-Engine** (440 DAS-Regeln, Pattern-Matcher
-  statt Voll-XPath; ehrlicher Coverage-Report; aktuell 57 Regeln scharf).
-- **FHIR-Export** — FHIR-R4-Pflegeüberleitungs-**Document-Bundle**, validiert im CI mit dem **amtlichen
-  HL7-FHIR-Validator** (0 errors) — Richtung **ÜLB-MIO** (`kbv.mio.ueberleitungsbogen`). Siehe
-  [FHIR-Konformität](#fhir--ülb-mio-konformität).
-- **Sicherheit** — **MFA (TOTP, Pflicht für alle)**, Row-Level-Mandantentrennung (`tenant_id` + Global
-  Scope), RBAC (Rollen je Mandant), Audit-Log, IDOR-Härtung, **At-Rest-Verschlüsselung** sensibler
-  Gesundheits-Freitextdaten, **Security-Header** (CSP/HSTS/…), DSGVO-Guards auf Export-Routen. CI-Gates:
-  Dependency-CVE-Audit + **SAST (Semgrep)**. Konzept: [`docs/security/sicherheitskonzept.md`](docs/security/sicherheitskonzept.md).
+  **Sturzrisiko**, **BESD** (Schmerz), **Barthel-Index** (Funktion/ADL, LOINC).
+- **Medikation** — Verordnungen, Stellplan, Bestände, Gabe-Dokumentation, Vitalwerte.
+- **Sprache → SIS®** — Audio/Transkription → LLM-Strukturierung in die SIS-Felder (Human-in-the-Loop).
+</details>
+
+<details>
+<summary><b>👥 Personal, Dienstplan & Arbeitsschutz</b></summary>
+
+- **Dienstplan & ArbZG-Compliance** — Wochenplan mit **Live-Prüfung (ArbZG)**: editierbares Regelwerk
+  (§ 3/4/5/9–11/14, je mit Gesetzeslink) + dokumentierte **§ 14-Begründungen** für zwingende Abweichungen.
+  Soll-Ist gegen das Vertrags-Pensum. **Wunschdienstplan** (Dienstwünsche im Raster eingeblendet).
+- **Arbeitszeiterfassung (BAG/EuGH)** — Kommen/Gehen stempeln (oder manuell); Wochen-Ist gegen Dienstplan-Soll,
+  Team-Sicht für die Leitung.
+- **Personalakte** — Personalfragebogen (Person, Steuer/ELStAM, SV, Bank, Vertrag/Pensum, Masernschutz § 20 IfSG)
+  1:1 am Benutzer, an die Rollenverwaltung gekoppelt; sensible Felder (Steuer-ID/SV-Nr/IBAN) At-Rest-verschlüsselt.
+- **Arbeitsschutz & Fortbildung** — Nachweise-mit-Frist + **Betriebsarzt/Sifa** (ASiG/DGUV V2),
+  **Beauftragten-Register**, **Fortbildungsplan** (QPR QB6, Pflicht-Themen-Matrix).
+- **Team-Energiebarometer** — freiwillig/anonym (k-Anonymität, § 26 BDSG/§ 87 BetrVG).
+</details>
+
+<details>
+<summary><b>📋 Qualität, Recht & Beteiligung</b></summary>
+
+- **Qualität & Controlling** — Vorkommnis-Erfassung (Sturz/Dekubitus/FEM strukturiert), QS-Indikatoren,
+  KPI-Dashboard + **QM-Norm-Checkliste** (QPR QB1–6 + Hygiene/Datenschutz/Arbeitsschutz/LMIV/DIN 31051/Heimrecht)
+  mit Erfüllungsgrad, Zuständigkeit und Gesetzeslink je Anforderung.
+- **Beschwerde- & Gewaltschutz-Management** (§ 113 SGB XI / Landes-WTG / § 5 SGB XI) — Eingang erfassen und
+  **anonym oder namentlich** an die betroffene Abteilung weiterleiten; Gewaltvorfälle bleiben bis zur Sofortmaßnahme rot.
+- **Betreuung/Vertretung** (§§ 1814 ff. BGB) — rechtliche Vertretungen mit **Aufgabenkreisen** (§ 1815),
+  **read-only Portal-Login**, **Pflicht-mit-Frist** (§ 1863 Jahresbericht), **Ereignis-Workflow** (§ 1821:
+  MD-Begutachtung/Heilbehandlung/Krankenhaus/Heimvertrag/Posteingang → berechtigte Vertretungen benachrichtigt).
+- **Gremien & Heimbeirat** (HeimmwV, § 10 WBVG, § 11 ASiG) + **Abstimmungen & Wahlen** — anonym (echte
+  Anonymität: Stimme UUID-/timestamp-frei) oder namentlich; geheime Wahl erzwungen (§ 5 HeimmwV / § 11 MVG-EKD).
+- **Datenschutz-Register** (Art. 30/28 DSGVO) — Verarbeitungstätigkeiten + Auftragsverarbeitungen mit
+  Prüf-Frist-Ampel + Art-30-Export.
+</details>
+
+<details>
+<summary><b>🏥 Hygiene, Gebäude & Verpflegung</b></summary>
+
+- **Haustechnik & Instandhaltung** (DIN 31051) — Mängelmeldungen (offen → in Arbeit → erledigt) + **Wartungsplan**
+  mit Prüffristen (überfällig rot; DGUV V3 / MPBetreibV / BetrSichV / TrinkwV).
+- **Medizinprodukte** (MPBetreibV § 13/§ 14) — Bestandsverzeichnis + Medizinproduktebuch mit
+  **STK/MTK-Prüffristen-Ampel**, **Einweisungen**, Vorkommnissen (BfArM-Meldung).
+- **Hygiene** — Hygieneplan (Dokument-mit-Freigabe + Revisions-Ampel) + **MRE-/Infektions-Surveillance**
+  je Bewohner mit Meldepflicht-Verfolgung (§ 23 / §§ 6/7 IfSG).
+- **Küche & Verpflegung** (LMIV) — Lebensmittelallergien + Kostformen der Bewohner, **Speiseplan mit
+  Allergenwarnung** (14 EU-Allergene), Bewohner-Warnung je Gericht, Essenswünsche + Menüwahl je Mahlzeit.
+- **Soziale Betreuung** (§ 43b SGB XI) — Angebote planen, Teilnahme + Betreuungs-Nachweis (Einheiten/Minuten) je Bewohner.
+</details>
+
+<details>
+<summary><b>📦 Warenwirtschaft & Finanzen (HGB/PBV)</b></summary>
+
+- **Doppelte Buchführung** (Soll/Haben, Saldo je Kontoart) + **freie Hauptbuchung** (GoB/PBV), verzahnt mit der
+  **Lagerwirtschaft je Abteilung**: Wareneingang *Warenbestand an Verbindlichkeiten*, Verbrauch *Abteilungs-Aufwand
+  an Warenbestand* — jeder Materialfluss schlägt automatisch in der Finanzbuchhaltung durch.
+- **FIFO-Bewertung & Inventur** (§ 256, §§ 240/241 HGB/PBV) — Schichten-Ledger, Bestandswert, Zähldifferenz-Buchung.
+- **Charge/MHD-Rückverfolgung & Lieferanten** (Art. 18 VO 178/2002: one-step-back, MHD-Monitor).
+- **Pflegehilfsmittel-Verbrauch** (§ 40 SGB XI: bewohnerbezogen, 42-€-Referenz, nur ambulant Anspruch).
+- **Gefahrstoffverzeichnis** (§ 6 GefStoffV: GHS/CLP, SDB) **+ druckbare Betriebsanweisung** (§ 14 GefStoffV, TRGS 555).
+- **Beschaffung/Bestellwesen** (Wareneingang gegen Bestellung, Bedarfsvorschlag) + **generische Budgets**
+  (Konto-/Treuhand-Budget mit Warn-/Sperr-Ampel). **Taschengeldkasse** (Treuhand, § 27b SGB XII).
+</details>
+
+<details>
+<summary><b>🤖 KI-Module (lokal, DSGVO-konform)</b></summary>
+
+- **Beleg-Capture** — Belegfoto → Ollama-VLM-Extraktion → Vorschlag → berechtigte Bestätigung bucht (HITL).
+- **Lieferschein → Wareneingang** — Foto → VLM-Positionen → lokales **Embedding-Artikel-Matching**
+  (Match-Gedächtnis + Ollama-Cosine, DSGVO-lokal) → bestätigter FIFO-Wareneingang (standalone/gegen Bestellung).
+- **Stammdaten-Datenimport** — CSV → editierbares Spalten-Mapping → Artikel-Matching (anlegen/mergen, Dedup) →
+  bewerteter Anfangsbestand (EBK/Verbindlichkeit).
+- **Vision-Regalzählung** — Regalfoto → externes [Vision-MCP](https://github.com/Nileneb/vision-mcp) (YOLO,
+  whisperX-Muster) → `ProductLabel`-Mapping → bestätigter `Inventurposition.ist_menge`. Training hinter Schalter.
+</details>
+
+<details>
+<summary><b>🔌 Interoperabilität & Telematik (TI)</b></summary>
+
+- **QDVS / DAS-Pflege** — datengetriebene **Plausibilitäts-Regel-Engine** (440 DAS-Regeln, Pattern-Matcher;
+  ehrlicher Coverage-Report).
+- **FHIR-Export** — FHIR-R4-Pflegeüberleitungs-**Document-Bundle**, im CI gegen den **amtlichen HL7-FHIR-Validator**
+  (0 errors) Richtung **ÜLB-MIO**. Lokal mit dem gematik [`app-referencevalidator`](docs/gematik-validierung.md)
+  geprüft: ISiP + E-Rezept **6/6 konform**.
+- **TI 2.0 / ZETA** (Track C) — Service-Discovery-Seam (`HttpZetaClient`); lokaler gematik
+  **`zeta-testfachdienst`** angebunden (operativ). Echter RU-Auth vorbereitet (Test-SMC-B + Member-ID-Runbook).
+- **KIM** — Anbindung für sichere Kommunikation (Vorbereitung).
+</details>
+
+<details>
+<summary><b>🔐 Sicherheit & Plattform</b></summary>
+
+- **MFA (TOTP, Pflicht für alle)**, Row-Level-Mandantentrennung (`tenant_id` + Global Scope), **RBAC** (Rollen je
+  Mandant), Audit-Log, **IDOR-Härtung**, **At-Rest-Verschlüsselung** sensibler Gesundheits-Freitextdaten,
+  **Security-Header** (CSP/HSTS/…), DSGVO-Guards auf Export-Routen.
+- **CI-Gates**: Dependency-CVE-Audit + **SAST (Semgrep)** + FHIR-Validierung. Konzept:
+  [`docs/security/sicherheitskonzept.md`](docs/security/sicherheitskonzept.md).
+- **Föderales Heimrecht** — Bundesland automatisch aus der Adresse → Landesheimgesetz + Personalbemessungs-Defaults
+  (Bund → Land → Träger).
+</details>
 
 ## Tech-Stack
 
@@ -84,48 +138,97 @@ Vorlage, der Code ist von Grund auf neu.
 | Frontend | Blade + **Livewire 4** + Alpine.js |
 | Datenbank | **SQLite** (Dev/CI) · **PostgreSQL** (Prod) |
 | Tests | **Pest 4** (734 Tests) |
-| Lint/Style | **Laravel Pint** |
-| DTOs / RBAC / Audit | `spatie/laravel-data` · `spatie/laravel-permission` · `spatie/laravel-activitylog` |
+| Lint/Style | **Laravel Pint** · **Larastan/PHPStan L5** |
+| DTOs / RBAC / Audit | `spatie/laravel-data` · `spatie/laravel-permission` · `spatie/laravel-activitylog` · `spatie/laravel-medialibrary` |
+| KI (lokal) | **Ollama** (VLM/Embeddings) · externe **MCP-Tools** (Vision-MCP, whisperX-mcp) |
 | Deployment | **Docker Compose** (self-contained: eine `.env`, `docker compose up --build`) |
-| FHIR-Validierung (CI) | amtlicher **HL7 FHIR Validator** (`validator_cli.jar`) gegen R4 + `de.basisprofil.r4` + ÜLB |
+| FHIR-Validierung (CI) | amtlicher **HL7 FHIR Validator** + gematik **app-referencevalidator** (offline) |
 
 ## Architektur — Bounded Contexts
 
 Domänen-orientierte Struktur unter `app/Domains/`. Layering als Einbahnstraße:
 **Livewire/Controller → Action → Model/Service**, Daten zwischen Schichten als DTOs.
 
+<details open>
+<summary><b>🩺 Pflege & Dokumentation</b></summary>
+
 | Domäne | Inhalt |
 |---|---|
-| **Identity** | Auth, Benutzer, Rollen/Rechte, Mandanten, Tenant-Scoping, **föderales Heimrecht** (Bundesland automatisch aus der Adresse → Landesheimgesetz + Personalbemessungs-Defaults Bund→Land→Träger) |
 | **Masterdata** | Bewohner, Diagnosen/ICD, Versicherungen, **rechtliche Vertretung mit Aufgabenkreisen (§§ 1814 ff. BGB) + Vertreter-Portal + Bewohner-Ereignisse**, Ärzte, Gebäude/Zimmer, Allergien, Medizinprodukte, Kontakte, Status-Observationen |
 | **CarePlanning** | SIS®-Strukturmodell: Informationssammlung → Maßnahmenplan → Bericht → Evaluation |
 | **Assessment** | Instrument-Engine (Braden/Sturz/BESD/Barthel), Scoring, Risiko-Bänder, Eskalation |
 | **Medication** | Verordnungen, Stellplan, Bestände, Gaben, Vitalwerte |
+| **Speech** | Audio-Handling, Transkription, LLM→SIS®-Strukturierung (Human-in-the-Loop) |
+</details>
+
+<details>
+<summary><b>📋 Qualität, Compliance & Beteiligung</b></summary>
+
+| Domäne | Inhalt |
+|---|---|
 | **Quality** | Vorkommnisse/CareEvents, QS-Indikatoren, KPIs, **QM-Norm-Checkliste**, **Beschwerde-/Gewaltschutz-Management** (Weiterleitung anonym/namentlich), **Gremien/Heimbeirat** (HeimmwV/§ 11 ASiG) |
 | **Compliance** | **Datenschutz-Register**: Verzeichnis von Verarbeitungstätigkeiten (Art. 30 DSGVO) mit Prüf-Frist-Ampel + Auftragsverarbeitungen (Art. 28) + Art-30-Export |
-| **Capture** | **VLM-Beleg-Capture**: Belegfoto → Ollama-VLM-Extraktion → Einsortierungs-Vorschlag → berechtigte Bestätigung bucht (Human-in-the-loop, kein stiller Schreibvorgang) + **Lieferschein→Wareneingang**: Foto → VLM-Positionen → lokales Embedding-Artikel-Matching (Match-Gedächtnis + Ollama-Cosine, DSGVO-lokal) → bestätigter FIFO-Wareneingang (standalone/gegen Bestellung) |
-| **Import** | **WaWi-Stammdaten-Datenimport** (Mandanten-Onboarding): CSV → Spalten-Alias-Erkennung (editierbar) → Artikel-Matching gegen den Katalog (anlegen/mergen, Dedup) → HITL-Vorschau → bewerteter Anfangsbestand (FIFO-Schicht, EBK-Eröffnungsbuchung oder echte Verbindlichkeit) |
-| **Vision** | **Regalzählung** über das externe [Vision-MCP](https://github.com/Nileneb/vision-mcp) (YOLO, gestrippt aus stockpilot, whisperX-Muster): Regalfoto → `detect` → `ProductLabel`-Mapping (Label→Artikel×Multiplier) → bestätigter `Inventurposition.ist_menge`; Labeling (SAM2) + Training hinter Inbetriebnahme-Schalter. DSGVO: nur Regalfotos |
-| **Voting** | **Abstimmungen & Wahlen** (anonym + namentlich) für Bewohner/Mitarbeitende/Gremien: drei entkoppelte Modelle (`Stimme` UUID-PK + timestamp-frei = echte Anonymität, ErwG 26; `Wahlteilnahme` nur Boolean), Beleg-Token, geheime Wahl erzwungen (§ 5 HeimmwV / § 11 MVG-EKD), bindende Online-Wahl hinter Inbetriebnahme-Schalter |
-| **Hygiene** | **Hygieneplan** (Dokument-mit-Freigabe + Revisions-Ampel) + **MRE-/Infektions-Surveillance** je Bewohner mit Meldepflicht-Verfolgung (§ 23/§§ 6/7 IfSG) |
-| **Qdvs** | DAS-Plausibilitäts-Regel-Engine + QDVS-Export |
-| **Fhir** | FHIR-R4-Mapper + Document-Bundle-Export (ÜLB-MIO-Richtung) |
+| **Voting** | **Abstimmungen & Wahlen** (anonym + namentlich): drei entkoppelte Modelle (`Stimme` UUID-PK + timestamp-frei = echte Anonymität ErwG 26; `Wahlteilnahme` nur Boolean), Beleg-Token, geheime Wahl erzwungen (§ 5 HeimmwV / § 11 MVG-EKD), bindende Online-Wahl hinter Inbetriebnahme-Schalter |
+</details>
+
+<details>
+<summary><b>👥 Personal & Dienstplan</b></summary>
+
+| Domäne | Inhalt |
+|---|---|
 | **Scheduling** | Dienstplan, Schichten, Kalender, **ArbZG-Compliance-Engine** (Regelwerk + § 14) + **Arbeitszeiterfassung** (BAG/EuGH) |
-| **Personnel** | Personalakte (Personalfragebogen, verschlüsselt) 1:1 am Benutzer, gekoppelt an die Rollenverwaltung; Arbeitsschutz-Nachweise + **Betriebsarzt/Sifa-Betreuung** (ASiG/DGUV V2), Beauftragten-Register, **Fortbildungsplan** (QPR QB6, Pflicht-Themen-Matrix), **Team-Energiebarometer** (freiwillig/anonym, § 26 BDSG/§ 87 BetrVG) |
-| **Facility** | Haustechnik/Instandhaltung (DIN 31051): Mängelmeldungen + Wartungsplan mit Prüffristen; Medizinprodukte-Bestandsverzeichnis + Medizinproduktebuch (MPBetreibV) |
+| **Personnel** | Personalakte (verschlüsselt) 1:1 am Benutzer, rollen-gekoppelt; Arbeitsschutz-Nachweise + **Betriebsarzt/Sifa** (ASiG/DGUV V2), Beauftragten-Register, **Fortbildungsplan** (QPR QB6), **Team-Energiebarometer** (freiwillig/anonym) |
+</details>
+
+<details>
+<summary><b>🏥 Hygiene, Gebäude & Verpflegung</b></summary>
+
+| Domäne | Inhalt |
+|---|---|
+| **Hygiene** | **Hygieneplan** (Dokument-mit-Freigabe + Revisions-Ampel) + **MRE-/Infektions-Surveillance** je Bewohner mit Meldepflicht-Verfolgung (§ 23 / §§ 6/7 IfSG) |
+| **Facility** | Haustechnik/Instandhaltung (DIN 31051): Mängelmeldungen + Wartungsplan mit Prüffristen; **Medizinprodukte**-Bestandsverzeichnis + Medizinproduktebuch (MPBetreibV) |
 | **Catering** | Küche/Verpflegung (LMIV): Diät-/Allergen-Sicht der Bewohner + Speiseplan mit Allergenwarnung |
 | **SocialCare** | Soziale Betreuung (§ 43b SGB XI): Angebote + Teilnahme-Nachweis je Bewohner |
-| **Accounting** | Doppelte Buchführung (Soll/Haben) + **freie Hauptbuchung** (generischer Buchungssatz, GoB/PBV) + Warenwirtschaft je Abteilung (Lager→Aufwand, automatische Buchung) + **FIFO-Bewertung & Inventur** (§ 256, §§ 240/241 HGB/PBV: Schichten-Ledger, Bestandswert, Zähldifferenz-Buchung) + **Charge/MHD-Rückverfolgung & Lieferanten** (Art. 18 VO 178/2002: one-step-back, MHD-Monitor) + **Pflegehilfsmittel-Verbrauch** (§ 40 SGB XI: bewohnerbezogen, 42-€-Referenz) + **Gefahrstoffverzeichnis** (§ 6 GefStoffV: GHS/CLP, SDB) + **Beschaffung/Bestellwesen** (Wareneingang gegen Bestellung, Bedarfsvorschlag) + **generische Budgets** (Konto-/Treuhand-Budget mit Warn-/Sperr-Ampel, greift beim Buchen) |
-| **Speech** | Audio-Handling, Transkription, LLM→SIS®-Strukturierung (Human-in-the-Loop) |
+</details>
+
+<details>
+<summary><b>📦 Warenwirtschaft, Finanzen & KI-Capture</b></summary>
+
+| Domäne | Inhalt |
+|---|---|
+| **Accounting** | Doppelte Buchführung + **freie Hauptbuchung** (GoB/PBV) + Warenwirtschaft je Abteilung + **FIFO-Bewertung & Inventur** (§ 256/§§ 240/241 HGB) + **Charge/MHD-Rückverfolgung & Lieferanten** (Art. 18 VO 178/2002) + **Pflegehilfsmittel** (§ 40 SGB XI) + **Gefahrstoffverzeichnis + Betriebsanweisung** (§ 6/§ 14 GefStoffV) + **Beschaffung** + generische **Budgets** + Taschengeldkasse (§ 27b SGB XII) |
+| **Capture** | **VLM-Beleg-Capture** (Belegfoto → Vorschlag → bestätigte Buchung) + **Lieferschein→Wareneingang** (Foto → VLM-Positionen → Embedding-Artikel-Matching → bestätigter FIFO-Wareneingang) |
+| **Import** | **WaWi-Stammdaten-Datenimport** (Onboarding): CSV → editierbares Spalten-Mapping → Artikel-Matching → bewerteter Anfangsbestand (EBK/Verbindlichkeit) |
+| **Vision** | **Regalzählung** über das externe [Vision-MCP](https://github.com/Nileneb/vision-mcp) (YOLO): Regalfoto → `detect` → `ProductLabel`-Mapping → `Inventurposition.ist_menge`; Training hinter Inbetriebnahme-Schalter |
+</details>
+
+<details>
+<summary><b>🔌 Interoperabilität & TI</b></summary>
+
+| Domäne | Inhalt |
+|---|---|
+| **Fhir** | FHIR-R4-Mapper + Document-Bundle-Export (ÜLB-MIO) + ISiP/E-Rezept (gegen gematik-Validator 6/6 konform) |
+| **Qdvs** | DAS-Plausibilitäts-Regel-Engine + QDVS-Export |
+| **Ti20** | **TI 2.0 / ZETA** — Service-Discovery-Seam (`HttpZetaClient`), lokaler gematik `zeta-testfachdienst` angebunden; RU-Auth vorbereitet (Inbetriebnahme-Schalter) |
+| **Kim** | KIM-Anbindung (sichere Kommunikation) — Vorbereitung |
+</details>
+
+<details>
+<summary><b>🔐 Plattform & Identität</b></summary>
+
+| Domäne | Inhalt |
+|---|---|
+| **Identity** | Auth, Benutzer, Rollen/Rechte, Mandanten, Tenant-Scoping, **föderales Heimrecht** (Bundesland automatisch aus der Adresse → Landesheimgesetz + Personalbemessungs-Defaults Bund→Land→Träger) |
+</details>
 
 ## FHIR / ÜLB-MIO-Konformität
 
 Der FHIR-Export erzeugt ein **vollständig ÜLB-MIO-konformes Document-Bundle** (`KBV_PR_MIO_ULB_Bundle`,
-PIO Überleitungsbogen `kbv.mio.ueberleitungsbogen` 1.0.0 — der veröffentlichte FHIR-MIO der
-Pflegeüberleitung). Im CI **blockierend** gegen FHIR R4 + `de.basisprofil.r4` + das ÜLB-Paket validiert,
-zusätzlich explizit gegen das ÜLB-Bundle-Profil (**0 errors**).
+PIO Überleitungsbogen `kbv.mio.ueberleitungsbogen` 1.0.0). Im CI **blockierend** gegen FHIR R4 +
+`de.basisprofil.r4` + das ÜLB-Paket validiert (**0 errors**).
 
-**Konforme Composition mit bis zu 12 slice-konformen Sektionen** (`meta.profile` durchgängig, closed slicing):
+<details>
+<summary><b>Composition mit bis zu 12 slice-konformen Sektionen</b></summary>
 
 | ÜLB-Sektion | FHIR-Ressource |
 |---|---|
@@ -137,13 +240,13 @@ zusätzlich explizit gegen das ÜLB-Bundle-Profil (**0 errors**).
 | `funktionsbeurteilungen` | Presence-Observation → `Assessment_Free` (Barthel) |
 | `pflegerischeMassnahme` | `Procedure` (je Maßnahme) |
 | `orientierungPsyche` / `qualitativeBeschreibungAtmung` | Status-Observations `Cognitive_Awareness` / `Qualitative_Description_Breathing` |
-| `harn-/stuhlkontinenzDifferenzierteEinschaetzung` / `ernaehrung` | `Continence_Differentiated_Assessment` / `Presence_Information_Nutrition` |
+| `harn-/stuhlkontinenz…` / `ernaehrung` | `Continence_Differentiated_Assessment` / `Presence_Information_Nutrition` |
 | `medizinprodukte` | `Relevant_Information_Medical_Devices` → `DeviceUseStatement` → `Device` |
-| `patientenAdressbuch` | `RelatedPerson_Contact_Person` (An-/Zugehörige) |
+| `patientenAdressbuch` | `RelatedPerson_Contact_Person` |
 
-Dazu die dokumentierende Einheit (Organization/Practitioner/PractitionerRole) und der ÜLB-Patient. Die
-Status-/Medizinprodukte-/Angehörige-Sektionen erscheinen, sobald die Daten erfasst sind. Genuin offener,
-optionaler Rest (Drainage, gradDerBehinderung, Patientenwunsch …): [Wiki → Track A](https://github.com/Nileneb/opcare/wiki).
+Dazu die dokumentierende Einheit (Organization/Practitioner/PractitionerRole) und der ÜLB-Patient. Genuin offener,
+optionaler Rest: [Wiki → Track A](https://github.com/Nileneb/opcare/wiki).
+</details>
 
 ## Schnellstart (Docker)
 
@@ -155,7 +258,8 @@ docker compose up --build
 # Demo-Login: admin@opcare.local / password
 ```
 
-Lokal ohne Docker:
+<details>
+<summary>Lokal ohne Docker</summary>
 
 ```bash
 composer install
@@ -163,13 +267,16 @@ cp .env.example .env && php artisan key:generate
 php artisan migrate --seed
 php artisan serve
 ```
+</details>
 
 ## Entwicklung
 
 ```bash
 php artisan test                 # bzw. vendor/bin/pest   (734 Tests)
 vendor/bin/pint                  # Code-Style
-php artisan fhir:export --output=bundle.json   # FHIR-Document-Bundle erzeugen
+php -d memory_limit=1G vendor/bin/phpstan analyse   # Larastan L5
+php artisan fhir:export --output=bundle.json        # FHIR-Document-Bundle
+scripts/fhir/validate.sh isip1 <datei.json>         # gematik-Referenzvalidator (offline)
 ```
 
 **CI-Gates** (GitHub Actions): `tests` · `lint` · `security` (composer audit) ·
@@ -186,3 +293,4 @@ dessen Code.
 ## Lizenz
 
 **AGPL-3.0** — Copyleft erstreckt sich auch auf über das Netzwerk bereitgestellte Dienste (SaaS).
+</content>
