@@ -64,6 +64,7 @@ use App\Livewire\Scheduling\Arbeitsrecht;
 use App\Livewire\Scheduling\Dienstplan;
 use App\Livewire\Scheduling\Kalender;
 use App\Livewire\Scheduling\Spitzenzeiten;
+use App\Livewire\Vision\Regalzaehlung;
 use App\Livewire\Scheduling\Tauschboerse;
 use App\Livewire\Scheduling\Wunschdienstplan;
 use App\Livewire\Scheduling\Zeiterfassung;
@@ -145,6 +146,7 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class, Restrict
     Route::get('/gefahrstoffe', Gefahrstoffverzeichnis::class)->name('gefahrstoffe');
     Route::get('/beleg-capture', Belegerfassung::class)->name('belegerfassung');
     Route::get('/wareneingang-capture', Wareneingangerfassung::class)->name('wareneingang-capture');
+    Route::get('/regalzaehlung', Regalzaehlung::class)->name('regalzaehlung');
     Route::get('/rueckverfolgung', Rueckverfolgung::class)->name('rueckverfolgung');
     Route::get('/taschengeld', Taschengeldkasse::class)->name('taschengeld');
     Route::get('/dokumente/{media}', MediaDownloadController::class)->name('media.download')->middleware('signed');

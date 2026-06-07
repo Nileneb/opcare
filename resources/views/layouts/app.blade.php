@@ -95,10 +95,16 @@
                 <a href="{{ route('gefahrstoffe') }}" @class(['is-active' => request()->routeIs('gefahrstoffe')])>Gefahrstoffe</a>
                 <a href="{{ route('belegerfassung') }}" @class(['is-active' => request()->routeIs('belegerfassung')])>Beleg-Capture</a>
                 <a href="{{ route('wareneingang-capture') }}" @class(['is-active' => request()->routeIs('wareneingang-capture')])>Beleg→Wareneingang</a>
+                <a href="{{ route('regalzaehlung') }}" @class(['is-active' => request()->routeIs('regalzaehlung')])>Regalzählung</a>
                 <a href="{{ route('rueckverfolgung') }}" @class(['is-active' => request()->routeIs('rueckverfolgung')])>Rückverfolgung</a>
                 <a href="{{ route('taschengeld') }}" @class(['is-active' => request()->routeIs('taschengeld')])>Taschengeldkasse</a>
                 <a href="{{ route('beschaffung') }}" @class(['is-active' => request()->routeIs('beschaffung')])>Beschaffung</a>
                 <a href="{{ route('datenimport') }}" @class(['is-active' => request()->routeIs('datenimport')])>Datenimport</a>
+            </nav>
+        @endif
+        @if (auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'buchhaltung', 'pflegefachkraft']))
+            <nav class="app-nav app-nav-vision">
+                <a href="{{ route('regalzaehlung') }}" @class(['is-active' => request()->routeIs('regalzaehlung')])>Regalzählung</a>
             </nav>
         @endif
         @if (auth()->user()?->hasAnyRole(['admin', 'super-admin']))
