@@ -31,3 +31,7 @@ Thumbs.db
 /storage/app/shots
 /build
 .env.shots
+# WHY: 200MB-JAR + Plugin-ZIPs nicht committen — idempotenter Download via scripts/fhir/validate.sh
+/tools/fhir-validator/
+# WHY: FHIR-Sample-Exports sind generierte Artefakte (via php artisan *:export), kein Quellcode
+/storage/app/fhir-samples/
