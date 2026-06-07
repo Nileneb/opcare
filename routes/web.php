@@ -7,6 +7,7 @@ use App\Http\Controllers\SpeechController;
 use App\Http\Middleware\RequireTwoFactorEnrollment;
 use App\Http\Middleware\RestrictPortalUsers;
 use App\Livewire\Accounting\Buchhaltung;
+use App\Livewire\Accounting\Gefahrstoffverzeichnis;
 use App\Livewire\Accounting\Inventur;
 use App\Livewire\Accounting\Pflegehilfsmittel;
 use App\Livewire\Accounting\Rueckverfolgung;
@@ -136,6 +137,7 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class, Restrict
     Route::get('/buchhaltung', Buchhaltung::class)->name('buchhaltung');
     Route::get('/inventur', Inventur::class)->name('inventur');
     Route::get('/pflegehilfsmittel', Pflegehilfsmittel::class)->name('pflegehilfsmittel');
+    Route::get('/gefahrstoffe', Gefahrstoffverzeichnis::class)->name('gefahrstoffe');
     Route::get('/beleg-capture', Belegerfassung::class)->name('belegerfassung');
     Route::get('/rueckverfolgung', Rueckverfolgung::class)->name('rueckverfolgung');
     Route::get('/taschengeld', Taschengeldkasse::class)->name('taschengeld');
