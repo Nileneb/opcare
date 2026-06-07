@@ -142,6 +142,10 @@ use App\Domains\SocialCare\Models\Betreuungsangebot;
 use App\Domains\SocialCare\Models\Praeventionsprogramm;
 use App\Domains\Vision\Models\ProductLabel;
 use App\Domains\Vision\Models\RegalAufnahme;
+use App\Domains\Voting\Enums\Abstimmungsart;
+use App\Domains\Voting\Enums\Elektorat;
+use App\Domains\Voting\Enums\Stimmodus;
+use App\Domains\Voting\Services\AbstimmungStarten;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
@@ -600,6 +604,14 @@ class DemoSeeder extends Seeder
             'tenant_id' => $tenant->id, 'label' => 'box', 'confidence' => 0.91,
             'artikel_id' => $handschuhe->id, 'menge_vorschlag' => 36,
         ]);
+
+        // Abstimmungen: eine offene geheime Team-Umfrage (alle Mitarbeitenden stimmberechtigt, anonyme Stimme).
+        $umfrage = app(AbstimmungStarten::class)->handle([
+            'titel' => 'Wohin soll der nächste Team-Ausflug gehen?',
+            'beschreibung' => 'Geheime Umfrage — deine Stimme ist für niemanden außer dir nachvollziehbar.',
+            'elektorat' => Elektorat::Mitarbeitende, 'modus' => Stimmodus::Geheim, 'art' => Abstimmungsart::Umfrage,
+        ], ['Kletterpark', 'Schifffahrt', 'Weingut-Tour'], $admin->id);
+        app(AbstimmungStarten::class)->eroeffne($umfrage);
 
         // Freie Hauptbuchung (GoB/PBV): generischer Buchungssatz, hier Bargeld-Aufnahme von der Bank in die Kasse.
         app(Buchen::class)->handle(
