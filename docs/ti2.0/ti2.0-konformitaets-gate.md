@@ -67,9 +67,75 @@ Alternative (nicht empfohlen): PHP-nativer ZETA-Client — voller Protokoll-/Kry
 - **opcare-Seam** (`app/Domains/Ti20/`): `ZetaClient`-Interface (Sidecar-HTTP), Vertrag aus Abschnitt oben
   als Pest-Unit-Tests gegen Fixtures (Request-Form/Discovery-Parsing) — architektur-agnostisch verifizierbar.
 
+## gematik ZETA-Test-Fachdienst (lokal, creds-frei)
+
+**Repo:** [github.com/gematik/zeta-testfachdienst](https://github.com/gematik/zeta-testfachdienst)
+
+Der Test-Fachdienst (Spring Boot, Java 21, H2) simuliert die **Ressource-Seite** im ZETA-Szenario —
+also den Dienst *hinter* dem PEP (E-Rezept-CRUD + Hello-Endpunkt). Er ist **kein PEP** und exponiert
+**kein** `/.well-known/oauth-protected-resource` (RFC 9728) — dieses Dokument liegt am PEP/ZETA-Guard
+(C1, braucht SMC-B).
+
+### Was er exponiert (HTTP, kein Auth)
+
+| Pfad | Beschreibung |
+|---|---|
+| `GET /achelos_testfachdienst/hellozeta` | `{"message":"Hello ZETA!"}` — Ping/Smoke |
+| `GET /achelos_testfachdienst/actuator/health` | `{"status":"UP"}` — Health-Probe |
+| `GET/POST/PUT/DELETE /achelos_testfachdienst/api/erezept` | E-Rezept-CRUD (H2-backed) |
+| `GET /achelos_testfachdienst/swagger-ui/index.html` | Swagger UI |
+
+### Was er NICHT exponiert (braucht PEP/ZETA-Guard, C1)
+
+`/.well-known/oauth-protected-resource` (RFC 9728) — fehlt im Test-Fachdienst absichtlich (er ist
+die Ressource, nicht der PEP). opcares `discoverProtectedResource()` läuft in C1 gegen den
+ZETA-Guard-Sidecar.
+
+### Lokal hochbringen
+
+```bash
+# Einmalig klonen (KEIN opcare-Commit):
+git clone https://github.com/gematik/zeta-testfachdienst ~/Desktop/WebDev/zeta-testfachdienst
+
+# Über ai-services.sh (empfohlen — prüft erst Erreichbarkeit):
+scripts/ai-services.sh up zeta
+
+# Oder direkt via Docker (Multi-Stage-Build, kein lokales Gradle):
+docker build -f ~/Desktop/WebDev/zeta-testfachdienst/Dockerfile.opcare-dev \
+  -t zeta-testfachdienst:opcare-dev ~/Desktop/WebDev/zeta-testfachdienst
+docker run -d --name zeta-testfachdienst-dev -p 8082:8080 \
+  -e SERVER_SSL_ENABLED=false zeta-testfachdienst:opcare-dev
+```
+
+**Port:** 8082 (Default, konfigurierbar via `TI20_ZETA_TESTFACHDIENST_URL`).
+
+### Anbindung opcare
+
+`HttpZetaClient` implementiert neben `discoverProtectedResource()` (C1, PEP-gebunden) zwei
+creds-freie Methoden:
+
+- `pingFachdienst()` — HTTP-GET auf `/actuator/health`, gibt `true` wenn `status == "UP"`.
+- `fetchHelloZeta()` — HTTP-GET auf `/hellozeta`, gibt das JSON-Payload-Array zurück.
+
+Konfiguration: `TI20_ZETA_TESTFACHDIENST_URL` (Default `http://localhost:8082`).
+
+### Tests
+
+```bash
+# Unit-Tests (Http::fake, immer grün):
+php vendor/bin/pest tests/Feature/Ti20/ZetaTestfachdienstTest.php
+
+# Integrations-Tests (brauchen laufenden Test-Fachdienst):
+TI20_ZETA_TESTFACHDIENST_URL=http://localhost:8082 \
+  php vendor/bin/pest tests/Feature/Ti20/ZetaTestfachdienstTest.php
+```
+
+Ohne laufenden Container skippen die Integrations-Tests sauber (`markTestSkipped`).
+
 ## Reihenfolge
 
 1. **C0 (jetzt, creds-frei):** dieses Dokument; Testhub vendoren; Seam + Discovery/Request-Konstruktion
-   unit-getestet; CI-Skeleton (cert-gated).
-2. **C1 (braucht SMC-B-Cert + Sidecar-Image):** ZETA-Guard-Sidecar einsetzen; Testhub-Suiten live grün.
+   unit-getestet; CI-Skeleton (cert-gated). **Test-Fachdienst lokal angebunden** — operativ verifiziert.
+2. **C1 (braucht SMC-B-Cert + Sidecar-Image):** ZETA-Guard-Sidecar einsetzen; Testhub-Suiten live grün;
+   `discoverProtectedResource()` gegen echten PEP.
 3. **C2:** ePA-Schreibzugriff / VSDM2-Fachlogik auf der grünen ZETA-Schicht (FHIR aus Track A wiederverwenden).
