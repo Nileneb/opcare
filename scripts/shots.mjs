@@ -35,6 +35,7 @@ const pages = [
     ['zeiterfassung', '/zeiterfassung', true],
     ['haustechnik', '/haustechnik', true],
     ['medizinprodukte', '/medizinprodukte', true],
+    ['trinkwasser', '/trinkwasser', true],
     ['kueche', '/kueche', true],
     ['buchhaltung', '/buchhaltung', true],
     ['inventur', '/inventur', true],
