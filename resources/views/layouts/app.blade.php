@@ -87,7 +87,7 @@
                     <a href="{{ route('abstimmungen') }}" @class(['is-active' => request()->routeIs('abstimmungen')])>Abstimmungen</a>
                 </div>
             </div>
-            @php($kalenderActive = request()->routeIs('kalender','zeiterfassung','wunschdienstplan','tauschboerse','energiebarometer','haustechnik','medizinprodukte','trinkwasser','quality.beschwerden','kueche','haccp','reinigungsplan'))
+            @php($kalenderActive = request()->routeIs('kalender','zeiterfassung','wunschdienstplan','tauschboerse','energiebarometer','haustechnik','medizinprodukte','trinkwasser','brandschutz','quality.beschwerden','kueche','haccp','reinigungsplan'))
             <div class="nav-menu" x-data="{ open: false }" @keydown.escape="open = false">
                 <button type="button" class="nav-menu-btn {{ $kalenderActive ? 'is-active' : '' }}" @click="open = !open" :aria-expanded="open">
                     Kalender &amp; Betrieb <span class="nav-caret">▾</span>
@@ -102,6 +102,7 @@
                     <a href="{{ route('medizinprodukte') }}" @class(['is-active' => request()->routeIs('medizinprodukte')])>Medizinprodukte</a>
                     @if (auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'haustechnik']))
                         <a href="{{ route('trinkwasser') }}" @class(['is-active' => request()->routeIs('trinkwasser')])>Trinkwasser</a>
+                        <a href="{{ route('brandschutz') }}" @class(['is-active' => request()->routeIs('brandschutz')])>Brandschutz</a>
                     @endif
                     @if (auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'pflegefachkraft', 'pflegehilfskraft', 'betreuungskraft', 'kueche', 'haustechnik', 'buchhaltung']))
                         <a href="{{ route('quality.beschwerden') }}" @class(['is-active' => request()->routeIs('quality.beschwerden')])>Beschwerden</a>
