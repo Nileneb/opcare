@@ -68,12 +68,11 @@
         @forelse ($belastung as $b)
             <div style="border:1px solid #e5e7eb;border-radius:4px;padding:.75rem;margin-bottom:.75rem">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem">
-                    <div>
+                    <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+                        {{-- Farbverlauf-Indikator statt Stufen-Badge --}}
+                        <div style="width:18px;height:18px;border-radius:50%;background:{{ \App\Domains\Arbeitsschutz\Support\BelastungsAmpel::farbe($b->lage) }};border:1px solid rgba(0,0,0,.12);flex-shrink:0"
+                             title="{{ $b->wohnbereich }}"></div>
                         <strong>{{ $b->wohnbereich }}</strong>
-                        <span class="badge {{ $b->stufe->ampel() === 'green' ? 'green' : ($b->stufe->ampel() === 'amber' ? 'amber' : 'red') }}" style="margin-left:.5rem">
-                            {{ $b->stufe->label() }}
-                        </span>
-                        <span class="muted" style="font-size:.85em;margin-left:.4rem">Score {{ $b->score }}/100</span>
                     </div>
                     @if ($b->stufe->istMeldepflichtig())
                         <div style="display:flex;gap:.4rem;flex-wrap:wrap">
