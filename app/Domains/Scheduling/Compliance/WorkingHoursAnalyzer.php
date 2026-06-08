@@ -111,12 +111,13 @@ class WorkingHoursAnalyzer
             }
         }
 
-        // § 4 — Ruhepausen: nicht erfasst → ehrlich als nicht prüfbar ausweisen
+        // § 4 — Ruhepausen: im PLAN nicht hinterlegt, aber auf der Ist-Zeit prüfbar (die Pause ist in der
+        // Zeiterfassung erfasst → Zeitbuchung::pausenStatus). Hier nur Hinweis + Verweis, kein totes „n/a".
         if ($rule = $rules->get('ruhepausen')) {
             $ab = $rule->param('pause_30_ab_stunden', 6);
             $lang = array_values(array_unique(array_map(fn ($iv) => $iv['date'], array_filter($intervals, fn ($iv) => $iv['hours'] > $ab))));
             if ($lang !== []) {
-                $make($rule, ViolationSeverity::NichtPruefbar, count($lang).' Dienst(e) über '.$ab.' h — Pausen werden nicht erfasst, § 4 ist nicht prüfbar.', $lang);
+                $make($rule, ViolationSeverity::Hinweis, count($lang).' Dienst(e) über '.$ab.' h — § 4 wird in der Zeiterfassung gegen die erfassten Pausen geprüft.', $lang);
             }
         }
 

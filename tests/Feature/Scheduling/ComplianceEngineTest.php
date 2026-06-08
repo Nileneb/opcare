@@ -86,12 +86,13 @@ it('§§ 9–11: weist Sonntagsdienst als Hinweis aus (Pflege-Ausnahme)', functi
         ->and($f->gesetzUrl)->toContain('__10.html');
 });
 
-it('§ 4: weist Pausen ehrlich als nicht prüfbar aus', function () {
+it('§ 4: verweist im Plan auf die Pausenprüfung in der Zeiterfassung', function () {
     dienst($this->tenant->id, $this->user->id, 'Achtdienst', '06:00', '14:00', '2026-06-08'); // 8 h > 6 h
     $f = collect(befunde($this))->firstWhere('ruleKey', 'ruhepausen');
 
     expect($f)->not->toBeNull()
-        ->and($f->severity)->toBe(ViolationSeverity::NichtPruefbar);
+        ->and($f->severity)->toBe(ViolationSeverity::Hinweis)
+        ->and($f->message)->toContain('Zeiterfassung');
 });
 
 it('wertet eine deaktivierte Regel nicht aus', function () {

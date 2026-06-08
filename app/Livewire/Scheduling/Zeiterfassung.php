@@ -4,6 +4,7 @@ namespace App\Livewire\Scheduling;
 
 use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Support\CurrentTenant;
+use App\Domains\Scheduling\Compliance\Enums\Pausenstatus;
 use App\Domains\Scheduling\Compliance\WorkingHoursAnalyzer;
 use App\Domains\Scheduling\Models\ShiftAssignment;
 use App\Domains\Scheduling\Models\Zeitbuchung;
@@ -123,11 +124,15 @@ class Zeiterfassung extends Component
             }
         }
 
+        // § 4 ArbZG ist auf der Ist-Zeit prüfbar (die Pause ist erfasst): zu kurze Pausen je Woche zählen.
+        $pausenVerstoesse = $eigene->filter(fn (Zeitbuchung $b) => $b->pausenStatus() === Pausenstatus::Unzureichend)->count();
+
         return view('livewire.scheduling.zeiterfassung', [
             'eigene' => $eigene,
             'laufend' => $laufend,
             'istEigene' => $istEigene,
             'sollEigene' => round($soll[auth()->id()] ?? 0, 1),
+            'pausenVerstoesse' => $pausenVerstoesse,
             'weekLabel' => $start->isoFormat('DD.MM.').'–'.$start->addDays(6)->isoFormat('DD.MM.YYYY'),
             'darfAlle' => $this->darfAlle(),
             'alleUebersicht' => $alleUebersicht,
