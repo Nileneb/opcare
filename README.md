@@ -6,7 +6,7 @@ Qualitätssicherung (QDVS/DAS-Pflege)** und **FHIR / ÜLB-MIO** (Pflegeüberleit
 des eingestellten Java-Projekts **[Offene-Pflege.de (OPDE)](#herkunft)** — dessen Domänenwissen dient als
 Vorlage, der Code ist von Grund auf neu.
 
-> **Status:** Funktionsfähig und aktiv in Entwicklung. **814 Tests grün**, CI durchgehend grün
+> **Status:** Funktionsfähig und aktiv in Entwicklung. **860 Tests grün**, CI durchgehend grün
 > (Tests · Linter · Security-Audit · FHIR-Validierung). Open Source (AGPL-3.0), **kein Rechtsgate**,
 > solange keine Echt-Patientendaten verarbeitet werden.
 >
@@ -43,7 +43,10 @@ Warenwirtschaft bis zu KI-Assistenz und TI-Anbindung. Nach Themen aufgeklappt:
   Team-Sicht für die Leitung.
 - **Personalakte** — Personalfragebogen (Person, Steuer/ELStAM, SV, Bank, Vertrag/Pensum, Masernschutz § 20 IfSG)
   1:1 am Benutzer, an die Rollenverwaltung gekoppelt; sensible Felder (Steuer-ID/SV-Nr/IBAN) At-Rest-verschlüsselt.
-- **Arbeitsschutz & Fortbildung** — Nachweise-mit-Frist + **Betriebsarzt/Sifa** (ASiG/DGUV V2),
+- **Gefährdungsbeurteilung** (§ 5/§ 6 ArbSchG) — GBU-Register je Arbeitsbereich mit den **6 Gefährdungsfaktoren**
+  (inkl. psychischer Belastung), **Risiko-Matrix** (Wahrscheinlichkeit × Schwere), **TOP-Maßnahmen**,
+  Fortschreibungs-Frist-Ampel + Wirksamkeitskontrolle (§ 3).
+- **Arbeitsschutz-Nachweise & Fortbildung** — Nachweise-mit-Frist + **Betriebsarzt/Sifa** (ASiG/DGUV V2),
   **Beauftragten-Register**, **Fortbildungsplan** (QPR QB6, Pflicht-Themen-Matrix).
 - **Team-Energiebarometer** — freiwillig/anonym (k-Anonymität, § 26 BDSG/§ 87 BetrVG).
 </details>
@@ -143,7 +146,7 @@ Warenwirtschaft bis zu KI-Assistenz und TI-Anbindung. Nach Themen aufgeklappt:
 | Backend | **Laravel 13**, **PHP 8.3+** |
 | Frontend | Blade + **Livewire 4** + Alpine.js |
 | Datenbank | **SQLite** (Dev/CI) · **PostgreSQL** (Prod) |
-| Tests | **Pest 4** (814 Tests) |
+| Tests | **Pest 4** (860 Tests) |
 | Lint/Style | **Laravel Pint** · **Larastan/PHPStan L5** |
 | DTOs / RBAC / Audit | `spatie/laravel-data` · `spatie/laravel-permission` · `spatie/laravel-activitylog` · `spatie/laravel-medialibrary` |
 | KI (lokal) | **Ollama** (VLM/Embeddings) · externe **MCP-Tools** (Vision-MCP, whisperX-mcp) |
@@ -184,6 +187,7 @@ Domänen-orientierte Struktur unter `app/Domains/`. Layering als Einbahnstraße:
 |---|---|
 | **Scheduling** | Dienstplan, Schichten, Kalender, **ArbZG-Compliance-Engine** (Regelwerk + § 14) + **Arbeitszeiterfassung** (BAG/EuGH) |
 | **Personnel** | Personalakte (verschlüsselt) 1:1 am Benutzer, rollen-gekoppelt; Arbeitsschutz-Nachweise + **Betriebsarzt/Sifa** (ASiG/DGUV V2), Beauftragten-Register, **Fortbildungsplan** (QPR QB6), **Team-Energiebarometer** (freiwillig/anonym) |
+| **Arbeitsschutz** | **Gefährdungsbeurteilung** (§ 5/§ 6 ArbSchG): GBU je Arbeitsbereich, 6 Gefährdungsfaktoren (inkl. psychischer Belastung), Nohl-Risiko-Matrix, TOP-Maßnahmen, Fortschreibungs-Frist-Ampel + Wirksamkeitskontrolle (§ 3) |
 </details>
 
 <details>
@@ -278,7 +282,7 @@ php artisan serve
 ## Entwicklung
 
 ```bash
-php artisan test                 # bzw. vendor/bin/pest   (814 Tests)
+php artisan test                 # bzw. vendor/bin/pest   (860 Tests)
 vendor/bin/pint                  # Code-Style
 php -d memory_limit=1G vendor/bin/phpstan analyse   # Larastan L5
 php artisan fhir:export --output=bundle.json        # FHIR-Document-Bundle
