@@ -20,6 +20,10 @@ use App\Domains\Accounting\Models\Lieferant;
 use App\Domains\Accounting\Models\Treuhandbudget;
 use App\Domains\Accounting\Models\Treuhandkonto;
 use App\Domains\Accounting\Support\AccountingDefaults;
+use App\Domains\Arbeitsschutz\Enums\GbuStatus;
+use App\Domains\Arbeitsschutz\Enums\Gefaehrdungsfaktor;
+use App\Domains\Arbeitsschutz\Enums\Massnahmentyp;
+use App\Domains\Arbeitsschutz\Models\Gefaehrdungsbeurteilung;
 use App\Domains\Assessment\Actions\ConductAssessment;
 use App\Domains\Assessment\Data\AssessmentInputData;
 use App\Domains\Assessment\Database\Seeders\InstrumentSeeder;
@@ -517,6 +521,35 @@ class DemoSeeder extends Seeder
         Reinigungsaufgabe::create(['tenant_id' => $tenant->id, 'bezeichnung' => 'Dunstabzugshaube entfetten', 'bereich' => 'Küche', 'intervall' => ReinigungsIntervall::Monatlich, 'verantwortlich' => 'Hauswirtschaft', 'aktiv' => true]);
         $aufgabeBoeden = Reinigungsaufgabe::create(['tenant_id' => $tenant->id, 'bezeichnung' => 'Böden Küche wischen', 'bereich' => 'Küche', 'intervall' => ReinigungsIntervall::Taeglich, 'verantwortlich' => 'Küchenpersonal', 'aktiv' => true]);
         $reinigungSvc->handle($aufgabeBoeden, now()->toDateString(), $koechin->id, null);
+
+        // Gefährdungsbeurteilung (§ 5/§ 6 ArbSchG): eine freigegebene GBU „Pflege Wohnbereich 1" mit drei
+        // typischen Pflege-Gefährdungen (biologisch, muskuloskelettal, psychisch) + TOP-Maßnahmen.
+        // Fortschreibung überfällig (letzte Überprüfung vor 14 Monaten bei 12-Monats-Intervall) → rote Frist-Ampel.
+        $gbuPflege = Gefaehrdungsbeurteilung::create([
+            'tenant_id' => $tenant->id, 'arbeitsbereich' => 'Pflege Wohnbereich 1', 'taetigkeit' => 'Grund- und Behandlungspflege',
+            'beschreibung' => 'Beurteilung der Arbeitsbedingungen für die Pflegekräfte des Wohnbereichs 1.',
+            'ueberpruefungsintervall_monate' => 12, 'erstellt_am' => now()->subMonths(14)->toDateString(),
+            'letzte_ueberpruefung_am' => now()->subMonths(14)->toDateString(), 'verantwortlich' => 'Sicherheitsbeauftragte / PDL',
+            'status' => GbuStatus::Freigegeben, 'freigegeben_am' => now()->subMonths(14)->toDateString(),
+        ]);
+        $gefBio = $gbuPflege->gefaehrdungen()->create(['tenant_id' => $tenant->id, 'faktor' => Gefaehrdungsfaktor::Einwirkungen,
+            'beschreibung' => 'Infektionsgefährdung (MRE, Blut/Körperflüssigkeiten) bei der Pflege.', 'wahrscheinlichkeit' => 2, 'schwere' => 3]);
+        $gefBio->massnahmen()->create(['tenant_id' => $tenant->id, 'typ' => Massnahmentyp::Personenbezogen,
+            'beschreibung' => 'Schutzhandschuhe + Händedesinfektion nach jedem Bewohnerkontakt.', 'verantwortlich' => 'alle Pflegekräfte',
+            'umgesetzt_am' => now()->subMonths(13)->toDateString(), 'wirksam_geprueft_am' => now()->subMonths(6)->toDateString()]);
+        $gefBio->massnahmen()->create(['tenant_id' => $tenant->id, 'typ' => Massnahmentyp::Organisatorisch,
+            'beschreibung' => 'Jährliche Hygiene-Unterweisung + Hautschutzplan aushängen.', 'verantwortlich' => 'Hygienebeauftragte',
+            'frist' => now()->addMonth()->toDateString(), 'umgesetzt_am' => null]);
+        $gefHeben = $gbuPflege->gefaehrdungen()->create(['tenant_id' => $tenant->id, 'faktor' => Gefaehrdungsfaktor::Verfahren,
+            'beschreibung' => 'Muskuloskelettale Belastung durch Heben/Umlagern immobiler Bewohner.', 'wahrscheinlichkeit' => 3, 'schwere' => 2]);
+        $gefHeben->massnahmen()->create(['tenant_id' => $tenant->id, 'typ' => Massnahmentyp::Technisch,
+            'beschreibung' => 'Anschaffung eines mobilen Patientenlifters + Rutschbretter je Wohnbereich.', 'verantwortlich' => 'Heimleitung',
+            'frist' => now()->subMonths(2)->toDateString(), 'umgesetzt_am' => null]);
+        $gefPsych = $gbuPflege->gefaehrdungen()->create(['tenant_id' => $tenant->id, 'faktor' => Gefaehrdungsfaktor::PsychischeBelastung,
+            'beschreibung' => 'Psychische Belastung durch Schichtarbeit, Zeitdruck und Sterbebegleitung.', 'wahrscheinlichkeit' => 2, 'schwere' => 2]);
+        $gefPsych->massnahmen()->create(['tenant_id' => $tenant->id, 'typ' => Massnahmentyp::Organisatorisch,
+            'beschreibung' => 'Belastungsarme Dienstplangestaltung + Supervisions-Angebot.', 'verantwortlich' => 'PDL',
+            'umgesetzt_am' => now()->subMonths(10)->toDateString(), 'wirksam_geprueft_am' => null]);
 
         // Arbeitszeit-Ist (BAG/EuGH): erfasste Zeiten der laufenden Woche für Sandra/Tom (Soll-Ist-Demo).
         $woStart = now()->startOfWeek();
