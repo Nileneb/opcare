@@ -3,6 +3,7 @@
 namespace App\Domains\Arbeitsschutz\Models;
 
 use App\Domains\Arbeitsschutz\Enums\Belastungsstufe;
+use App\Domains\Arbeitsschutz\Support\BelastungsAmpel;
 use App\Domains\Identity\Models\Tenant;
 use App\Domains\Identity\Models\User;
 use App\Domains\Masterdata\Models\Station;
@@ -72,6 +73,11 @@ class Belastungsmeldung extends BaseModel
     public function istOffen(): bool
     {
         return $this->quittiert_am === null;
+    }
+
+    public function lage(): int
+    {
+        return BelastungsAmpel::lageAusScore($this->score);
     }
 
     /** @return BelongsTo<Station, $this> */

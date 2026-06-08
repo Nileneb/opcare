@@ -2,7 +2,9 @@
 
 namespace App\Livewire\Scheduling;
 
+use App\Domains\Arbeitsschutz\Models\BelastungFreischaltung;
 use App\Domains\Arbeitsschutz\Models\BelastungsKonfig;
+use App\Domains\Arbeitsschutz\Services\BelastungFreischalten;
 use App\Domains\Identity\Support\CurrentTenant;
 use App\Domains\Scheduling\Compliance\ArbeitszeitgesetzDefaults;
 use App\Domains\Scheduling\Compliance\Enums\ViolationSeverity;
@@ -12,6 +14,11 @@ use App\Domains\Scheduling\Models\ComplianceRule;
 use App\Domains\Scheduling\Models\ScheduleQualityRule;
 use App\Domains\Scheduling\Models\Shift;
 use App\Domains\Scheduling\Models\StaffingConfig;
+use App\Domains\Voting\Enums\Abstimmungsart;
+use App\Domains\Voting\Enums\AbstimmungStatus;
+use App\Domains\Voting\Enums\Elektorat;
+use App\Domains\Voting\Models\Abstimmung;
+use InvalidArgumentException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -36,6 +43,11 @@ class Arbeitsrecht extends Component
     public int $sc_nachtdienst = 50;
 
     public float $sc_multiplikator = 1.0;
+
+    // Belastungs-Freischaltung (Mode B/C)
+    public ?int $freischaltungBeschlussId = null;
+
+    public ?int $freischaltungOptionId = null;
 
     // Belastungsindex-Konfig
     public int $bk_gewicht_pflegelast = 40;
@@ -167,6 +179,36 @@ class Arbeitsrecht extends Component
         }
     }
 
+    public function belastungFreischalten(): void
+    {
+        abort_unless(auth()->user()?->can('manage', Shift::class), 403);
+
+        $tenantId = app(CurrentTenant::class)->id();
+        // WHY(IDOR): Abstimmung muss zum selben Mandanten gehören.
+        $abstimmung = Abstimmung::where('tenant_id', $tenantId)->findOrFail($this->freischaltungBeschlussId);
+
+        try {
+            app(BelastungFreischalten::class)->ausBeschluss(
+                $abstimmung,
+                (int) $this->freischaltungOptionId,
+                auth()->user(),
+            );
+            $this->freischaltungBeschlussId = null;
+            $this->freischaltungOptionId = null;
+            session()->flash('status', 'Selbst-Ampel (Mode B/C) erfolgreich freigeschaltet.');
+        } catch (InvalidArgumentException $e) {
+            session()->flash('status', 'Freischaltung fehlgeschlagen: '.$e->getMessage());
+        }
+    }
+
+    public function belastungZuruecknehmen(): void
+    {
+        abort_unless(auth()->user()?->can('manage', Shift::class), 403);
+
+        app(BelastungFreischalten::class)->zuruecknehmen(auth()->user());
+        session()->flash('status', 'Freischaltung der Selbst-Ampel zurückgenommen.');
+    }
+
     public function belastungsKonfigSpeichern(): void
     {
         abort_unless(auth()->user()?->can('manage', Shift::class), 403);
@@ -198,12 +240,33 @@ class Arbeitsrecht extends Component
     {
         $tenantId = app(CurrentTenant::class)->id();
 
+        $aktiveFreischaltung = BelastungFreischaltung::where('tenant_id', $tenantId)
+            ->whereNull('zurueckgenommen_am')
+            ->with(['abstimmung', 'freigeschaltetVon'])
+            ->latest('id')
+            ->first();
+
+        $geschlosseneBeschluesse = Abstimmung::where('tenant_id', $tenantId)
+            ->where('art', Abstimmungsart::Beschluss)
+            ->where('elektorat', Elektorat::Mitarbeitende)
+            ->where('status', AbstimmungStatus::Geschlossen)
+            ->with('optionen')
+            ->latest('id')
+            ->get();
+
+        $gewaehlterBeschluss = $this->freischaltungBeschlussId
+            ? $geschlosseneBeschluesse->firstWhere('id', $this->freischaltungBeschlussId)
+            : null;
+
         return view('livewire.scheduling.arbeitsrecht', [
             'rules' => ComplianceRule::where('tenant_id', $tenantId)->orderBy('id')->get(),
             'severities' => ViolationSeverity::editable(),
             'version' => ArbeitszeitgesetzDefaults::VERSION,
             'qualityRules' => ScheduleQualityRule::where('tenant_id', $tenantId)->orderBy('id')->get(),
             'pawVersion' => PersonalbemessungDefaults::VERSION,
+            'aktiveFreischaltung' => $aktiveFreischaltung,
+            'geschlosseneBeschluesse' => $geschlosseneBeschluesse,
+            'gewaehlterBeschluss' => $gewaehlterBeschluss,
         ]);
     }
 }

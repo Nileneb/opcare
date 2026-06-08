@@ -70,6 +70,63 @@
         <button class="btn btn-primary btn-sm" wire:click="staffingSpeichern">Speichern</button>
     </div>
 
+    <h2 style="margin-top:28px">Belastungs-Features (Mode B/C) — Freischaltung</h2>
+    <p class="muted" style="margin-bottom:12px">Die individuelle Selbst-Ampel und Selbst-Überlastungsmeldung (Mode B/C)
+        erfordern einen gültigen Mitarbeitenden-Beschluss (§ 87 Abs. 1 Nr. 6 BetrVG). Ohne Beschluss bleibt der
+        Energiebarometer-Screen gesperrt.</p>
+    <div class="card">
+        <div class="card-head">
+            <h3>Status</h3>
+            @if ($aktiveFreischaltung)
+                <span class="badge green">aktiv</span>
+            @else
+                <span class="badge gray">inaktiv</span>
+            @endif
+        </div>
+        @if ($aktiveFreischaltung)
+            <p>Freigeschaltet am {{ $aktiveFreischaltung->freigeschaltet_am->format('d.m.Y') }}
+                @if ($aktiveFreischaltung->freigeschaltetVon) von {{ $aktiveFreischaltung->freigeschaltetVon->name }}@endif
+                auf Basis des Beschlusses: <strong>{{ $aktiveFreischaltung->abstimmung->titel }}</strong></p>
+            <button class="btn btn-ghost btn-sm" wire:click="belastungZuruecknehmen"
+                    wire:confirm="Freischaltung der Selbst-Ampel zurücknehmen?">
+                Zurücknehmen
+            </button>
+        @else
+            @if ($geschlosseneBeschluesse->isEmpty())
+                <p class="empty">Kein geschlossener Mitarbeitenden-Beschluss vorhanden. Bitte zuerst eine Abstimmung
+                    (Art: Beschluss, Elektorat: Mitarbeitende) abschließen.</p>
+            @else
+                <div class="form-row-2" style="margin-bottom:10px">
+                    <div class="field">
+                        <label>Beschluss wählen</label>
+                        <select wire:model.live="freischaltungBeschlussId">
+                            <option value="">— Beschluss wählen —</option>
+                            @foreach ($geschlosseneBeschluesse as $b)
+                                <option value="{{ $b->id }}">{{ $b->titel }} ({{ $b->ende_am?->format('d.m.Y') ?? 'n/a' }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @if ($gewaehlterBeschluss && $gewaehlterBeschluss->optionen->isNotEmpty())
+                        <div class="field">
+                            <label>Zustimmungs-Option (z. B. „Ja")</label>
+                            <select wire:model="freischaltungOptionId">
+                                <option value="">— Option wählen —</option>
+                                @foreach ($gewaehlterBeschluss->optionen as $opt)
+                                    <option value="{{ $opt->id }}">{{ $opt->text }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
+                </div>
+                @if ($freischaltungBeschlussId && $freischaltungOptionId)
+                    <button class="btn btn-primary btn-sm" wire:click="belastungFreischalten">
+                        Freischalten
+                    </button>
+                @endif
+            @endif
+        @endif
+    </div>
+
     <h2 style="margin-top:28px">Belastungs-Index — Gewichte &amp; Schwellen (§ 5 ArbSchG)</h2>
     <p class="muted" style="margin-bottom:12px">Konfiguration des psychischen Belastungsindex je Einrichtung. Gewichte müssen nicht 100 ergeben — der Analyzer normiert automatisch. Schwellen bestimmen ab welchem Score Stufe „Hoch" bzw. „Kritisch" (= meldepflichtig) ausgelöst wird.</p>
     <div class="card">

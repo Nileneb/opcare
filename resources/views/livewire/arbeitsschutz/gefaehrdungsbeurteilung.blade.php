@@ -23,13 +23,12 @@
         @forelse ($belastungsmeldungen as $m)
             <div style="border:1px solid #fee2e2;border-radius:4px;padding:.75rem;margin-bottom:.75rem;background:#fff7f7">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem">
-                    <div>
+                    <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+                        {{-- Farbverlauf-Indikator statt Stufen-Badge --}}
+                        <div style="width:18px;height:18px;border-radius:50%;background:{{ \App\Domains\Arbeitsschutz\Support\BelastungsAmpel::farbe($m->lage()) }};border:1px solid rgba(0,0,0,.12);flex-shrink:0"
+                             title="{{ $m->wohnbereich }} — Lage {{ $m->lage() }}/10 ({{ $m->stufe->label() }})"></div>
                         <strong>{{ $m->wohnbereich }}</strong>
-                        <span class="badge {{ $m->stufe->ampel() === 'green' ? 'green' : ($m->stufe->ampel() === 'amber' ? 'amber' : 'red') }}" style="margin-left:.5rem">
-                            {{ $m->stufe->label() }}
-                        </span>
-                        <span class="muted" style="font-size:.85em;margin-left:.4rem">Score {{ $m->score }}/100</span>
-                        <span class="muted" style="font-size:.82em;margin-left:.4rem">gemeldet {{ $m->gemeldet_am->format('d.m.Y') }}</span>
+                        <span class="muted" style="font-size:.82em">gemeldet {{ $m->gemeldet_am->format('d.m.Y') }}</span>
                     </div>
                     <button class="btn btn-primary btn-sm" wire:click="meldungQuittieren({{ $m->id }})" wire:confirm="Meldung quittieren?">
                         Quittieren
@@ -53,6 +52,41 @@
             </div>
         @empty
             <p class="empty">Keine offenen Belastungsmeldungen.</p>
+        @endforelse
+        <p class="muted" style="margin-top:6px;font-size:.8em">Legende: <span style="color:hsl(0,75%,45%)">rot</span> = stark belastet · <span style="color:hsl(50,75%,45%)">gelb</span> = mäßig · <span style="color:hsl(120,75%,45%)">grün</span> = entlastet</p>
+    </div>
+
+    {{-- Selbst-Überlastungsmeldungen (Mode C) --}}
+    <div class="card">
+        <div class="card-head">
+            <h3>Selbst-Überlastungsmeldungen (Mode C)</h3>
+            <span class="badge {{ $selbstmeldungen->isEmpty() ? 'green' : 'amber' }}">
+                {{ $selbstmeldungen->isEmpty() ? 'Keine offenen Meldungen' : $selbstmeldungen->count().' offen' }}
+            </span>
+        </div>
+        <p class="muted" style="margin-bottom:10px;font-size:.85em">Mitarbeitende melden sich hier selbst an die Leitung —
+            ausschließlich per eigenem Knopfdruck, nie automatisch (§ 87 BetrVG, Art. 6(1)(a) DSGVO).</p>
+        @forelse ($selbstmeldungen as $sm)
+            <div style="border:1px solid #fef3c7;border-radius:4px;padding:.75rem;margin-bottom:.75rem;background:#fffbeb">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem">
+                    <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+                        {{-- Farbverlauf-Indikator (wert = 0-10 wie lage) --}}
+                        <div style="width:18px;height:18px;border-radius:50%;background:{{ \App\Domains\Arbeitsschutz\Support\BelastungsAmpel::farbe($sm->wert) }};border:1px solid rgba(0,0,0,.12);flex-shrink:0"
+                             title="Belastungswert {{ $sm->wert }}/10"></div>
+                        <strong>{{ $sm->user->name }}</strong>
+                        <span class="muted" style="font-size:.82em">gemeldet {{ $sm->gemeldet_am->format('d.m.Y') }}</span>
+                    </div>
+                    <button class="btn btn-primary btn-sm" wire:click="selbstmeldungQuittieren({{ $sm->id }})"
+                            wire:confirm="Meldung von {{ $sm->user->name }} quittieren?">
+                        Quittieren
+                    </button>
+                </div>
+                @if ($sm->notiz)
+                    <p class="muted" style="font-size:.85em;margin-top:.4rem">{{ $sm->notiz }}</p>
+                @endif
+            </div>
+        @empty
+            <p class="empty">Keine offenen Selbst-Überlastungsmeldungen.</p>
         @endforelse
     </div>
 

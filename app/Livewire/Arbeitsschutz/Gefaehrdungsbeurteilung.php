@@ -9,6 +9,7 @@ use App\Domains\Arbeitsschutz\Models\Belastungsmeldung;
 use App\Domains\Arbeitsschutz\Models\Gefaehrdung;
 use App\Domains\Arbeitsschutz\Models\Gefaehrdungsbeurteilung as GbuModel;
 use App\Domains\Arbeitsschutz\Models\Schutzmassnahme;
+use App\Domains\Arbeitsschutz\Models\SelbstmeldungUeberlastung;
 use App\Domains\Arbeitsschutz\Services\GbuFortschreiben;
 use App\Domains\Arbeitsschutz\Services\GbuMonitor;
 use App\Domains\Identity\Support\CurrentTenant;
@@ -231,6 +232,22 @@ class Gefaehrdungsbeurteilung extends Component
         session()->flash('status', 'GBU fortgeschrieben.');
     }
 
+    public function selbstmeldungQuittieren(int $id): void
+    {
+        $u = auth()->user();
+        abort_unless($u && ($u->isSuperAdmin() || $u->hasAnyRole(['admin', 'pflegefachkraft'])), 403);
+
+        // WHY(IDOR): ID kommt als Methodenparameter — tenant-scoped findOrFail.
+        $meldung = SelbstmeldungUeberlastung::where('tenant_id', app(CurrentTenant::class)->id())
+            ->findOrFail($id);
+
+        $meldung->quittiert_am = today();
+        $meldung->quittiert_von = auth()->id();
+        $meldung->save();
+
+        session()->flash('status', 'Selbst-Überlastungsmeldung von '.$meldung->user->name.' quittiert.');
+    }
+
     public function meldungQuittieren(int $id): void
     {
         $u = auth()->user();
@@ -259,6 +276,11 @@ class Gefaehrdungsbeurteilung extends Component
             'belastungsmeldungen' => Belastungsmeldung::where('tenant_id', $tenantId)
                 ->whereNull('quittiert_am')
                 ->with('schutzmassnahme')
+                ->latest('gemeldet_am')
+                ->get(),
+            'selbstmeldungen' => SelbstmeldungUeberlastung::where('tenant_id', $tenantId)
+                ->whereNull('quittiert_am')
+                ->with('user')
                 ->latest('gemeldet_am')
                 ->get(),
         ]);

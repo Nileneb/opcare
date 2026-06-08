@@ -2,9 +2,13 @@
 
 namespace App\Livewire\Personnel;
 
+use App\Domains\Arbeitsschutz\Models\BelastungFreischaltung;
+use App\Domains\Arbeitsschutz\Services\PersoenlicheBelastungSetzen;
+use App\Domains\Arbeitsschutz\Services\UeberlastungMelden;
 use App\Domains\Identity\Support\CurrentTenant;
 use App\Domains\Personnel\Enums\Energiestufe;
 use App\Domains\Personnel\Models\Energielevel;
+use InvalidArgumentException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -22,10 +26,19 @@ class Energiebarometer extends Component
 
     public ?int $meine = null;
 
+    public ?int $meineBelastung = null;
+
+    public string $belastungNotiz = '';
+
     public function mount(): void
     {
         abort_unless($this->darfTeilnehmen(), 403);
         $this->meine = $this->eigenes()?->stufe->value;
+
+        $u = auth()->user();
+        if ($u !== null && BelastungFreischaltung::aktivFuer($u->tenant_id)) {
+            $this->meineBelastung = app(PersoenlicheBelastungSetzen::class)->aktuellerWert($u);
+        }
     }
 
     private function darfTeilnehmen(): bool
@@ -64,6 +77,32 @@ class Energiebarometer extends Component
         session()->flash('status', 'Deine Rückmeldung wurde entfernt.');
     }
 
+    public function belastungSetzen(int $wert): void
+    {
+        abort_unless($this->darfTeilnehmen(), 403);
+        $u = auth()->user();
+        abort_if($u === null, 403);
+
+        app(PersoenlicheBelastungSetzen::class)->handle($u, $wert);
+        $this->meineBelastung = $wert;
+        session()->flash('status', 'Dein Belastungswert wurde gespeichert.');
+    }
+
+    public function ueberlastungMelden(): void
+    {
+        abort_unless($this->darfTeilnehmen(), 403);
+        $u = auth()->user();
+        abort_if($u === null, 403);
+
+        try {
+            app(UeberlastungMelden::class)->handle($u, $this->belastungNotiz ?: null);
+            $this->belastungNotiz = '';
+            session()->flash('status', 'An Leitung gemeldet.');
+        } catch (InvalidArgumentException) {
+            session()->flash('status', 'Du hast bereits eine offene Meldung.');
+        }
+    }
+
     public function render()
     {
         $levels = Energielevel::all();
@@ -83,6 +122,9 @@ class Energiebarometer extends Component
             default => 'green',
         };
 
+        $u = auth()->user();
+        $belastungFreigeschaltet = $u !== null && BelastungFreischaltung::aktivFuer($u->tenant_id);
+
         return view('livewire.personnel.energiebarometer', [
             'stufen' => Energiestufe::cases(),
             'gesamt' => $gesamt,
@@ -90,6 +132,7 @@ class Energiebarometer extends Component
             'verteilung' => $verteilung,
             'hausAmpel' => $hausAmpel,
             'minAuswertbar' => self::MIN_AUSWERTBAR,
+            'belastungFreigeschaltet' => $belastungFreigeschaltet,
         ]);
     }
 }

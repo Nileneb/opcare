@@ -24,8 +24,11 @@ use App\Domains\Arbeitsschutz\Enums\Belastungsstufe;
 use App\Domains\Arbeitsschutz\Enums\GbuStatus;
 use App\Domains\Arbeitsschutz\Enums\Gefaehrdungsfaktor;
 use App\Domains\Arbeitsschutz\Enums\Massnahmentyp;
+use App\Domains\Arbeitsschutz\Models\BelastungFreischaltung;
 use App\Domains\Arbeitsschutz\Models\Belastungsmeldung;
 use App\Domains\Arbeitsschutz\Models\Gefaehrdungsbeurteilung;
+use App\Domains\Arbeitsschutz\Models\PersoenlicheBelastung;
+use App\Domains\Arbeitsschutz\Models\SelbstmeldungUeberlastung;
 use App\Domains\Assessment\Actions\ConductAssessment;
 use App\Domains\Assessment\Data\AssessmentInputData;
 use App\Domains\Assessment\Database\Seeders\InstrumentSeeder;
@@ -167,6 +170,7 @@ use App\Domains\SocialCare\Models\Praeventionsprogramm;
 use App\Domains\Vision\Models\ProductLabel;
 use App\Domains\Vision\Models\RegalAufnahme;
 use App\Domains\Voting\Enums\Abstimmungsart;
+use App\Domains\Voting\Enums\AbstimmungStatus as VotingStatus;
 use App\Domains\Voting\Enums\Elektorat;
 use App\Domains\Voting\Enums\Stimmodus;
 use App\Domains\Voting\Services\AbstimmungStarten;
@@ -753,6 +757,24 @@ class DemoSeeder extends Seeder
             'elektorat' => Elektorat::Mitarbeitende, 'modus' => Stimmodus::Geheim, 'art' => Abstimmungsart::Umfrage,
         ], ['Kletterpark', 'Schifffahrt', 'Weingut-Tour'], $admin->id);
         app(AbstimmungStarten::class)->eroeffne($umfrage);
+
+        // Belastungs-Features (Mode B/C) sind durch einen Mitarbeitenden-Beschluss freigeschaltet (BetrVG-Weg).
+        // Der Beschluss wird hier als „angenommen" angelegt; die echte Mehrheits-Verifikation testet die Suite.
+        $beschluss = app(AbstimmungStarten::class)->handle([
+            'titel' => 'Individuelle Belastungsampel + Selbst-Meldung freischalten?',
+            'beschreibung' => 'Beschluss der Mitarbeitenden gem. § 87 BetrVG zur Freischaltung der freiwilligen Selbst-Belastungsampel.',
+            'elektorat' => Elektorat::Mitarbeitende, 'modus' => Stimmodus::Namentlich, 'art' => Abstimmungsart::Beschluss,
+        ], ['Ja, freischalten', 'Nein'], $admin->id);
+        $beschluss->update(['status' => VotingStatus::Geschlossen]);
+        BelastungFreischaltung::create([
+            'tenant_id' => $tenant->id, 'abstimmung_id' => $beschluss->id,
+            'freigeschaltet_von' => $admin->id, 'freigeschaltet_am' => now()->subDays(5)->toDateString(),
+        ]);
+        PersoenlicheBelastung::create(['tenant_id' => $tenant->id, 'user_id' => $admin->id, 'wert' => 4]);
+        SelbstmeldungUeberlastung::create([
+            'tenant_id' => $tenant->id, 'user_id' => $sandra->id, 'wert' => 2,
+            'notiz' => 'Drei Spätdienste in Folge — brauche Entlastung.', 'gemeldet_am' => now()->subDay()->toDateString(),
+        ]);
 
         // Freie Hauptbuchung (GoB/PBV): generischer Buchungssatz, hier Bargeld-Aufnahme von der Bank in die Kasse.
         app(Buchen::class)->handle(
