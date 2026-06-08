@@ -348,6 +348,41 @@ it('mappt Harn-/Stuhlableitung auf Drainage-Profile mit Anlagedatum-Extension au
     expect($titles)->toContain('Harnableitung')->toContain('Stuhlableitung');
 });
 
+it('mappt Krankenhausaufenthalte auf Encounter_Hospital_Stay (nur period.end, class IMP, kein start)', function () {
+    $this->resident->hospitalStays()->create(['ende' => '2026-04-15', 'grund' => 'Pneumonie']);
+
+    $bundle = app(FhirDocumentExporter::class)->export($this->resident);
+    $encounter = collect($bundle['entry'])->pluck('resource')->first(fn ($r) => ($r['resourceType'] ?? '') === 'Encounter');
+
+    // WHY(ÜLB): Hospital_Stay verbietet period.start (max=0); nur das Aufenthaltsende wird erfasst.
+    expect($encounter)->not->toBeNull()
+        ->and($encounter['status'])->toBe('finished')
+        ->and($encounter['class']['code'])->toBe('IMP')
+        ->and($encounter['period'])->not->toHaveKey('start')
+        ->and($encounter['period']['end'])->toStartWith('2026-04-15');
+
+    $titles = collect($bundle['entry'][0]['resource']['section'])->pluck('title')->all();
+    expect($titles)->toContain('Krankenhausaufenthalt');
+});
+
+it('mappt Empfehlungen auf CarePlan_Recommendation (Freitext in activity.detail.code.text)', function () {
+    $this->resident->recommendations()->create(['empfehlung' => 'Dekubitusprophylaxe fortführen', 'erstellt_am' => '2026-06-01']);
+
+    $bundle = app(FhirDocumentExporter::class)->export($this->resident);
+    $carePlan = collect($bundle['entry'])->pluck('resource')->first(fn ($r) => ($r['resourceType'] ?? '') === 'CarePlan');
+
+    expect($carePlan)->not->toBeNull()
+        ->and($carePlan['status'])->toBe('draft')
+        ->and($carePlan['intent'])->toBe('plan')
+        ->and($carePlan['contributor'][0]['reference'])->not->toBeNull()
+        ->and($carePlan['activity'][0]['detail']['status'])->toBe('not-started')
+        ->and($carePlan['activity'][0]['detail']['code']['coding'][0]['code'])->toBe('406216001')
+        ->and($carePlan['activity'][0]['detail']['code']['text'])->toBe('Dekubitusprophylaxe fortführen');
+
+    $titles = collect($bundle['entry'][0]['resource']['section'])->pluck('title')->all();
+    expect($titles)->toContain('Empfehung an die empfangende Einrichtung');
+});
+
 it('exportiert pro Status-Typ nur die jüngste Erfassung (Sektion max=1)', function () {
     $this->resident->statusObservations()->create(['typ' => 'bewusstsein', 'wert_code' => '371632003', 'erfasst_am' => '2026-01-01']);
     $this->resident->statusObservations()->create(['typ' => 'bewusstsein', 'wert_code' => '271591004', 'erfasst_am' => '2026-06-01']);

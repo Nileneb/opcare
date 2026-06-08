@@ -154,6 +154,53 @@
             @endcan
         </div>
 
+        <div class="card scroll-target" id="krankenhausaufenthalte">
+            <div class="card-head"><h3>Krankenhausaufenthalte</h3>
+                <span class="badge ulb" title="Fließt in den ÜLB-FHIR-Export (Sektion Krankenhausaufenthalt)">→ ÜLB-Export</span>
+            </div>
+            @forelse ($resident->hospitalStays->sortByDesc('ende') as $h)
+                <div class="chip">
+                    <b>bis {{ $h->ende->format('d.m.Y') }}</b>
+                    @if ($h->grund)<span style="color:var(--c-muted)">— {{ $h->grund }}</span>@endif
+                    <button type="button" class="btn btn-ghost btn-sm" style="margin-left:auto" wire:click="removeHospitalStay({{ $h->id }})" wire:confirm="Eintrag entfernen?" title="Entfernen">✕</button>
+                </div>
+            @empty <p class="empty">Keine Krankenhausaufenthalte erfasst.</p> @endforelse
+            @can('update', $resident)
+                <form wire:submit="addHospitalStay" style="margin-top:14px">
+                    <div class="form-row">
+                        <div class="field"><label>Aufenthalt beendet am</label>
+                            <input type="date" wire:model="hos_ende" />@error('hos_ende')<span class="err">{{ $message }}</span>@enderror
+                        </div>
+                        <div class="field"><label>Grund (intern, optional)</label>
+                            <input type="text" wire:model="hos_grund" placeholder="z. B. Sturz mit Fraktur" />@error('hos_grund')<span class="err">{{ $message }}</span>@enderror
+                        </div>
+                    </div>
+                    <button class="btn btn-ghost btn-sm">+ Aufenthalt</button>
+                </form>
+            @endcan
+        </div>
+
+        <div class="card scroll-target" id="empfehlungen">
+            <div class="card-head"><h3>Empfehlungen an die aufnehmende Einrichtung</h3>
+                <span class="badge ulb" title="Fließt in den ÜLB-FHIR-Export (Sektion Empfehlung)">→ ÜLB-Export</span>
+            </div>
+            @forelse ($resident->recommendations->sortByDesc('erstellt_am') as $r)
+                <div class="chip">
+                    <span>{{ $r->empfehlung }}</span>
+                    @if ($r->erstellt_am)<span style="color:var(--c-muted)">{{ $r->erstellt_am->format('d.m.Y') }}</span>@endif
+                    <button type="button" class="btn btn-ghost btn-sm" style="margin-left:auto" wire:click="removeRecommendation({{ $r->id }})" wire:confirm="Eintrag entfernen?" title="Entfernen">✕</button>
+                </div>
+            @empty <p class="empty">Keine Empfehlungen erfasst.</p> @endforelse
+            @can('update', $resident)
+                <form wire:submit="addRecommendation" style="margin-top:14px">
+                    <div class="field"><label>Empfehlung</label>
+                        <textarea wire:model="rec_text" rows="2" placeholder="z. B. Weiterführung der Dekubitusprophylaxe alle 2 Stunden"></textarea>@error('rec_text')<span class="err">{{ $message }}</span>@enderror
+                    </div>
+                    <button class="btn btn-ghost btn-sm">+ Empfehlung</button>
+                </form>
+            @endcan
+        </div>
+
         <div class="card scroll-target" id="medizinprodukte">
             <div class="card-head"><h3>Medizinprodukte & Hilfsmittel</h3>
                 <span class="badge ulb" title="Fließt in den ÜLB-FHIR-Export (Sektion Medizinprodukte)">→ ÜLB-Export</span>

@@ -391,6 +391,8 @@ class DemoSeeder extends Seeder
         ] as [$typ, $code, $text]) {
             $maria->statusObservations()->create(['typ' => $typ, 'wert_code' => $code, 'wert_text' => $text, 'erfasst_am' => now()->subDays(3)->toDateString()]);
         }
+        $maria->hospitalStays()->create(['ende' => now()->subMonths(3)->toDateString(), 'grund' => 'Sturz mit Oberschenkelhalsfraktur']);
+        $maria->recommendations()->create(['empfehlung' => 'Weiterführung der Sturzprophylaxe; Mobilisation nach Maßgabe der Physiotherapie.', 'erstellt_am' => now()->subDays(3)->toDateString()]);
         foreach ([['Rollator', 'hilfsmittel', 'für Strecken > 10 m'], ['Hörgerät rechts', 'hilfsmittel', null]] as [$bez, $kat, $hinweis]) {
             $maria->devices()->create(['bezeichnung' => $bez, 'kategorie' => $kat, 'hinweis' => $hinweis, 'seit' => now()->subMonths(6)->toDateString()]);
         }

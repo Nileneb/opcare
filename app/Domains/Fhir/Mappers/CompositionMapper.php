@@ -101,6 +101,14 @@ class CompositionMapper
             ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '16490003', 'display' => 'Anorectal continence, function (observable entity)'],
             'Stuhlkontinenz differenzierte Einschätzung',
         ],
+        'krankenhausaufenthalt' => [
+            ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '170551006', 'display' => 'Last hospital inpatient (finding)'],
+            'Krankenhausaufenthalt',
+        ],
+        'empfehlung' => [
+            ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '406216001', 'display' => 'Recommendation to caregiver (procedure)'],
+            'Empfehung an die empfangende Einrichtung',
+        ],
         'medikationsplan' => [
             ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '736378000', 'display' => 'Medication management plan (record artifact)'],
             'Medikationsplan',

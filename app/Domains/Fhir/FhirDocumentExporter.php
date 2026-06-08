@@ -10,6 +10,7 @@ use App\Domains\Fhir\Mappers\CareLevelMapper;
 use App\Domains\Fhir\Mappers\CompositionMapper;
 use App\Domains\Fhir\Mappers\ConditionMapper;
 use App\Domains\Fhir\Mappers\DocumentingEntityMapper;
+use App\Domains\Fhir\Mappers\HospitalStayMapper;
 use App\Domains\Fhir\Mappers\MedicalDeviceMapper;
 use App\Domains\Fhir\Mappers\MedicationMapper;
 use App\Domains\Fhir\Mappers\MedicationStatementMapper;
@@ -17,6 +18,7 @@ use App\Domains\Fhir\Mappers\ObservationMapper;
 use App\Domains\Fhir\Mappers\PatientMapper;
 use App\Domains\Fhir\Mappers\PresenceObservationMapper;
 use App\Domains\Fhir\Mappers\ProcedureMapper;
+use App\Domains\Fhir\Mappers\RecommendationMapper;
 use App\Domains\Fhir\Mappers\RelatedPersonMapper;
 use App\Domains\Fhir\Mappers\StatusObservationMapper;
 use App\Domains\Fhir\Mappers\VitalSignsReportMapper;
@@ -52,12 +54,14 @@ class FhirDocumentExporter
         private readonly StatusObservationMapper $statusObservationMapper,
         private readonly MedicalDeviceMapper $medicalDeviceMapper,
         private readonly RelatedPersonMapper $relatedPersonMapper,
+        private readonly HospitalStayMapper $hospitalStayMapper,
+        private readonly RecommendationMapper $recommendationMapper,
     ) {}
 
     /** @return array<string, mixed> */
     public function export(Resident $resident): array
     {
-        $resident->loadMissing('diagnoses.icdCode', 'allergies', 'devices', 'contacts', 'statusObservations', 'tenant');
+        $resident->loadMissing('diagnoses.icdCode', 'allergies', 'devices', 'contacts', 'statusObservations', 'hospitalStays', 'recommendations', 'tenant');
         $base = rtrim(config('app.url'), '/').'/fhir/';
         $patientRef = $base.'Patient/'.PatientMapper::id($resident);
         $date = Carbon::now()->toIso8601String();
@@ -221,6 +225,30 @@ class FhirDocumentExporter
         }
         if ($procedureRefs !== []) {
             $sections[] = ['slice' => 'pflegerischeMassnahme', 'entries' => $procedureRefs];
+        }
+
+        // krankenhausaufenthalt: zurückliegende stationäre Aufenthalte → je ein Encounter_Hospital_Stay (period.end).
+        $hospitalRefs = [];
+        foreach ($resident->hospitalStays as $stay) {
+            $built = $this->hospitalStayMapper->build($stay, $patientRef);
+            $ref = $base.'Encounter/'.$built['id'];
+            $hospitalRefs[] = $ref;
+            $entry[] = ['fullUrl' => $ref, 'resource' => $built['resource']];
+        }
+        if ($hospitalRefs !== []) {
+            $sections[] = ['slice' => 'krankenhausaufenthalt', 'entries' => $hospitalRefs];
+        }
+
+        // empfehlung: Empfehlungen an die aufnehmende Einrichtung → je ein CarePlan_Recommendation.
+        $recommendationRefs = [];
+        foreach ($resident->recommendations as $rec) {
+            $built = $this->recommendationMapper->build($rec, $patientRef, $authorRef);
+            $ref = $base.'CarePlan/'.$built['id'];
+            $recommendationRefs[] = $ref;
+            $entry[] = ['fullUrl' => $ref, 'resource' => $built['resource']];
+        }
+        if ($recommendationRefs !== []) {
+            $sections[] = ['slice' => 'empfehlung', 'entries' => $recommendationRefs];
         }
 
         $reports = CareReport::query()->where('resident_id', $resident->id)->current()->latest('datum')->get();

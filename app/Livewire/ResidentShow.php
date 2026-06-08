@@ -76,6 +76,14 @@ class ResidentShow extends Component
 
     public string $dev_hinweis = '';
 
+    // Krankenhausaufenthalt (ÜLB: krankenhausaufenthalt → Encounter_Hospital_Stay)
+    public string $hos_ende = '';
+
+    public string $hos_grund = '';
+
+    // Empfehlung an die aufnehmende Einrichtung (ÜLB: empfehlung → CarePlan_Recommendation)
+    public string $rec_text = '';
+
     // Angehörige / Kontaktperson (ÜLB: benachrichtigung / pflegeDurchAngehoerige)
     public string $con_name = '';
 
@@ -349,6 +357,47 @@ class ResidentShow extends Component
         session()->flash('status', 'Eintrag entfernt.');
     }
 
+    public function addHospitalStay(): void
+    {
+        Gate::authorize('update', $this->resident);
+        $this->validate([
+            'hos_ende' => ['required', 'date'],
+            'hos_grund' => ['nullable', 'string', 'max:255'],
+        ]);
+        $this->resident->hospitalStays()->create([
+            'ende' => $this->hos_ende,
+            'grund' => $this->hos_grund ?: null,
+        ]);
+        $this->reset('hos_ende', 'hos_grund');
+        session()->flash('status', 'Krankenhausaufenthalt dokumentiert.');
+    }
+
+    public function removeHospitalStay(int $id): void
+    {
+        Gate::authorize('update', $this->resident);
+        $this->resident->hospitalStays()->whereKey($id)->delete();
+        session()->flash('status', 'Eintrag entfernt.');
+    }
+
+    public function addRecommendation(): void
+    {
+        Gate::authorize('update', $this->resident);
+        $this->validate(['rec_text' => ['required', 'string', 'max:2000']]);
+        $this->resident->recommendations()->create([
+            'empfehlung' => $this->rec_text,
+            'erstellt_am' => now()->toDateString(),
+        ]);
+        $this->reset('rec_text');
+        session()->flash('status', 'Empfehlung dokumentiert.');
+    }
+
+    public function removeRecommendation(int $id): void
+    {
+        Gate::authorize('update', $this->resident);
+        $this->resident->recommendations()->whereKey($id)->delete();
+        session()->flash('status', 'Eintrag entfernt.');
+    }
+
     public function addDevice(): void
     {
         Gate::authorize('update', $this->resident);
@@ -538,6 +587,7 @@ class ResidentShow extends Component
         $this->resident->load([
             'room.station', 'diagnoses.icdCode', 'insurances.healthInsurance',
             'custodians', 'physicians', 'allergies', 'statusObservations', 'devices', 'contacts',
+            'hospitalStays', 'recommendations',
             'sisAssessments' => fn ($q) => $q->current()->latest('id')->with(['topicFields', 'riskItems']),
             'careMeasures' => fn ($q) => $q->current()->latest('id'),
             'careEvents',

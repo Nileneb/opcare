@@ -213,11 +213,24 @@ CI (tests + fhir-validate) grün.
   Pflicht). 0 errors (beide Profile). **Damit ist Gruppe B vollständig.**
 
 **Gruppe C — eigene Ressourcentypen (neuer Store + Mapper):**
-- `raeumlicheIsolation` als **Procedure** zusätzlich (`Procedure_Isolation`) — heute nur als Observation-Necessity.
-- `krankenhausaufenthalt` → `Encounter_Hospital_Stay` (+ `Encounter_Current_Location`): kleiner Store
-  (Aufnahme/Entlassung/Grund).
-- `empfehlung` → `CarePlan_Recommendation_Receiving_Institution`.
-- `mitgegebeneDokumente` → `DocumentReference_ePa_Reference`.
+- ✅ `krankenhausaufenthalt` → `Encounter_Hospital_Stay`: neuer Store `resident_hospital_stays`
+  (`ResidentHospitalStay`), UI-Card + FHIR-Mapper. **Profil-Korrektur:** Encounter ist minimal —
+  `status=finished`, `class` fix IMP (v3-ActCode 5.0.0), `subject`, und NUR `period.end` (period.start max=0
+  **verboten**; reasonCode/type/serviceProvider ebenfalls verboten). Es wird also nur das *Aufenthaltsende*
+  erfasst, kein Aufnahmedatum/Grund (Grund nur intern/Narrativ). 0 errors.
+- ✅ `empfehlung` → `CarePlan_Recommendation_Receiving_Institution`: neuer Store `resident_recommendations`
+  (`ResidentRecommendation`), UI-Card + FHIR-Mapper. `status=draft`, `intent=plan`, `subject`+`contributor`
+  (Recorder), eine `activity.detail` (`status=not-started`) mit SNOMED-`codeSnomed` 406216001 + Freitext in
+  `code.text`. 0 errors.
+- ❎ `raeumlicheIsolation` als **Procedure_Isolation**: **NICHT nötig** — Introspektion zeigt, die Sektion
+  `raeumlicheIsolation` verlangt `Observation_Isolation_Necessary` (exportieren wir bereits, Gruppe A);
+  `Procedure_Isolation` ist nur eine *optionale* `naehereInformationen`-Referenz (min=0) auf der Observation,
+  nirgends Pflicht. „Built but barely used" → bewusst nicht gebaut.
+- ❎ `Encounter_Current_Location` / `DocumentReference_ePa_Reference`: **kein Sektions-Bezug.** Current_Location
+  (participant/CALLBCK) ist nicht Teil der Krankenhaus-Sektion; DocumentReference ist NICHT in „mitgegebene
+  Dokumente" (die nimmt Device/Medication/Provenance), sondern nur optionale `derivedFrom`/Provenance-Referenz.
+  Beide sind optionale Cross-Links ohne eigenständigen Erfassungs-Datenpunkt → nicht gebaut (ehrlich vermerkt).
+- **Damit ist Gruppe C in den sektions-relevanten Punkten vollständig.**
 
 **Gruppe D — administrative Flags / Ereignisse (Resident-Flags bzw. Ereignis-Store):**
 - `mitgabeKrankenkassenkarte` (`Health_Insurance_Card_Given`), `zuzahlungsbefreiung` (`Copayment_Exemption`) →

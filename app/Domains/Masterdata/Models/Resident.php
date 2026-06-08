@@ -50,6 +50,8 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property-read Collection<int, Custodian> $custodians
  * @property-read int|null $custodians_count
  * @property-read Collection<int, ResidentDevice> $devices
+ * @property-read Collection<int, ResidentHospitalStay> $hospitalStays
+ * @property-read Collection<int, ResidentRecommendation> $recommendations
  * @property-read int|null $devices_count
  * @property-read Collection<int, ResidentDiagnosis> $diagnoses
  * @property-read int|null $diagnoses_count
@@ -134,6 +136,18 @@ class Resident extends BaseModel implements HasMedia
     public function devices(): HasMany
     {
         return $this->hasMany(ResidentDevice::class);
+    }
+
+    /** @return HasMany<ResidentHospitalStay, $this> */
+    public function hospitalStays(): HasMany
+    {
+        return $this->hasMany(ResidentHospitalStay::class);
+    }
+
+    /** @return HasMany<ResidentRecommendation, $this> */
+    public function recommendations(): HasMany
+    {
+        return $this->hasMany(ResidentRecommendation::class);
     }
 
     public function contacts(): HasMany
