@@ -26,6 +26,7 @@ use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Auth\ResetPassword;
+use App\Livewire\Brandschutz\Brandschutz as BrandschutzScreen;
 use App\Livewire\Capture\Belegerfassung;
 use App\Livewire\Capture\Wareneingangerfassung;
 use App\Livewire\Catering\Haccp;
@@ -142,6 +143,7 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class, Restrict
     Route::get('/haustechnik', Haustechnik::class)->name('haustechnik');
     Route::get('/medizinprodukte', Medizinprodukte::class)->name('medizinprodukte');
     Route::get('/trinkwasser', Trinkwasser::class)->name('trinkwasser');
+    Route::get('/brandschutz', BrandschutzScreen::class)->name('brandschutz');
     Route::get('/kueche', Kueche::class)->name('kueche');
     Route::get('/haccp', Haccp::class)->name('haccp');
     Route::get('/reinigungsplan', Reinigungsplan::class)->name('reinigungsplan');
