@@ -38,6 +38,7 @@ const pages = [
     ['trinkwasser', '/trinkwasser', true],
     ['kueche', '/kueche', true],
     ['haccp', '/haccp', true],
+    ['reinigungsplan', '/reinigungsplan', true],
     ['buchhaltung', '/buchhaltung', true],
     ['inventur', '/inventur', true],
     ['rueckverfolgung', '/rueckverfolgung', true],
