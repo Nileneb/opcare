@@ -6,7 +6,7 @@ Qualitätssicherung (QDVS/DAS-Pflege)** und **FHIR / ÜLB-MIO** (Pflegeüberleit
 des eingestellten Java-Projekts **[Offene-Pflege.de (OPDE)](#herkunft)** — dessen Domänenwissen dient als
 Vorlage, der Code ist von Grund auf neu.
 
-> **Status:** Funktionsfähig und aktiv in Entwicklung. **791 Tests grün**, CI durchgehend grün
+> **Status:** Funktionsfähig und aktiv in Entwicklung. **814 Tests grün**, CI durchgehend grün
 > (Tests · Linter · Security-Audit · FHIR-Validierung). Open Source (AGPL-3.0), **kein Rechtsgate**,
 > solange keine Echt-Patientendaten verarbeitet werden.
 >
@@ -81,7 +81,7 @@ Warenwirtschaft bis zu KI-Assistenz und TI-Anbindung. Nach Themen aufgeklappt:
   Allergenwarnung** (14 EU-Allergene), Bewohner-Warnung je Gericht, Essenswünsche + Menüwahl je Mahlzeit.
 - **HACCP-Eigenkontrolle** (VO 852/2004 Art. 5, LMHV, DIN 10508) — CCP-**Temperaturüberwachung** der Küche
   (Kühlung ≤ 7 °C / TK ≤ −18 °C / Heißhaltung ≥ 65 °C): Messpunkte, tägliches Tagesblatt, Abweichungs- +
-  Korrekturmaßnahmen-Workflow.
+  Korrekturmaßnahmen-Workflow. **Reinigungs-/Desinfektionsplan** (VO 852/2004 Anhang II): Aufgaben mit Intervall + Fälligkeits-Ampel + Erledigungs-Nachweis.
 - **Soziale Betreuung** (§ 43b SGB XI) — Angebote planen, Teilnahme + Betreuungs-Nachweis (Einheiten/Minuten) je Bewohner.
 </details>
 
@@ -143,7 +143,7 @@ Warenwirtschaft bis zu KI-Assistenz und TI-Anbindung. Nach Themen aufgeklappt:
 | Backend | **Laravel 13**, **PHP 8.3+** |
 | Frontend | Blade + **Livewire 4** + Alpine.js |
 | Datenbank | **SQLite** (Dev/CI) · **PostgreSQL** (Prod) |
-| Tests | **Pest 4** (791 Tests) |
+| Tests | **Pest 4** (814 Tests) |
 | Lint/Style | **Laravel Pint** · **Larastan/PHPStan L5** |
 | DTOs / RBAC / Audit | `spatie/laravel-data` · `spatie/laravel-permission` · `spatie/laravel-activitylog` · `spatie/laravel-medialibrary` |
 | KI (lokal) | **Ollama** (VLM/Embeddings) · externe **MCP-Tools** (Vision-MCP, whisperX-mcp) |
@@ -193,7 +193,7 @@ Domänen-orientierte Struktur unter `app/Domains/`. Layering als Einbahnstraße:
 |---|---|
 | **Hygiene** | **Hygieneplan** (Dokument-mit-Freigabe + Revisions-Ampel) + **MRE-/Infektions-Surveillance** je Bewohner mit Meldepflicht-Verfolgung (§ 23 / §§ 6/7 IfSG) |
 | **Facility** | Haustechnik/Instandhaltung (DIN 31051): Mängelmeldungen + Wartungsplan mit Prüffristen; **Medizinprodukte**-Bestandsverzeichnis + Medizinproduktebuch (MPBetreibV); **Trinkwasser/Legionellen-Überwachung** (TrinkwV 2023: Frist-Ampel, Maßnahmenwert 100 KbE/100 ml, § 51-Workflow) |
-| **Catering** | Küche/Verpflegung (LMIV): Diät-/Allergen-Sicht der Bewohner + Speiseplan mit Allergenwarnung; **HACCP-Eigenkontrolle** (VO 852/2004 Art. 5: CCP-Temperaturüberwachung Kühlung/TK/Heißhaltung + Abweichungs-/Korrektur-Workflow) |
+| **Catering** | Küche/Verpflegung (LMIV): Diät-/Allergen-Sicht der Bewohner + Speiseplan mit Allergenwarnung; **HACCP-Eigenkontrolle** (VO 852/2004 Art. 5: CCP-Temperaturüberwachung + Abweichungs-/Korrektur-Workflow) + **Reinigungs-/Desinfektionsplan** (Anhang II: Frist-Ampel + Erledigungs-Nachweis) |
 | **SocialCare** | Soziale Betreuung (§ 43b SGB XI): Angebote + Teilnahme-Nachweis je Bewohner |
 </details>
 
@@ -278,7 +278,7 @@ php artisan serve
 ## Entwicklung
 
 ```bash
-php artisan test                 # bzw. vendor/bin/pest   (791 Tests)
+php artisan test                 # bzw. vendor/bin/pest   (814 Tests)
 vendor/bin/pint                  # Code-Style
 php -d memory_limit=1G vendor/bin/phpstan analyse   # Larastan L5
 php artisan fhir:export --output=bundle.json        # FHIR-Document-Bundle
