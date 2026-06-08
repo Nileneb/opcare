@@ -18,5 +18,6 @@ class BelastungsBefund extends Data
         public int $score,
         /** @var array<string,string> */
         public array $signale,
+        public int $lage = 0,
     ) {}
 }

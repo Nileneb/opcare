@@ -5,6 +5,7 @@ namespace App\Domains\Arbeitsschutz\Services;
 use App\Domains\Arbeitsschutz\Data\BelastungsBefund;
 use App\Domains\Arbeitsschutz\Enums\Belastungsstufe;
 use App\Domains\Arbeitsschutz\Models\BelastungsKonfig;
+use App\Domains\Arbeitsschutz\Support\BelastungsAmpel;
 use App\Domains\CarePlanning\Models\RiskItem;
 use App\Domains\Masterdata\Models\Resident;
 use App\Domains\Masterdata\Models\Station;
@@ -75,6 +76,7 @@ class BelastungsAnalyzer
                         : "{$spitzen->unterdeckungen()} Unterdeckungs-Fenster",
                     'Ergonomie' => count($qualityFindings).' Findings',
                 ],
+                lage: BelastungsAmpel::lageAusScore($gesamt),
             ));
         }
 
