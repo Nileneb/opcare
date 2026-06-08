@@ -1,4 +1,4 @@
-<div wire:poll.10s class="chat-layout">
+<div wire:poll.30s class="chat-layout">
 
     {{-- Sidebar: Konversationsliste --}}
     <aside class="chat-sidebar">

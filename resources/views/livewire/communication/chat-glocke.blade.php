@@ -1,4 +1,4 @@
-<div wire:poll.30s>
+<div wire:poll.60s>
     @if ($istStaff)
         <a href="{{ route('chat') }}" class="btn btn-ghost btn-sm" title="Chat" style="position:relative;text-decoration:none">
             💬

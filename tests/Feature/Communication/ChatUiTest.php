@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\Communication\Enums\KonversationTyp;
+use App\Domains\Communication\Events\NachrichtGesendet;
 use App\Domains\Communication\Models\Konversation;
 use App\Domains\Communication\Models\KonversationTeilnehmer;
 use App\Domains\Communication\Models\Nachricht;
@@ -341,4 +342,61 @@ it('ChatGlocke zeigt 0 für betreuer-Rolle', function () {
 
     Livewire::test(ChatGlocke::class)
         ->assertDontSee('badge');
+});
+
+// ---------------------------------------------------------------------------
+// Echo-Echtzeit-Listener (Reverb): ersetzt das reine Polling
+// ---------------------------------------------------------------------------
+
+it('Chat getListeners: ohne Konversationen keine Echo-Listener', function () {
+    $this->actingAs($this->alice);
+
+    $listeners = Livewire::test(Chat::class)->instance()->getListeners();
+
+    expect($listeners)->toBe([]);
+});
+
+it('Chat getListeners: lauscht auf alle Kanäle der Person (auch ohne aktive Konversation)', function () {
+    $this->actingAs($this->alice);
+
+    $gruppe = app(GruppeErstellen::class)->handle($this->alice, 'Echo-Test', [$this->bob->id]);
+
+    // aktivKonversationId bleibt null — der Kanal muss trotzdem gebunden sein (Livewire bindet
+    // Echo-Kanäle nur beim Init; ein nur-aktiver Listener würde den Push im Thread verpassen).
+    $listeners = Livewire::test(Chat::class)->instance()->getListeners();
+
+    expect($listeners)->toHaveKey("echo-private:konversation.{$gruppe->id},.NachrichtGesendet")
+        ->and($listeners["echo-private:konversation.{$gruppe->id},.NachrichtGesendet"])->toBe('$refresh');
+});
+
+it('ChatGlocke getListeners: lauscht auf alle Konversations-Kanäle der Person', function () {
+    $this->actingAs($this->alice);
+
+    $g1 = app(GruppeErstellen::class)->handle($this->alice, 'Kanal 1', [$this->bob->id]);
+    $g2 = app(GruppeErstellen::class)->handle($this->alice, 'Kanal 2', [$this->bob->id]);
+
+    $listeners = Livewire::test(ChatGlocke::class)->instance()->getListeners();
+
+    expect($listeners)->toHaveKey("echo-private:konversation.{$g1->id},.NachrichtGesendet")
+        ->and($listeners)->toHaveKey("echo-private:konversation.{$g2->id},.NachrichtGesendet")
+        ->and($listeners["echo-private:konversation.{$g1->id},.NachrichtGesendet"])->toBe('$refresh');
+});
+
+it('ChatGlocke getListeners: betreuer-Rolle bekommt keine Listener', function () {
+    $betreuer = User::create([
+        'name' => 'BetreuerEcho',
+        'email' => 'betreuer-echo@ui-chat.test',
+        'password' => bcrypt('x'),
+        'tenant_id' => $this->tenant->id,
+    ]);
+    $betreuer->assignRole('betreuer');
+
+    $this->actingAs($betreuer);
+
+    expect(Livewire::test(ChatGlocke::class)->instance()->getListeners())->toBe([]);
+});
+
+it('broadcastAs liefert den stabilen Event-Namen für den Echo-Listener', function () {
+    expect((new NachrichtGesendet(1, 1))->broadcastAs())
+        ->toBe('NachrichtGesendet');
 });

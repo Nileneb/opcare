@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="{{ asset('sis/css/colors_and_type.css') }}" />
     <link rel="stylesheet" href="{{ asset('sis/css/admin.css') }}" />
     <script src="{{ asset('sis/js/voice.js') }}"></script>
+    @vite('resources/js/app.js')
     @livewireStyles
 </head>
 <body>

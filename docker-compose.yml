@@ -10,6 +10,13 @@ x-php: &php
     context: .
     dockerfile: docker/php/Dockerfile
     target: app
+    args: &vite-args
+      # WHY: Vite backt VITE_*-Werte zur Build-Zeit ins JS-Bundle. Ohne diese Args fehlt der
+      # Reverb-Client-Key → window.Echo wird nie erzeugt, der Chat fällt stumm auf Polling zurück.
+      VITE_REVERB_APP_KEY: ${REVERB_APP_KEY:-opcare-key}
+      VITE_REVERB_HOST: ${REVERB_HOST:-localhost}
+      VITE_REVERB_PORT: ${REVERB_PORT:-8080}
+      VITE_REVERB_SCHEME: ${REVERB_SCHEME:-http}
   image: opcare/php:latest
   restart: unless-stopped
   volumes:
@@ -42,6 +49,7 @@ services:
       context: .
       dockerfile: docker/php/Dockerfile
       target: web
+      args: *vite-args
     image: opcare/web:latest
     restart: unless-stopped
     ports:

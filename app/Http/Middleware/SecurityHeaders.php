@@ -20,6 +20,15 @@ class SecurityHeaders
     {
         $response = $next($request);
 
+        // WHY: Der Reverb-WebSocket (Echtzeit-Chat) läuft auf einem eigenen Host/Port. Ohne ihn in
+        // connect-src blockt die CSP die WS-Verbindung und der Chat fällt auf Polling zurück. Hier zählt
+        // die ÖFFENTLICHE Browser-Sicht (REVERB_HOST/Hostname + REVERB_PORT) — NICHT der interne
+        // Server→Reverb-Host. Aus der (gecachten) Config gelesen statt env() (nach config:cache null).
+        $reverbHost = config('reverb.servers.reverb.hostname')
+            ?: (config('broadcasting.connections.reverb.options.host') ?: 'localhost');
+        $reverbPort = config('broadcasting.connections.reverb.options.port', 443);
+        $connectSrc = "connect-src 'self' ws://{$reverbHost}:{$reverbPort} wss://{$reverbHost}:{$reverbPort}";
+
         $headers = [
             'X-Frame-Options' => 'DENY',
             'X-Content-Type-Options' => 'nosniff',
@@ -34,7 +43,7 @@ class SecurityHeaders
                 "style-src 'self' 'unsafe-inline'",
                 "img-src 'self' data:",
                 "font-src 'self' data:",
-                "connect-src 'self'",
+                $connectSrc,
                 "media-src 'self' blob:",
                 "frame-ancestors 'none'",
                 "base-uri 'self'",
