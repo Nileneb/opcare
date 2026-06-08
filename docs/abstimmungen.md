@@ -20,7 +20,23 @@ Personen-FK, noch über Zeitstempel, noch über Insert-Reihenfolge (UUID), noch 
 
 > **Ehrliche Decke:** „niemand außer der Person" ist als Design-/Zugriffsversprechen erreichbar. Vollständige
 > Unverkettbarkeit auch gegen einen Root-Admin (der Code/Logs ändern kann) erst mit dem **Krypto-Härtungspfad**
-> (blind-signierter Token, `GeheimKrypto` — vorgemerkte Naht). Der Beleg-Token ist bewusst **nicht vote-beweisend**.
+> (blind-signierter Token, Modus `GeheimKrypto`). Der Beleg-Token ist bewusst **nicht vote-beweisend**.
+
+### `GeheimKrypto` — gebaut & stillgelegt (echter Schalter)
+
+Der Modus `GeheimKrypto` ist kein loses Versprechen mehr, sondern ein **registrierter Inbetriebnahme-Schalter**
+(`docs/INBETRIEBNAHME.md` §6, `voting.krypto_unverkettbarkeit_aktiv`, Default `false`):
+
+- **Enum-Case** `Stimmodus::GeheimKrypto` (`istGeheim()` true — erfüllt die Geheim-Pflicht, `istKrypto()` true).
+- **Service-Sperre an der Quelle:** `AbstimmungStarten` lehnt das Anlegen ab, `StimmeAbgeben` lehnt die Abgabe ab,
+  solange der Schalter aus ist (Defense-in-depth). Fehlertext: „Krypto-unverkettbarer Modus stillgelegt (Inbetriebnahme …)".
+- **UI** blendet den Modus aus, bis der Schalter an ist — kein wählbarer Modus, dessen Garantie der Code nicht hält.
+
+**Warum stillgelegt:** Die kryptografische Härtung selbst (blind-signierter Berechtigungstoken: der Wähler holt
+einen blind signierten Token, gibt ihn beim Einwurf entkoppelt ab, sodass der Server Stimme↔Wähler nicht mehr
+verketten kann) ist **noch nicht implementiert**. Sie würde nur halbgar gegen die heutige „pragmatische
+Unverkettbarkeit" wirken — also bleibt der Schalter ehrlich aus, statt eine Root-Unverkettbarkeit vorzutäuschen.
+Aktivieren: blind-signierten Token-Fluss bauen → `VOTING_KRYPTO_UNVERKETTBARKEIT=true`.
 
 ## Ablauf
 
@@ -43,7 +59,9 @@ Personen-FK, noch über Zeitstempel, noch über Insert-Reihenfolge (UUID), noch 
 - **Bewohner-Kiosk-Stimmabgabe** — Residents haben i.d.R. keinen Login; diese UI deckt User-Login-Wähler
   (Mitarbeitende/Gremium) ab. Der assistierte/Kiosk-Pfad für Bewohner-Wahlen ist ein Folge-Inkrement
   (`docs/INBETRIEBNAHME.md`).
-- **Krypto-Härtungspfad** (`GeheimKrypto`, blind-signierter Token) für Server-Unverkettbarkeit.
+- **Krypto-Härtungspfad** (`GeheimKrypto`, blind-signierter Token) für Server-Unverkettbarkeit — als
+  **registrierter Schalter** gebaut & stillgelegt (siehe oben + `docs/INBETRIEBNAHME.md` §6), Implementierung der
+  Krypto-Primitive offen.
 
 ## Spec & Plan
 
