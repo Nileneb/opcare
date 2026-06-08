@@ -28,6 +28,11 @@ use App\Domains\Assessment\Actions\ConductAssessment;
 use App\Domains\Assessment\Data\AssessmentInputData;
 use App\Domains\Assessment\Database\Seeders\InstrumentSeeder;
 use App\Domains\Assessment\Models\Instrument;
+use App\Domains\Brandschutz\Enums\BrandschutzordnungTeil;
+use App\Domains\Brandschutz\Enums\MangelSchwere;
+use App\Domains\Brandschutz\Models\Brandschutzbegehung;
+use App\Domains\Brandschutz\Models\Brandschutzordnung;
+use App\Domains\Brandschutz\Models\Raeumungsuebung;
 use App\Domains\Capture\Enums\PositionStatus;
 use App\Domains\Capture\Enums\VorschlagStatus;
 use App\Domains\Capture\Enums\ZielTyp;
@@ -550,6 +555,26 @@ class DemoSeeder extends Seeder
         $gefPsych->massnahmen()->create(['tenant_id' => $tenant->id, 'typ' => Massnahmentyp::Organisatorisch,
             'beschreibung' => 'Belastungsarme Dienstplangestaltung + Supervisions-Angebot.', 'verantwortlich' => 'PDL',
             'umgesetzt_am' => now()->subMonths(10)->toDateString(), 'wirksam_geprueft_am' => null]);
+
+        // Brandschutz-Organisation (§ 10 ArbSchG / ASR A2.2/A2.3 / DIN 14096): Brandschutzordnung (freigegeben,
+        // Revision überfällig → rot), zwei Begehungen (eine mit offenem kritischem Mangel), Räumungsübung (überfällig).
+        Brandschutzordnung::create(['tenant_id' => $tenant->id, 'titel' => 'Brandschutzordnung Haus 1', 'teil' => BrandschutzordnungTeil::B,
+            'version' => '2.1', 'inhalt' => 'Verhalten im Brandfall, Flucht- und Rettungswege, Sammelplatz Parkplatz Nord.',
+            'freigegeben_von' => $admin->id, 'freigegeben_am' => now()->subMonths(27)->toDateString(), 'revision_intervall_monate' => 24, 'aktiv' => true]);
+        Brandschutzordnung::create(['tenant_id' => $tenant->id, 'titel' => 'Brandschutzordnung Teil C (Brandschutzbeauftragte)', 'teil' => BrandschutzordnungTeil::C,
+            'version' => '1.0', 'inhalt' => 'Aufgaben der Personen mit besonderen Brandschutzaufgaben.', 'revision_intervall_monate' => 24, 'aktiv' => true]);
+        $begehungWb1 = Brandschutzbegehung::create(['tenant_id' => $tenant->id, 'bereich' => 'Wohnbereich 1', 'begangen_am' => now()->subMonths(14)->toDateString(),
+            'begangen_von' => $admin->id, 'intervall_monate' => 12, 'bemerkung' => 'Quartalsbegehung Eigenkontrolle.']);
+        $begehungWb1->maengel()->create(['tenant_id' => $tenant->id, 'beschreibung' => 'Brandschutztür Flur 1.OG durch Pflegewagen blockiert (Feststellung unzulässig).',
+            'schwere' => MangelSchwere::Kritisch, 'frist' => now()->subWeeks(2)->toDateString(), 'behoben_am' => null]);
+        $begehungWb1->maengel()->create(['tenant_id' => $tenant->id, 'beschreibung' => 'Hinweisschild Sammelplatz verblasst.',
+            'schwere' => MangelSchwere::Gering, 'frist' => now()->addMonth()->toDateString(),
+            'behoben_am' => now()->subMonths(13)->toDateString(), 'behoben_notiz' => 'Schild ersetzt.']);
+        Brandschutzbegehung::create(['tenant_id' => $tenant->id, 'bereich' => 'Küche', 'begangen_am' => now()->subWeeks(2)->toDateString(),
+            'begangen_von' => $koechin->id, 'intervall_monate' => 12, 'bemerkung' => 'Keine Beanstandungen.']);
+        Raeumungsuebung::create(['tenant_id' => $tenant->id, 'durchgefuehrt_am' => now()->subMonths(16)->toDateString(), 'durchgefuehrt_von' => $admin->id,
+            'intervall_monate' => 12, 'bereich' => 'Gesamtes Haus 1', 'szenario' => 'Küchenbrand mit Verrauchung Treppenhaus Ost',
+            'teilnehmer_anzahl' => 18, 'dauer_minuten' => 25, 'erkenntnisse' => 'Räumung Wohnbereich 2 verzögert — zweiter Rettungsweg neu beschildert.']);
 
         // Arbeitszeit-Ist (BAG/EuGH): erfasste Zeiten der laufenden Woche für Sandra/Tom (Soll-Ist-Demo).
         $woStart = now()->startOfWeek();

@@ -66,6 +66,7 @@ const pages = [
     ['energiebarometer', '/energiebarometer', true],
     ['arbeitsschutz-nachweise', '/arbeitsschutz/nachweise', true],
     ['gefaehrdungsbeurteilung', '/arbeitsschutz/gefaehrdungsbeurteilung', true],
+    ['brandschutz', '/brandschutz', true],
     ['mitarbeitende', '/admin/benutzer', true],
     ['qdvs', '/qdvs', true],
     ['einrichtung', '/einrichtung', true],

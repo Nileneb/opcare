@@ -30,7 +30,9 @@ class BrandschutzMonitor
             ->where('tenant_id', $this->currentTenant->id())
             ->with('maengel')
             ->get()
-            ->sortByDesc('begangen_am')
+            // WHY: sekundär nach id absteigend, damit bei gleichem begangen_am (date-Cast, ohne Zeit)
+            // deterministisch die zuletzt erfasste Begehung je Bereich „jüngste" ist.
+            ->sortByDesc(fn (Brandschutzbegehung $b): string => sprintf('%s-%012d', $b->begangen_am->format('Y-m-d'), $b->id))
             ->unique('bereich')
             ->values();
     }
