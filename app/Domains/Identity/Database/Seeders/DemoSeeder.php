@@ -20,9 +20,11 @@ use App\Domains\Accounting\Models\Lieferant;
 use App\Domains\Accounting\Models\Treuhandbudget;
 use App\Domains\Accounting\Models\Treuhandkonto;
 use App\Domains\Accounting\Support\AccountingDefaults;
+use App\Domains\Arbeitsschutz\Enums\Belastungsstufe;
 use App\Domains\Arbeitsschutz\Enums\GbuStatus;
 use App\Domains\Arbeitsschutz\Enums\Gefaehrdungsfaktor;
 use App\Domains\Arbeitsschutz\Enums\Massnahmentyp;
+use App\Domains\Arbeitsschutz\Models\Belastungsmeldung;
 use App\Domains\Arbeitsschutz\Models\Gefaehrdungsbeurteilung;
 use App\Domains\Assessment\Actions\ConductAssessment;
 use App\Domains\Assessment\Data\AssessmentInputData;
@@ -555,6 +557,15 @@ class DemoSeeder extends Seeder
         $gefPsych->massnahmen()->create(['tenant_id' => $tenant->id, 'typ' => Massnahmentyp::Organisatorisch,
             'beschreibung' => 'Belastungsarme Dienstplangestaltung + Supervisions-Angebot.', 'verantwortlich' => 'PDL',
             'umgesetzt_am' => now()->subMonths(10)->toDateString(), 'wirksam_geprueft_am' => null]);
+
+        // Belastungs-Live-Index (§ 5 Abs. 3 Nr. 6 ArbSchG): eine offene, kritische Belastungsmeldung für
+        // Wohnbereich 1 (hohe Pflegelast + Unterdeckung) — schicht-/bereichsbezogen, KEIN Personen-Score.
+        Belastungsmeldung::create([
+            'tenant_id' => $tenant->id, 'station_id' => $station->id, 'wohnbereich' => $station->name,
+            'stufe' => Belastungsstufe::Kritisch, 'score' => 84,
+            'signale' => ['Pflegelast' => 'hoch (5 Risiken)', 'Personaldeckung' => '62 %', 'Spitzenzeit' => '2 Engpässe', 'Ergonomie' => '3 Befunde'],
+            'gemeldet_am' => now()->subDay()->toDateString(),
+        ]);
 
         // Brandschutz-Organisation (§ 10 ArbSchG / ASR A2.2/A2.3 / DIN 14096): Brandschutzordnung (freigegeben,
         // Revision überfällig → rot), zwei Begehungen (eine mit offenem kritischem Mangel), Räumungsübung (überfällig).

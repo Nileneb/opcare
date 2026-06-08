@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Scheduling;
 
+use App\Domains\Arbeitsschutz\Models\BelastungsKonfig;
 use App\Domains\Identity\Support\CurrentTenant;
 use App\Domains\Scheduling\Compliance\ArbeitszeitgesetzDefaults;
 use App\Domains\Scheduling\Compliance\Enums\ViolationSeverity;
@@ -36,6 +37,19 @@ class Arbeitsrecht extends Component
 
     public float $sc_multiplikator = 1.0;
 
+    // Belastungsindex-Konfig
+    public int $bk_gewicht_pflegelast = 40;
+
+    public int $bk_gewicht_deckung = 35;
+
+    public int $bk_gewicht_spitzenzeit = 15;
+
+    public int $bk_gewicht_ergonomie = 10;
+
+    public int $bk_schwelle_hoch = 60;
+
+    public int $bk_schwelle_kritisch = 80;
+
     public function mount(): void
     {
         abort_unless(auth()->user()?->can('manage', Shift::class), 403);
@@ -69,6 +83,14 @@ class Arbeitsrecht extends Component
         $this->sc_fachkraftquote = $sc->fachkraftquote_min;
         $this->sc_nachtdienst = $sc->nachtdienst_je_fachkraft;
         $this->sc_multiplikator = $sc->paw_multiplikator;
+
+        $bk = BelastungsKonfig::ensureFor($tenantId);
+        $this->bk_gewicht_pflegelast = $bk->gewicht_pflegelast;
+        $this->bk_gewicht_deckung = $bk->gewicht_deckung;
+        $this->bk_gewicht_spitzenzeit = $bk->gewicht_spitzenzeit;
+        $this->bk_gewicht_ergonomie = $bk->gewicht_ergonomie;
+        $this->bk_schwelle_hoch = $bk->schwelle_hoch;
+        $this->bk_schwelle_kritisch = $bk->schwelle_kritisch;
     }
 
     public function qSpeichern(int $id): void
@@ -143,6 +165,33 @@ class Arbeitsrecht extends Component
             $this->ladeEdits();
             session()->flash('status', $rule->label.' auf den ArbZG-Standard zurückgesetzt.');
         }
+    }
+
+    public function belastungsKonfigSpeichern(): void
+    {
+        abort_unless(auth()->user()?->can('manage', Shift::class), 403);
+
+        $this->validate([
+            'bk_gewicht_pflegelast' => ['required', 'integer', 'min:0', 'max:100'],
+            'bk_gewicht_deckung' => ['required', 'integer', 'min:0', 'max:100'],
+            'bk_gewicht_spitzenzeit' => ['required', 'integer', 'min:0', 'max:100'],
+            'bk_gewicht_ergonomie' => ['required', 'integer', 'min:0', 'max:100'],
+            'bk_schwelle_hoch' => ['required', 'integer', 'min:0', 'max:100'],
+            'bk_schwelle_kritisch' => ['required', 'integer', 'min:0', 'max:100'],
+        ]);
+
+        $tenantId = app(CurrentTenant::class)->id();
+        $konfig = BelastungsKonfig::ensureFor($tenantId);
+        $konfig->update([
+            'gewicht_pflegelast' => $this->bk_gewicht_pflegelast,
+            'gewicht_deckung' => $this->bk_gewicht_deckung,
+            'gewicht_spitzenzeit' => $this->bk_gewicht_spitzenzeit,
+            'gewicht_ergonomie' => $this->bk_gewicht_ergonomie,
+            'schwelle_hoch' => $this->bk_schwelle_hoch,
+            'schwelle_kritisch' => $this->bk_schwelle_kritisch,
+        ]);
+
+        session()->flash('status', 'Belastungsindex-Konfiguration gespeichert.');
     }
 
     public function render()

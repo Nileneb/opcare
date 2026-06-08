@@ -59,6 +59,74 @@
             <a href="{{ route('arbeitsrecht') }}" wire:navigate>Regeln</a> je Einrichtung einstellbar.</p>
     </div>
 
+    {{-- Belastungs-Panel (§ 5 Abs. 3 Nr. 6 ArbSchG live) --}}
+    <div class="card">
+        <div class="card-head">
+            <h3>Belastungs-Index (§ 5 ArbSchG live)</h3>
+            <span class="badge gray" title="Psychische Belastung als Arbeitsbedingung — schicht-/wohnbereichsbezogen, kein Personenbezug">§ 5 Abs. 3 Nr. 6</span>
+        </div>
+        @forelse ($belastung as $b)
+            <div style="border:1px solid #e5e7eb;border-radius:4px;padding:.75rem;margin-bottom:.75rem">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem">
+                    <div>
+                        <strong>{{ $b->wohnbereich }}</strong>
+                        <span class="badge {{ $b->stufe->ampel() === 'green' ? 'green' : ($b->stufe->ampel() === 'amber' ? 'amber' : 'red') }}" style="margin-left:.5rem">
+                            {{ $b->stufe->label() }}
+                        </span>
+                        <span class="muted" style="font-size:.85em;margin-left:.4rem">Score {{ $b->score }}/100</span>
+                    </div>
+                    @if ($b->stufe->istMeldepflichtig())
+                        <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+                            <button class="btn btn-primary btn-sm" wire:click="leitungMelden({{ $b->stationId }})">Leitung melden</button>
+                            <button class="btn btn-ghost btn-sm" wire:click="entlasten({{ $b->stationId }})">Entlasten</button>
+                        </div>
+                    @endif
+                </div>
+                <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem">
+                    @foreach ($b->signale as $label => $wert)
+                        <span class="badge gray" style="font-size:.8em"><b>{{ $label }}:</b> {{ $wert }}</span>
+                    @endforeach
+                </div>
+
+                {{-- Entlasten-Dialog --}}
+                @if ($entlastenStation === $b->stationId)
+                    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:4px;padding:.75rem;margin-top:.75rem">
+                        <p style="margin-bottom:.5rem"><strong>Entlastungsmaßnahme anlegen</strong></p>
+                        <div class="form-row-2">
+                            <div class="field">
+                                <label>GBU / Arbeitsbereich *</label>
+                                <select wire:model="entlastenGbuId">
+                                    <option value="">— GBU wählen —</option>
+                                    @foreach ($gbus as $gbu)
+                                        <option value="{{ $gbu->id }}">{{ $gbu->arbeitsbereich }}</option>
+                                    @endforeach
+                                </select>
+                                @error('entlastenGbuId')<span class="err">{{ $message }}</span>@enderror
+                            </div>
+                            <div class="field">
+                                <label>Frist</label>
+                                <input type="date" wire:model="entlastenFrist" />
+                                @error('entlastenFrist')<span class="err">{{ $message }}</span>@enderror
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label>Beschreibung *</label>
+                            <textarea wire:model="entlastenBeschreibung" rows="2"></textarea>
+                            @error('entlastenBeschreibung')<span class="err">{{ $message }}</span>@enderror
+                        </div>
+                        <div style="display:flex;gap:.5rem;margin-top:.5rem">
+                            <button class="btn btn-primary btn-sm" wire:click="entlastenSpeichern">Speichern</button>
+                            <button class="btn btn-ghost btn-sm" wire:click="entlastenAbbrechen">Abbrechen</button>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        @empty
+            <p class="empty">Keine belegten Wohnbereiche — Belastungsindex nicht berechenbar.</p>
+        @endforelse
+        <p class="muted" style="margin-top:8px;font-size:.82em">Schicht-/wohnbereichsbezogen, kein Personenbezug (§ 5 Abs. 3 Nr. 6 ArbSchG Mode A). Gewichte &amp; Schwellen unter <a href="{{ route('arbeitsrecht') }}" wire:navigate>Regeln</a> einstellbar.</p>
+    </div>
+
     <div class="card" style="overflow-x:auto">
         <table class="plan">
             <thead>
