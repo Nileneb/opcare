@@ -16,6 +16,10 @@ use Tests\TestCase;
 
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
+    // WHY: Das Layout nutzt @vite (Echo/Reverb-Assets). HTTP-Tests, die eine volle Seite rendern, würden
+    // sonst eine ViteManifestNotFoundException werfen, wenn in CI kein `npm run build` lief — Asset-Bundling
+    // ist nicht Teil der PHP-Test-Pipeline. withoutVite() stubt die Direktive; Feature-Tests prüfen kein Bundling.
+    ->beforeEach(fn () => $this->withoutVite())
     ->in('Feature');
 
 /*
