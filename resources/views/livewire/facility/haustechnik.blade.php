@@ -2,9 +2,12 @@
     <div class="page-head">
         <div><p class="kicker">Haustechnik · Instandhaltung</p><h1>Haustechnik</h1>
             <p class="lead">Mängel melden und Wartungsfristen im Blick (DIN 31051).</p></div>
-        @if ($ueberfaellig > 0)
-            <span class="badge red" title="überfällige Prüfungen">{{ $ueberfaellig }} Prüfung(en) überfällig</span>
-        @endif
+        <div style="display:flex;gap:8px;align-items:center">
+            @if ($ueberfaellig > 0)
+                <span class="badge red" title="überfällige Prüfungen">{{ $ueberfaellig }} Prüfung(en) überfällig</span>
+            @endif
+            <a href="{{ route('haustechnik.stoerquellen') }}" class="btn btn-ghost btn-sm">Top-Störquellen &amp; Vorsorge →</a>
+        </div>
     </div>
     @if (session('status'))<div class="flash">{{ session('status') }}</div>@endif
 

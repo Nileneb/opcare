@@ -76,6 +76,7 @@ use App\Domains\Facility\Models\Medizinprodukt;
 use App\Domains\Facility\Models\MedizinproduktEinweisung;
 use App\Domains\Facility\Models\MedizinproduktVorkommnis;
 use App\Domains\Facility\Models\Probenahmestelle;
+use App\Domains\Facility\Models\StoerquelleVorsorge;
 use App\Domains\Facility\Models\Trinkwasseranlage;
 use App\Domains\Hygiene\Enums\BefundArt;
 use App\Domains\Hygiene\Enums\Erreger;
@@ -481,11 +482,34 @@ class DemoSeeder extends Seeder
         $hausmeister = User::create(['name' => 'Frank Kessler', 'email' => 'haustechnik@opcare.local', 'password' => Hash::make('password'), 'tenant_id' => $tenant->id]);
         $hausmeister->assignRole('haustechnik');
         $aufzug = FacilityAsset::create(['bezeichnung' => 'Aufzug Haus Aprath', 'kategorie' => AssetKategorie::Aufzug, 'standort' => 'Treppenhaus', 'norm' => 'BetrSichV', 'pruefintervall_monate' => 12, 'letzte_pruefung' => now()->subMonths(14)->toDateString()]);
-        FacilityAsset::create(['bezeichnung' => 'Brandmeldeanlage', 'kategorie' => AssetKategorie::Brandschutz, 'standort' => 'gesamt', 'norm' => 'DIN 14675', 'pruefintervall_monate' => 12, 'letzte_pruefung' => now()->subMonths(5)->toDateString()]);
+        $bma = FacilityAsset::create(['bezeichnung' => 'Brandmeldeanlage', 'kategorie' => AssetKategorie::Brandschutz, 'standort' => 'gesamt', 'norm' => 'DIN 14675', 'pruefintervall_monate' => 12, 'letzte_pruefung' => now()->subMonths(5)->toDateString()]);
         FacilityAsset::create(['bezeichnung' => 'Pflegebetten WB 1 (8 Stk.)', 'kategorie' => AssetKategorie::Medizinprodukt, 'standort' => 'Wohnbereich 1', 'norm' => 'MPBetreibV', 'pruefintervall_monate' => 24, 'letzte_pruefung' => now()->subMonths(3)->toDateString()]);
         FacilityMeldung::create(['titel' => 'Heizung Zimmer 7 wird nicht warm', 'beschreibung' => 'Thermostat reagiert nicht.', 'standort' => 'Zimmer 7', 'prioritaet' => MeldungPrioritaet::Hoch, 'gemeldet_von' => $admin->id]);
         FacilityMeldung::create(['titel' => 'Türschließer Haupteingang quietscht', 'standort' => 'Eingang EG', 'prioritaet' => MeldungPrioritaet::Niedrig, 'status' => MeldungStatus::InArbeit, 'gemeldet_von' => $sandra->id]);
         FacilityMeldung::create(['titel' => 'Wasserhahn Küche tropft', 'asset_id' => null, 'standort' => 'Küche', 'prioritaet' => MeldungPrioritaet::Mittel, 'status' => MeldungStatus::Erledigt, 'erledigt_am' => now()->subDays(2)->toDateString(), 'erledigt_notiz' => 'Dichtung getauscht.', 'gemeldet_von' => $admin->id]);
+
+        // Störquellen-Historie (für die Top-Auswertung): der Aufzug ist der häufigste Ausfall, dann die BMA.
+        $backdate = function (FacilityMeldung $m, int $tageZurueck): void {
+            $m->forceFill(['created_at' => now()->subDays($tageZurueck)])->save();
+        };
+        foreach ([[14, MeldungPrioritaet::Dringend, MeldungStatus::Erledigt], [52, MeldungPrioritaet::Hoch, MeldungStatus::Erledigt], [95, MeldungPrioritaet::Dringend, MeldungStatus::Erledigt], [140, MeldungPrioritaet::Mittel, MeldungStatus::Erledigt], [205, MeldungPrioritaet::Hoch, MeldungStatus::Erledigt], [9, MeldungPrioritaet::Dringend, MeldungStatus::Offen]] as [$tage, $prio, $status]) {
+            $m = FacilityMeldung::create(['titel' => 'Aufzug blockiert / Türstörung', 'standort' => 'Treppenhaus', 'asset_id' => $aufzug->id, 'prioritaet' => $prio, 'status' => $status, 'erledigt_am' => $status === MeldungStatus::Erledigt ? now()->subDays($tage - 1)->toDateString() : null, 'gemeldet_von' => $hausmeister->id]);
+            $backdate($m, $tage);
+        }
+        foreach ([[30, MeldungPrioritaet::Hoch], [120, MeldungPrioritaet::Mittel], [240, MeldungPrioritaet::Hoch]] as [$tage, $prio]) {
+            $m = FacilityMeldung::create(['titel' => 'Brandmelder Fehlalarm WB 2', 'standort' => 'Wohnbereich 2', 'asset_id' => $bma->id, 'prioritaet' => $prio, 'status' => MeldungStatus::Erledigt, 'erledigt_am' => now()->subDays($tage - 1)->toDateString(), 'gemeldet_von' => $hausmeister->id]);
+            $backdate($m, $tage);
+        }
+
+        // Eine Notfallvorsorge ist hinterlegt (Aufzug) — die häufige BMA-Störung bleibt bewusst eine sichtbare Lücke.
+        StoerquelleVorsorge::create([
+            'bezeichnung' => 'Aufzug Haus Aprath', 'kategorie' => AssetKategorie::Aufzug, 'asset_id' => $aufzug->id,
+            'mindest_ersatzteile' => '2× Türkontakt-Schalter, 1× Notruf-Taster, Satz Steuerungs-Sicherungen',
+            'dienstleister' => 'Aufzugswartung Müller GmbH', 'dienstleister_kontakt' => '0800 1234567 (24/7-Notruf)',
+            'reaktionszeit' => '4 h (Personeneinschluss: 1 h)', 'reaktionszeit_stunden' => 4,
+            'sofortmassnahmen' => ['Bei Personeneinschluss sofort Notruf des Dienstleisters + Bewohner beruhigen, Sprechkontakt halten', 'Aufzug außer Betrieb nehmen + beide Etagen sichtbar absperren', 'Betroffene Transporte über zweiten Aufzug / Tragehilfe organisieren'],
+            'notiz' => 'Wartungsvertrag mit fixierter Reaktionszeit liegt in der Leitung.',
+        ]);
 
         // Medizinprodukte (MPBetreibV § 13/§ 14): Bestandsverzeichnis + Medizinproduktebuch mit STK/MTK-Ampel.
         $defi = Medizinprodukt::create(['bezeichnung' => 'Defibrillator (AED)', 'typ' => 'HeartStart FRx', 'hersteller' => 'Philips', 'seriennummer' => 'A21J-00847', 'inventarnummer' => 'MP-001', 'anschaffungsjahr' => 2021, 'standort' => 'Foyer EG', 'zuordnung' => 'gesamt', 'anlage' => MpAnlage::Anlage1, 'inbetriebnahme_am' => '2021-03-01', 'stk_intervall_monate' => 24, 'letzte_stk' => now()->subMonths(26)->toDateString()]); // STK überfällig → rot
