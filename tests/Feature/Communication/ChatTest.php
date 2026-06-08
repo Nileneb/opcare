@@ -484,3 +484,13 @@ it('Channel-Auth: fremder Tenant → Konversation nicht gefunden', function () {
 
     expect($konversation)->toBeNull();
 });
+
+it('letzteNachricht liefert die NEUESTE Nachricht (nicht die älteste)', function () {
+    $konv = Konversation::create(['tenant_id' => $this->tenant->id, 'typ' => KonversationTyp::Gruppe, 'titel' => 'Team']);
+    $alt = Nachricht::create(['tenant_id' => $this->tenant->id, 'konversation_id' => $konv->id, 'user_id' => $this->alice->id, 'inhalt' => 'ALT']);
+    $alt->forceFill(['created_at' => now()->subHours(2)])->saveQuietly();
+    $neu = Nachricht::create(['tenant_id' => $this->tenant->id, 'konversation_id' => $konv->id, 'user_id' => $this->alice->id, 'inhalt' => 'NEU']);
+    $neu->forceFill(['created_at' => now()])->saveQuietly();
+
+    expect($konv->letzteNachricht()?->inhalt)->toBe('NEU');
+});

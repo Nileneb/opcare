@@ -79,9 +79,11 @@ class Konversation extends Model
 
     public function letzteNachricht(): ?Nachricht
     {
+        // WHY: nachrichten() trägt orderBy('created_at') ASC — reorder() verwirft das, sonst gewinnt
+        // die ASC-Klausel und ->latest() liefert die ÄLTESTE statt der neuesten Nachricht.
         return $this->nachrichten()
             ->whereNull('geloescht_am')
-            ->latest()
+            ->reorder('created_at', 'desc')
             ->first();
     }
 
