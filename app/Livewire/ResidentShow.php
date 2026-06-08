@@ -314,9 +314,13 @@ class ResidentShow extends Component
         $def = StatusObservationCatalog::get($this->so_typ);
         abort_if($def === null, 422);
 
-        if (($def['kind'] ?? 'coded') === 'coded') {
+        $kind = $def['kind'] ?? 'coded';
+        if ($kind === 'coded') {
             $this->validate(['so_wert_code' => ['required', Rule::in(array_keys($def['options']))]]);
             $wert = ['wert_code' => $this->so_wert_code, 'wert_text' => null];
+        } elseif ($kind === 'datetime') {
+            $this->validate(['so_wert_text' => ['required', 'date']]);
+            $wert = ['wert_code' => null, 'wert_text' => $this->so_wert_text];
         } else {
             $this->validate(['so_wert_text' => ['required', 'string', 'max:255']]);
             $wert = ['wert_code' => null, 'wert_text' => $this->so_wert_text];

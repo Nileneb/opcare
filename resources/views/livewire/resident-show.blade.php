@@ -136,6 +136,8 @@
                                     <option value="">– wählen –</option>
                                     @foreach ($statusCatalog[$so_typ]['options'] as $code => $label)<option value="{{ $code }}">{{ $label }}</option>@endforeach
                                 </select>@error('so_wert_code')<span class="err">{{ $message }}</span>@enderror
+                            @elseif (($statusCatalog[$so_typ]['kind'] ?? 'coded') === 'datetime')
+                                <input type="datetime-local" wire:model="so_wert_text" />@error('so_wert_text')<span class="err">{{ $message }}</span>@enderror
                             @else
                                 <input type="text" wire:model="so_wert_text" placeholder="z. B. ruhig, unauffällig" />@error('so_wert_text')<span class="err">{{ $message }}</span>@enderror
                             @endif

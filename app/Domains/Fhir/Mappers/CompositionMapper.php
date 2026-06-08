@@ -77,6 +77,14 @@ class CompositionMapper
             ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '363787002:704326004=21134002', 'display' => 'Observable entity (observable entity) : Precondition (attribute) = Disability (finding)'],
             'Grad der Behinderung',
         ],
+        'zeitpunktLetzteMiktion' => [
+            ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '364201005:370134009=57615005', 'display' => 'Urine output observable (observable entity) : Time aspect (attribute) = Definite time (qualifier value)'],
+            'Zeitpunkt der letzten Miktion',
+        ],
+        'zeitpunktLetzterStuhlgang' => [
+            ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '364171004:370134009=57615005', 'display' => 'Defecation observable (observable entity) : Time aspect (attribute) = Definite time (qualifier value)'],
+            'Zeitpunkt des letzten Stuhlgangs',
+        ],
         'harnkontinenzDifferenzierteEinschaetzung' => [
             ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '129009001', 'display' => 'Bladder control, function (observable entity)'],
             'Harnkontinenz differenzierte Einschätzung',

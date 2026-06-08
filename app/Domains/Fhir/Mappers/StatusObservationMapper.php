@@ -4,6 +4,7 @@ namespace App\Domains\Fhir\Mappers;
 
 use App\Domains\Masterdata\Models\ResidentStatusObservation;
 use App\Domains\Masterdata\Support\StatusObservationCatalog;
+use Illuminate\Support\Carbon;
 
 /**
  * Mappt erfasste Status-Beobachtungen (ResidentStatusObservation) auf ihre konkreten ÜLB-Observation-Profile:
@@ -44,11 +45,14 @@ class StatusObservationMapper
             'performer' => [['reference' => $performerReference]],
         ];
 
-        // WHY(ÜLB): manche Profile (z. B. Respiratory_Access) binden effective[x] auf Period statt dateTime.
-        if (($def['effective'] ?? 'dateTime') === 'period') {
-            $resource['effectivePeriod'] = ['start' => $effective];
-        } else {
-            $resource['effectiveDateTime'] = $effective;
+        // WHY(ÜLB): Zeitpunkt-Profile (Last_Micturition/Last_Bowel_Movement) verbieten effective[x] (max=0) —
+        // der Zeitpunkt steckt in valueDateTime. Andere Profile binden effective[x] teils auf Period statt dateTime.
+        if ($def['kind'] !== 'datetime') {
+            if (($def['effective'] ?? 'dateTime') === 'period') {
+                $resource['effectivePeriod'] = ['start' => $effective];
+            } else {
+                $resource['effectiveDateTime'] = $effective;
+            }
         }
 
         if ($def['kind'] === 'text') {
@@ -63,6 +67,14 @@ class StatusObservationMapper
                 return null;
             }
             $resource['valueCodeableConcept'] = ['text' => (string) $obs->wert_text];
+        } elseif ($def['kind'] === 'datetime') {
+            // WHY(ÜLB): Last_Micturition/Last_Bowel_Movement binden value auf dateTime (Zeitpunkt).
+            // Carbon normalisiert die UI-Eingabe (datetime-local) auf ein FHIR-konformes dateTime
+            // (mit Sekunden + Zeitzone — sonst Constraint-Verstoß).
+            if (($obs->wert_text ?? '') === '') {
+                return null;
+            }
+            $resource['valueDateTime'] = Carbon::parse((string) $obs->wert_text)->toIso8601String();
         } else {
             $display = $def['value_displays'][$obs->wert_code] ?? null;
             if ($obs->wert_code === null || $display === null) {

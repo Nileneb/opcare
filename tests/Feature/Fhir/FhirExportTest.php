@@ -306,6 +306,26 @@ it('mappt Patientenwunsch/Verhalten (Freitext→CodeableConcept) und Grad der Be
     expect($titles)->toContain('Patientenwunsch')->toContain('Auffälliges Verhalten')->toContain('Grad der Behinderung');
 });
 
+it('mappt Zeitpunkt-Beobachtungen auf valueDateTime ohne effective[x] (Last_Micturition/Bowel_Movement)', function () {
+    $this->resident->statusObservations()->create(['typ' => 'zeitpunkt_letzte_miktion', 'wert_text' => '2026-06-01T08:30', 'erfasst_am' => '2026-06-01']);
+    $this->resident->statusObservations()->create(['typ' => 'zeitpunkt_letzter_stuhlgang', 'wert_text' => '2026-05-31T20:00', 'erfasst_am' => '2026-06-01']);
+
+    $bundle = app(FhirDocumentExporter::class)->export($this->resident);
+    $resources = collect($bundle['entry'])->pluck('resource');
+    $profileOf = fn (string $needle) => $resources->first(fn ($r) => isset($r['meta']['profile'][0]) && str_contains($r['meta']['profile'][0], $needle));
+
+    $miktion = $profileOf('Observation_Last_Micturition');
+    // WHY(ÜLB): Zeitpunkt-Profile verbieten effective[x] (max=0); der Zeitpunkt steht in valueDateTime (FHIR-konform).
+    expect($miktion)->not->toBeNull()
+        ->and($miktion)->not->toHaveKey('effectiveDateTime')
+        ->and($miktion)->not->toHaveKey('effectivePeriod')
+        ->and($miktion['valueDateTime'])->toStartWith('2026-06-01T08:30:00')
+        ->and($profileOf('Observation_Last_Bowel_Movement')['valueDateTime'])->toStartWith('2026-05-31T20:00:00');
+
+    $titles = collect($bundle['entry'][0]['resource']['section'])->pluck('title')->all();
+    expect($titles)->toContain('Zeitpunkt der letzten Miktion')->toContain('Zeitpunkt des letzten Stuhlgangs');
+});
+
 it('exportiert pro Status-Typ nur die jüngste Erfassung (Sektion max=1)', function () {
     $this->resident->statusObservations()->create(['typ' => 'bewusstsein', 'wert_code' => '371632003', 'erfasst_am' => '2026-01-01']);
     $this->resident->statusObservations()->create(['typ' => 'bewusstsein', 'wert_code' => '271591004', 'erfasst_am' => '2026-06-01']);

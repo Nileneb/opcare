@@ -120,6 +120,20 @@ class StatusObservationCatalog
                 'fhir_code' => ['363896009:704326004=25786006', 'Behavior observable (observable entity) : Precondition (attribute) = Abnormal behavior (finding)'],
                 'options' => [],
             ],
+            'zeitpunkt_letzte_miktion' => [
+                'label' => 'Zeitpunkt der letzten Miktion', 'section' => 'Kontinenz', 'kind' => 'datetime',
+                'code' => ['364201005', 'Letzte Miktion'],
+                'profile' => 'Observation_Last_Micturition', 'slice' => 'zeitpunktLetzteMiktion',
+                'fhir_code' => ['364201005:370134009=57615005', 'Urine output observable (observable entity) : Time aspect (attribute) = Definite time (qualifier value)'],
+                'options' => [],
+            ],
+            'zeitpunkt_letzter_stuhlgang' => [
+                'label' => 'Zeitpunkt des letzten Stuhlgangs', 'section' => 'Kontinenz', 'kind' => 'datetime',
+                'code' => ['364171004', 'Letzter Stuhlgang'],
+                'profile' => 'Observation_Last_Bowel_Movement', 'slice' => 'zeitpunktLetzterStuhlgang',
+                'fhir_code' => ['364171004:370134009=57615005', 'Defecation observable (observable entity) : Time aspect (attribute) = Definite time (qualifier value)'],
+                'options' => [],
+            ],
             'grad_der_behinderung' => [
                 'label' => 'Grad der Behinderung', 'section' => 'Soziales', 'kind' => 'coded',
                 'code' => ['21134002', 'Grad der Behinderung'],
