@@ -5,6 +5,7 @@ namespace App\Livewire\Arbeitsschutz;
 use App\Domains\Arbeitsschutz\Enums\GbuStatus;
 use App\Domains\Arbeitsschutz\Enums\Gefaehrdungsfaktor;
 use App\Domains\Arbeitsschutz\Enums\Massnahmentyp;
+use App\Domains\Arbeitsschutz\Models\Belastungsmeldung;
 use App\Domains\Arbeitsschutz\Models\Gefaehrdung;
 use App\Domains\Arbeitsschutz\Models\Gefaehrdungsbeurteilung as GbuModel;
 use App\Domains\Arbeitsschutz\Models\Schutzmassnahme;
@@ -230,13 +231,36 @@ class Gefaehrdungsbeurteilung extends Component
         session()->flash('status', 'GBU fortgeschrieben.');
     }
 
+    public function meldungQuittieren(int $id): void
+    {
+        $u = auth()->user();
+        abort_unless($u && ($u->isSuperAdmin() || $u->hasAnyRole(['admin', 'pflegefachkraft'])), 403);
+
+        // WHY(IDOR): ID kommt als Methodenparameter — tenant-scoped findOrFail.
+        $meldung = Belastungsmeldung::where('tenant_id', app(CurrentTenant::class)->id())
+            ->findOrFail($id);
+
+        $meldung->quittiert_am = today();
+        $meldung->quittiert_von = auth()->id();
+        $meldung->save();
+
+        session()->flash('status', 'Belastungsmeldung "'.$meldung->wohnbereich.'" quittiert.');
+    }
+
     public function render(GbuMonitor $monitor)
     {
+        $tenantId = app(CurrentTenant::class)->id();
+
         return view('livewire.arbeitsschutz.gefaehrdungsbeurteilung', [
             'beurteilungen' => $monitor->status(),
             'faktoren' => Gefaehrdungsfaktor::cases(),
             'massnahmentypen' => Massnahmentyp::cases(),
             'ueberfaellig' => $monitor->ueberfaelligeAnzahl(),
+            'belastungsmeldungen' => Belastungsmeldung::where('tenant_id', $tenantId)
+                ->whereNull('quittiert_am')
+                ->with('schutzmassnahme')
+                ->latest('gemeldet_am')
+                ->get(),
         ]);
     }
 }

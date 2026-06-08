@@ -12,6 +12,50 @@
 
     @if (session('status'))<div class="flash">{{ session('status') }}</div>@endif
 
+    {{-- Belastungsmeldungen (§ 5 ArbSchG live) --}}
+    <div class="card">
+        <div class="card-head">
+            <h3>Belastungsmeldungen (§ 5 ArbSchG live)</h3>
+            <span class="badge {{ $belastungsmeldungen->isEmpty() ? 'green' : 'red' }}">
+                {{ $belastungsmeldungen->isEmpty() ? 'Keine offenen Meldungen' : $belastungsmeldungen->count().' offen' }}
+            </span>
+        </div>
+        @forelse ($belastungsmeldungen as $m)
+            <div style="border:1px solid #fee2e2;border-radius:4px;padding:.75rem;margin-bottom:.75rem;background:#fff7f7">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem">
+                    <div>
+                        <strong>{{ $m->wohnbereich }}</strong>
+                        <span class="badge {{ $m->stufe->ampel() === 'green' ? 'green' : ($m->stufe->ampel() === 'amber' ? 'amber' : 'red') }}" style="margin-left:.5rem">
+                            {{ $m->stufe->label() }}
+                        </span>
+                        <span class="muted" style="font-size:.85em;margin-left:.4rem">Score {{ $m->score }}/100</span>
+                        <span class="muted" style="font-size:.82em;margin-left:.4rem">gemeldet {{ $m->gemeldet_am->format('d.m.Y') }}</span>
+                    </div>
+                    <button class="btn btn-primary btn-sm" wire:click="meldungQuittieren({{ $m->id }})" wire:confirm="Meldung quittieren?">
+                        Quittieren
+                    </button>
+                </div>
+                <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem">
+                    @foreach ($m->signale as $label => $wert)
+                        <span class="badge gray" style="font-size:.8em"><b>{{ $label }}:</b> {{ $wert }}</span>
+                    @endforeach
+                </div>
+                @if ($m->schutzmassnahme)
+                    <p class="muted" style="font-size:.85em;margin-top:.4rem">
+                        Entlastungsmaßnahme: {{ $m->schutzmassnahme->beschreibung }}
+                        @if ($m->schutzmassnahme->frist)
+                            · Frist: {{ $m->schutzmassnahme->frist->format('d.m.Y') }}
+                        @endif
+                    </p>
+                @else
+                    <p class="muted" style="font-size:.85em;margin-top:.4rem">Noch keine Entlastungsmaßnahme verknüpft — im Dienstplan „Entlasten" klicken.</p>
+                @endif
+            </div>
+        @empty
+            <p class="empty">Keine offenen Belastungsmeldungen.</p>
+        @endforelse
+    </div>
+
     {{-- GBU anlegen --}}
     <div class="card">
         <div class="card-head"><h3>GBU anlegen</h3><span class="badge gray">§ 5 / § 6 ArbSchG</span></div>

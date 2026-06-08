@@ -70,6 +70,24 @@
         <button class="btn btn-primary btn-sm" wire:click="staffingSpeichern">Speichern</button>
     </div>
 
+    <h2 style="margin-top:28px">Belastungs-Index — Gewichte &amp; Schwellen (§ 5 ArbSchG)</h2>
+    <p class="muted" style="margin-bottom:12px">Konfiguration des psychischen Belastungsindex je Einrichtung. Gewichte müssen nicht 100 ergeben — der Analyzer normiert automatisch. Schwellen bestimmen ab welchem Score Stufe „Hoch" bzw. „Kritisch" (= meldepflichtig) ausgelöst wird.</p>
+    <div class="card">
+        <div class="card-head"><h3>Gewichte (0–100)</h3><span class="badge gray">§ 5 Abs. 3 Nr. 6 ArbSchG</span></div>
+        <div class="form-row-2">
+            <div class="field"><label>Pflegelast</label><input type="number" min="0" max="100" wire:model="bk_gewicht_pflegelast" />@error('bk_gewicht_pflegelast')<span class="err">{{ $message }}</span>@enderror</div>
+            <div class="field"><label>Personaldeckung</label><input type="number" min="0" max="100" wire:model="bk_gewicht_deckung" />@error('bk_gewicht_deckung')<span class="err">{{ $message }}</span>@enderror</div>
+            <div class="field"><label>Spitzenzeit</label><input type="number" min="0" max="100" wire:model="bk_gewicht_spitzenzeit" />@error('bk_gewicht_spitzenzeit')<span class="err">{{ $message }}</span>@enderror</div>
+            <div class="field"><label>Ergonomie</label><input type="number" min="0" max="100" wire:model="bk_gewicht_ergonomie" />@error('bk_gewicht_ergonomie')<span class="err">{{ $message }}</span>@enderror</div>
+        </div>
+        <div class="card-head" style="margin-top:1rem"><h3>Schwellen</h3></div>
+        <div class="form-row-2">
+            <div class="field"><label>Schwelle „Hoch" (Score ≥)</label><input type="number" min="0" max="100" wire:model="bk_schwelle_hoch" />@error('bk_schwelle_hoch')<span class="err">{{ $message }}</span>@enderror</div>
+            <div class="field"><label>Schwelle „Kritisch" (Score ≥)</label><input type="number" min="0" max="100" wire:model="bk_schwelle_kritisch" />@error('bk_schwelle_kritisch')<span class="err">{{ $message }}</span>@enderror</div>
+        </div>
+        <button class="btn btn-primary btn-sm" wire:click="belastungsKonfigSpeichern">Speichern</button>
+    </div>
+
     <h2 style="margin-top:28px">Ergonomie-Empfehlungen (Schichtgestaltung)</h2>
     <p class="muted" style="margin-bottom:12px">Arbeitswissenschaftliche Empfehlungen (§ 6 ArbZG, BAuA/BGHM/DGAUM) —
         der harten ArbZG-Prüfung nachgelagert. An-/abschaltbar, Schwellwerte anpassbar.</p>

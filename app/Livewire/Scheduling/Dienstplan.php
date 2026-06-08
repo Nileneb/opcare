@@ -2,12 +2,19 @@
 
 namespace App\Livewire\Scheduling;
 
+use App\Domains\Arbeitsschutz\Models\Belastungsmeldung;
+use App\Domains\Arbeitsschutz\Models\Gefaehrdungsbeurteilung;
+use App\Domains\Arbeitsschutz\Services\BelastungMelden;
+use App\Domains\Arbeitsschutz\Services\BelastungsAnalyzer;
+use App\Domains\Arbeitsschutz\Services\EntlastungErgreifen;
 use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Support\CurrentTenant;
 use App\Domains\Scheduling\Actions\AssignShift;
 use App\Domains\Scheduling\Compliance\ArbeitszeitgesetzDefaults;
 use App\Domains\Scheduling\Compliance\Betreuungsschluessel;
 use App\Domains\Scheduling\Compliance\ComplianceReporter;
+use App\Domains\Scheduling\Compliance\Data\QualityFinding;
+use App\Domains\Scheduling\Compliance\Data\StaffingAnalysis;
 use App\Domains\Scheduling\Compliance\ScheduleQualityAnalyzer;
 use App\Domains\Scheduling\Compliance\ScheduleQualityDefaults;
 use App\Domains\Scheduling\Compliance\WorkingHoursAnalyzer;
@@ -40,6 +47,15 @@ class Dienstplan extends Component
     public ?string $begruendeKey = null;
 
     public string $grund = '';
+
+    // Entlasten-Dialog state
+    public ?int $entlastenStation = null;
+
+    public ?int $entlastenGbuId = null;
+
+    public string $entlastenBeschreibung = '';
+
+    public string $entlastenFrist = '';
 
     public function mount(): void
     {
@@ -162,6 +178,136 @@ class Dienstplan extends Component
         $this->grund = '';
     }
 
+    public function leitungMelden(?int $stationId): void
+    {
+        abort_unless(auth()->user()?->can('manage', Shift::class), 403);
+
+        $tenantId = app(CurrentTenant::class)->id();
+        $staffing = $this->berechneStaffingFuerMelden($tenantId);
+        $qualityFindings = $this->berechneQualityFindingsFuerMelden($tenantId);
+
+        $befunde = app(BelastungsAnalyzer::class)->analysiere($tenantId, $staffing, $qualityFindings);
+        $befund = $befunde->first(fn ($b) => $b->stationId === $stationId);
+
+        if ($befund === null) {
+            session()->flash('status', 'Kein Befund für diese Station gefunden.');
+
+            return;
+        }
+
+        $result = app(BelastungMelden::class)->handle($befund);
+
+        if ($result === null) {
+            session()->flash('status', 'Meldung bereits vorhanden oder Stufe nicht meldepflichtig.');
+        } else {
+            session()->flash('status', 'Belastungsmeldung fuer "'.$befund->wohnbereich.'" angelegt.');
+        }
+    }
+
+    public function entlasten(int $stationId): void
+    {
+        abort_unless(auth()->user()?->can('manage', Shift::class), 403);
+
+        $this->entlastenStation = $stationId;
+        $this->entlastenGbuId = null;
+        $this->entlastenBeschreibung = 'Entlastungsmaßnahme aus Dienstplan-Belastungsindex';
+        $this->entlastenFrist = '';
+    }
+
+    public function entlastenAbbrechen(): void
+    {
+        $this->entlastenStation = null;
+        $this->entlastenGbuId = null;
+        $this->entlastenBeschreibung = '';
+        $this->entlastenFrist = '';
+    }
+
+    public function entlastenSpeichern(): void
+    {
+        abort_unless(auth()->user()?->can('manage', Shift::class), 403);
+
+        $tenantId = app(CurrentTenant::class)->id();
+
+        $data = $this->validate([
+            'entlastenGbuId' => ['required', Rule::exists('gefaehrdungsbeurteilungen', 'id')->where('tenant_id', $tenantId)],
+            'entlastenBeschreibung' => ['required', 'string', 'min:5', 'max:500'],
+            'entlastenFrist' => ['nullable', 'date'],
+        ]);
+
+        // WHY(IDOR): GBU tenant-scoped prüfen, obwohl Rule::exists bereits filtert — defense in depth.
+        $gbu = Gefaehrdungsbeurteilung::where('tenant_id', $tenantId)->findOrFail((int) $data['entlastenGbuId']);
+
+        // Offene Meldung der Station laden oder neu anlegen
+        $meldung = Belastungsmeldung::where('tenant_id', $tenantId)
+            ->where('station_id', $this->entlastenStation)
+            ->whereNull('quittiert_am')
+            ->latest('gemeldet_am')
+            ->first();
+
+        if ($meldung === null) {
+            $staffing = $this->berechneStaffingFuerMelden($tenantId);
+            $qualityFindings = $this->berechneQualityFindingsFuerMelden($tenantId);
+            $befunde = app(BelastungsAnalyzer::class)->analysiere($tenantId, $staffing, $qualityFindings);
+            $befund = $befunde->first(fn ($b) => $b->stationId === $this->entlastenStation);
+
+            if ($befund === null || ! $befund->stufe->istMeldepflichtig()) {
+                session()->flash('status', 'Keine offene Meldung und Stufe nicht meldepflichtig — Entlasten nicht möglich.');
+
+                return;
+            }
+
+            $meldung = app(BelastungMelden::class)->handle($befund);
+        }
+
+        app(EntlastungErgreifen::class)->handle(
+            $meldung,
+            $gbu,
+            $data['entlastenBeschreibung'],
+            $data['entlastenFrist'] ?: null,
+        );
+
+        $this->entlastenAbbrechen();
+        session()->flash('status', 'Entlastungsmaßnahme angelegt und Meldung verknüpft.');
+    }
+
+    // WHY: render() berechnet StaffingAnalysis mit Wochendaten — leitungMelden/entlastenSpeichern
+    // brauchen denselben Stand; diese Hilfsmethoden duplizieren die render()-Logik minimal, um
+    // unabhängig von render() aufgerufen werden zu können (Livewire actions laufen ohne render).
+    private function berechneStaffingFuerMelden(int $tenantId): StaffingAnalysis
+    {
+        $start = CarbonImmutable::parse($this->weekStart);
+        $von = $start->toDateString();
+        $bis = $start->addDays(6)->toDateString();
+
+        $users = User::where('tenant_id', $tenantId)->with('employeeProfile')->get();
+        $assignments = ShiftAssignment::with(['user', 'shift'])->whereBetween('dienst_am', [$von, $bis])->get();
+        $geplant = [];
+        foreach ($assignments as $a) {
+            if ($a->shift) {
+                $geplant[$a->user_id] = ($geplant[$a->user_id] ?? 0) + WorkingHoursAnalyzer::stunden($a->shift->beginn, $a->shift->ende);
+            }
+        }
+        $fachkraftIds = $users->filter(fn (User $u) => $u->employeeProfile?->qualifikation?->istFachkraft() ?? false)->pluck('id')->all();
+        $istGesamt = array_sum($geplant);
+        $istFachkraft = collect($geplant)->filter(fn ($h, $uid) => in_array($uid, $fachkraftIds, true))->sum();
+
+        return app(Betreuungsschluessel::class)->analysiere($tenantId, (float) $istGesamt, (float) $istFachkraft);
+    }
+
+    /** @return array<int, QualityFinding> */
+    private function berechneQualityFindingsFuerMelden(int $tenantId): array
+    {
+        $start = CarbonImmutable::parse($this->weekStart);
+        $von = $start->toDateString();
+        $bis = $start->addDays(6)->toDateString();
+        $days = collect(range(0, 6))->map(fn (int $i) => $start->addDays($i)->toDateString())->all();
+
+        $assignments = ShiftAssignment::with(['user', 'shift'])->whereBetween('dienst_am', [$von, $bis])->get();
+        $qualityRules = ScheduleQualityDefaults::ensureFor($tenantId);
+
+        return app(ScheduleQualityAnalyzer::class)->findings($assignments, $qualityRules, $days);
+    }
+
     public function render()
     {
         $tenantId = app(CurrentTenant::class)->id();
@@ -222,6 +368,9 @@ class Dienstplan extends Component
             $qualityByUser[$qf->userId][] = $qf;
         }
 
+        $belastung = app(BelastungsAnalyzer::class)->analysiere($tenantId, $staffing, $qualityFindings);
+        $gbus = Gefaehrdungsbeurteilung::where('tenant_id', $tenantId)->orderBy('arbeitsbereich')->get();
+
         return view('livewire.scheduling.dienstplan', [
             'staffing' => $staffing,
             'qualityByUser' => $qualityByUser,
@@ -237,6 +386,8 @@ class Dienstplan extends Component
             'findingsByUser' => $findingsByUser,
             'marks' => $marks,
             'offeneVerstoesse' => collect($findings)->filter(fn ($f) => $f->offenerVerstoss())->count(),
+            'belastung' => $belastung,
+            'gbus' => $gbus,
         ]);
     }
 }
