@@ -76,7 +76,7 @@
 
                 {{-- Erledigt melden --}}
                 <details style="margin-top:.5rem">
-                    <summary class="btn btn-sm" style="cursor:pointer;display:inline-block">&#10003; Erledigt melden</summary>
+                    <summary class="btn btn-ghost btn-sm" style="cursor:pointer;display:inline-block">&#10003; Erledigt melden</summary>
                     <form wire:submit="erledigen({{ $aufgabe->id }})" style="margin-top:.75rem">
                         <div class="form-row-3">
                             <div class="field">

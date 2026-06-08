@@ -79,14 +79,7 @@
         @endcan
         @unless ($istPortal)
             @php($votingActive = request()->routeIs('abstimmungen'))
-            <div class="nav-menu" x-data="{ open: false }" @keydown.escape="open = false">
-                <button type="button" class="nav-menu-btn {{ $votingActive ? 'is-active' : '' }}" @click="open = !open" :aria-expanded="open">
-                    Beteiligung <span class="nav-caret">▾</span>
-                </button>
-                <div class="nav-menu-panel" x-show="open" x-transition @click.outside="open = false" x-cloak>
-                    <a href="{{ route('abstimmungen') }}" @class(['is-active' => request()->routeIs('abstimmungen')])>Abstimmungen</a>
-                </div>
-            </div>
+            <a href="{{ route('abstimmungen') }}" @class(['is-active' => $votingActive])>Abstimmungen</a>
             @php($kalenderActive = request()->routeIs('kalender','zeiterfassung','wunschdienstplan','tauschboerse','energiebarometer','haustechnik','medizinprodukte','trinkwasser','brandschutz','quality.beschwerden','kueche','haccp','reinigungsplan'))
             <div class="nav-menu" x-data="{ open: false }" @keydown.escape="open = false">
                 <button type="button" class="nav-menu-btn {{ $kalenderActive ? 'is-active' : '' }}" @click="open = !open" :aria-expanded="open">
@@ -161,7 +154,7 @@
             </div>
         @endif
         @unless ($istPortal)
-            <a href="{{ route('chat') }}" @class(['app-nav-link', 'is-active' => request()->routeIs('chat')]) style="font-size:.95em">💬 Chat</a>
+            <a href="{{ route('chat') }}" @class(['nav-menu-btn', 'is-active' => request()->routeIs('chat')])>💬 Chat</a>
         @endunless
         <div class="app-user">
             @auth @livewire('notification-bell') @livewire('communication.chat-glocke') @endauth

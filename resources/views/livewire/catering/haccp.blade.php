@@ -104,7 +104,7 @@
 
                 {{-- Messung erfassen --}}
                 <details style="margin-top:.5rem">
-                    <summary class="btn btn-sm" style="cursor:pointer;display:inline-block">+ Messung erfassen</summary>
+                    <summary class="btn btn-ghost btn-sm" style="cursor:pointer;display:inline-block">+ Messung erfassen</summary>
                     <form wire:submit="messungErfassen({{ $mp->id }})" style="margin-top:.75rem">
                         <div class="form-row-3">
                             <div class="field">

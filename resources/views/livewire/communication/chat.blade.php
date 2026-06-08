@@ -1,7 +1,7 @@
-<div wire:poll.10s style="display:flex;height:calc(100vh - 80px);gap:0;overflow:hidden">
+<div wire:poll.10s class="chat-layout">
 
     {{-- Sidebar: Konversationsliste --}}
-    <aside style="width:280px;min-width:220px;border-right:1px solid var(--line-cool,#ddd);display:flex;flex-direction:column;overflow:hidden">
+    <aside class="chat-sidebar">
         <div style="padding:12px 12px 8px;border-bottom:1px solid var(--line-cool,#eee)">
             <b style="font-size:1.05em">Nachrichten</b>
         </div>
@@ -45,37 +45,49 @@
 
             @if ($neuModus === 'direkt')
                 <form wire:submit="dmStarten" style="display:flex;flex-direction:column;gap:6px">
-                    <select wire:model="dmPartner" class="form-control" style="font-size:.9em">
-                        <option value="">Kolleg:in wählen…</option>
-                        @foreach ($kollegen as $k)
-                            <option value="{{ $k->id }}">{{ $k->name }}</option>
-                        @endforeach
-                    </select>
+                    <div class="field" style="margin-bottom:0">
+                        <label>Kolleg:in wählen</label>
+                        <select wire:model="dmPartner">
+                            <option value="">Kolleg:in wählen…</option>
+                            @foreach ($kollegen as $k)
+                                <option value="{{ $k->id }}">{{ $k->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                     <button type="submit" class="btn btn-primary btn-sm">Öffnen</button>
                 </form>
             @endif
 
             @if ($neuModus === 'gruppe')
                 <form wire:submit="gruppeAnlegen" style="display:flex;flex-direction:column;gap:6px">
-                    @error('gruppeTitel') <span class="text-danger" style="font-size:.82em">{{ $message }}</span> @enderror
-                    <input type="text" wire:model="gruppeTitel" placeholder="Gruppen-Titel" class="form-control" style="font-size:.9em" maxlength="120" />
-                    <select wire:model="gruppeMitglieder" multiple class="form-control" style="font-size:.85em;height:90px">
-                        @foreach ($kollegen as $k)
-                            <option value="{{ $k->id }}">{{ $k->name }}</option>
-                        @endforeach
-                    </select>
+                    @error('gruppeTitel') <span class="field"><span class="err">{{ $message }}</span></span> @enderror
+                    <div class="field" style="margin-bottom:0">
+                        <label>Gruppen-Titel</label>
+                        <input type="text" wire:model="gruppeTitel" placeholder="Gruppen-Titel" maxlength="120" />
+                    </div>
+                    <div class="field" style="margin-bottom:0">
+                        <label>Mitglieder</label>
+                        <select wire:model="gruppeMitglieder" multiple style="height:90px">
+                            @foreach ($kollegen as $k)
+                                <option value="{{ $k->id }}">{{ $k->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                     <button type="submit" class="btn btn-primary btn-sm">Gruppe anlegen</button>
                 </form>
             @endif
 
             @if ($neuModus === 'station')
                 <form wire:submit="stationBeitreten" style="display:flex;flex-direction:column;gap:6px">
-                    <select wire:model="stationWahl" class="form-control" style="font-size:.9em">
-                        <option value="">Station wählen…</option>
-                        @foreach ($stationen as $s)
-                            <option value="{{ $s->id }}">{{ $s->name }}</option>
-                        @endforeach
-                    </select>
+                    <div class="field" style="margin-bottom:0">
+                        <label>Station wählen</label>
+                        <select wire:model="stationWahl">
+                            <option value="">Station wählen…</option>
+                            @foreach ($stationen as $s)
+                                <option value="{{ $s->id }}">{{ $s->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                     <button type="submit" class="btn btn-primary btn-sm">Beitreten</button>
                 </form>
             @endif
@@ -83,7 +95,7 @@
     </aside>
 
     {{-- Thread-Bereich --}}
-    <main style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <main class="chat-thread">
         @if (session('status'))
             <div class="alert alert-success" style="margin:8px 12px;flex-shrink:0">{{ session('status') }}</div>
         @endif
