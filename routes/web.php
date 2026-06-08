@@ -37,6 +37,7 @@ use App\Livewire\Compliance\Datenschutz;
 use App\Livewire\Facility;
 use App\Livewire\Facility\Haustechnik;
 use App\Livewire\Facility\Medizinprodukte;
+use App\Livewire\Facility\Stoerquellen;
 use App\Livewire\Facility\Trinkwasser;
 use App\Livewire\Hygiene\Hygiene;
 use App\Livewire\Import\Datenimport;
@@ -142,6 +143,7 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class, Restrict
     Route::get('/spitzenzeiten', Spitzenzeiten::class)->name('spitzenzeiten');
     Route::get('/kalender', Kalender::class)->name('kalender');
     Route::get('/haustechnik', Haustechnik::class)->name('haustechnik');
+    Route::get('/haustechnik/stoerquellen', Stoerquellen::class)->name('haustechnik.stoerquellen');
     Route::get('/medizinprodukte', Medizinprodukte::class)->name('medizinprodukte');
     Route::get('/trinkwasser', Trinkwasser::class)->name('trinkwasser');
     Route::get('/brandschutz', BrandschutzScreen::class)->name('brandschutz');

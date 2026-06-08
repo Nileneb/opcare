@@ -34,6 +34,7 @@ const pages = [
     ['spitzenzeiten', '/spitzenzeiten', true],
     ['zeiterfassung', '/zeiterfassung', true],
     ['haustechnik', '/haustechnik', true],
+    ['stoerquellen', '/haustechnik/stoerquellen', true],
     ['medizinprodukte', '/medizinprodukte', true],
     ['trinkwasser', '/trinkwasser', true],
     ['kueche', '/kueche', true],
