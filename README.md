@@ -6,7 +6,7 @@ Qualitätssicherung (QDVS/DAS-Pflege)** und **FHIR / ÜLB-MIO** (Pflegeüberleit
 des eingestellten Java-Projekts **[Offene-Pflege.de (OPDE)](#herkunft)** — dessen Domänenwissen dient als
 Vorlage, der Code ist von Grund auf neu.
 
-> **Status:** Funktionsfähig und aktiv in Entwicklung. **1043 Tests grün**, CI durchgehend grün
+> **Status:** Funktionsfähig und aktiv in Entwicklung. **1115 Tests grün**, CI durchgehend grün
 > (Tests · Linter · Security-Audit · FHIR-Validierung). Open Source (AGPL-3.0), **kein Rechtsgate**,
 > solange keine Echt-Patientendaten verarbeitet werden.
 >
@@ -24,7 +24,8 @@ Warenwirtschaft bis zu KI-Assistenz und TI-Anbindung. Nach Themen aufgeklappt:
 
 - **Stammdaten & Bewohnerverwaltung** — Gebäude/Etage/Station/Zimmer, Bewohner, Diagnosen (ICD-10-GM, ~16.000 Codes),
   Versicherungen, Betreuer:innen, Ärzt:innen, **Allergien**, **Medizinprodukte/Hilfsmittel**, **Angehörige**,
-  **pflegerische Einschätzungen** (Bewusstsein/Kontinenz/Ernährung/Atmung).
+  **pflegerische Einschätzungen** (Bewusstsein/Kontinenz/Atmung/Drainage/…), **Krankenhausaufenthalte** und
+  **Empfehlungen an die aufnehmende Einrichtung** — alles ÜLB-MIO-FHIR-exportierbar.
 - **SIS®-Pflegeplanung** — Strukturmodell: Informationssammlung → Maßnahmenplanung (Katalog ~230 Einträge) →
   Berichteblatt → Evaluation. Append-only/versioniert (manipulationssicher).
 - **Assessments** — generische Instrument-Engine mit Scoring + Risiko-Bändern: **Braden** (Dekubitus),
@@ -156,7 +157,7 @@ Warenwirtschaft bis zu KI-Assistenz und TI-Anbindung. Nach Themen aufgeklappt:
 | Backend | **Laravel 13**, **PHP 8.3+** |
 | Frontend | Blade + **Livewire 4** + Alpine.js |
 | Datenbank | **SQLite** (Dev/CI) · **PostgreSQL** (Prod) |
-| Tests | **Pest 4** (1043 Tests) |
+| Tests | **Pest 4** (1115 Tests) |
 | Lint/Style | **Laravel Pint** · **Larastan/PHPStan L5** |
 | DTOs / RBAC / Audit | `spatie/laravel-data` · `spatie/laravel-permission` · `spatie/laravel-activitylog` · `spatie/laravel-medialibrary` |
 | KI (lokal) | **Ollama** (VLM/Embeddings) · externe **MCP-Tools** (Vision-MCP, whisperX-mcp) |
@@ -173,7 +174,7 @@ Domänen-orientierte Struktur unter `app/Domains/`. Layering als Einbahnstraße:
 
 | Domäne | Inhalt |
 |---|---|
-| **Masterdata** | Bewohner, Diagnosen/ICD, Versicherungen, **rechtliche Vertretung mit Aufgabenkreisen (§§ 1814 ff. BGB) + Vertreter-Portal + Bewohner-Ereignisse**, Ärzte, Gebäude/Zimmer, Allergien, Medizinprodukte, Kontakte, Status-Observationen |
+| **Masterdata** | Bewohner, Diagnosen/ICD, Versicherungen, **rechtliche Vertretung mit Aufgabenkreisen (§§ 1814 ff. BGB) + Vertreter-Portal + Bewohner-Ereignisse**, Ärzte, Gebäude/Zimmer, Allergien, Medizinprodukte, Kontakte, Status-Observationen (codiert/boolean/datetime/Drainage), Krankenhausaufenthalte, Empfehlungen |
 | **CarePlanning** | SIS®-Strukturmodell: Informationssammlung → Maßnahmenplan → Bericht → Evaluation |
 | **Assessment** | Instrument-Engine (Braden/Sturz/BESD/Barthel), Scoring, Risiko-Bänder, Eskalation |
 | **Medication** | Verordnungen, Stellplan, Bestände, Gaben, Vitalwerte |
@@ -250,9 +251,9 @@ PIO Überleitungsbogen `kbv.mio.ueberleitungsbogen` 1.0.0). Im CI **blockierend*
 `de.basisprofil.r4` + das ÜLB-Paket validiert (**0 errors**).
 
 <details>
-<summary><b>Composition mit bis zu 12 slice-konformen Sektionen</b></summary>
+<summary><b>29 slice-konforme Composition-Sektionen (alle erfassbaren ÜLB-Datenpunkte)</b></summary>
 
-| ÜLB-Sektion | FHIR-Ressource |
+| ÜLB-Sektion(en) | FHIR-Ressource |
 |---|---|
 | `pflegegrad` (Pflicht) | Observation `Care_Level` (Beantragungsstatus, OPS-Pflegegrad) |
 | `vitalparameter` | `DiagnosticReport` über die konformen Vital-Observations (7 Arten) |
@@ -261,13 +262,24 @@ PIO Überleitungsbogen `kbv.mio.ueberleitungsbogen` 1.0.0). Im CI **blockierend*
 | `medikationsplan` | Information-Observation → `MedicationStatement` + `Medication` |
 | `funktionsbeurteilungen` | Presence-Observation → `Assessment_Free` (Barthel) |
 | `pflegerischeMassnahme` | `Procedure` (je Maßnahme) |
-| `orientierungPsyche` / `qualitativeBeschreibungAtmung` | Status-Observations `Cognitive_Awareness` / `Qualitative_Description_Breathing` |
-| `harn-/stuhlkontinenz…` / `ernaehrung` | `Continence_Differentiated_Assessment` / `Presence_Information_Nutrition` |
+| `orientierungPsyche` / `qualitativeBeschreibungAtmung` | `Cognitive_Awareness` / `Qualitative_Description_Breathing` |
+| `atemwegszugang` / `atmungsunterstuetzung` | `Respiratory_Access` / `Respiratory_Support` |
+| `harnkontinenz…` / `stuhlkontinenz…` / `ernaehrung` | `Continence_Differentiated_Assessment` / `Presence_Information_Nutrition` |
+| `harnableitung` / `stuhlableitung` | `Urinary_/Fecal_Drainage` (Typ + Anlagedatum-Extension) |
+| `zeitpunktLetzteMiktion` / `zeitpunktLetzterStuhlgang` | `Last_Micturition` / `Last_Bowel_Movement` (valueDateTime) |
+| `raeumlicheIsolation` / `patientenwunsch` / `auffaelligesVerhalten` | `Isolation_Necessary` / `Wish` / `Striking_Behavior` |
+| `gradDerBehinderung` | `Degree_Of_Disability_Available` |
+| `krankenhausaufenthalt` | `Encounter_Hospital_Stay` |
+| `empfehlung` | `CarePlan_Recommendation_Receiving_Institution` |
+| `mitgabeKrankenkassenkarte` / `zuzahlungsbefreiung` | `Health_Insurance_Card_Given` (boolean) / `Copayment_Exemption` |
+| `benachrichtigungVonAn-undZugehoerigen` | `Relatives_Notified` |
 | `medizinprodukte` | `Relevant_Information_Medical_Devices` → `DeviceUseStatement` → `Device` |
 | `patientenAdressbuch` | `RelatedPerson_Contact_Person` |
 
-Dazu die dokumentierende Einheit (Organization/Practitioner/PractitionerRole) und der ÜLB-Patient. Genuin offener,
-optionaler Rest: [Wiki → Track A](https://github.com/Nileneb/opcare/wiki).
+Dazu die dokumentierende Einheit (Organization/Practitioner/PractitionerRole) und der ÜLB-Patient. Damit ist
+**jeder im stationären Kontext erfassbare ÜLB-Datenpunkt mit einem UI-Erfassungspfad abgedeckt** (Vollständigkeits-
+Programm Gruppen A–D abgeschlossen). Genuin offener Rest sind nur Sektionen ohne eigenständigen Erfassungs-Datenpunkt
+(z. B. Cross-Record-Aggregate): [Wiki → Track A](https://github.com/Nileneb/opcare/wiki).
 </details>
 
 ## Schnellstart (Docker)
@@ -294,7 +306,7 @@ php artisan serve
 ## Entwicklung
 
 ```bash
-php artisan test                 # bzw. vendor/bin/pest   (1043 Tests)
+php artisan test                 # bzw. vendor/bin/pest   (1115 Tests)
 vendor/bin/pint                  # Code-Style
 php -d memory_limit=1G vendor/bin/phpstan analyse   # Larastan L5
 php artisan fhir:export --output=bundle.json        # FHIR-Document-Bundle
