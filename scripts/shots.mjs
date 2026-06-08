@@ -65,6 +65,7 @@ const pages = [
     ['heimrecht', '/heimrecht', true],
     ['energiebarometer', '/energiebarometer', true],
     ['arbeitsschutz-nachweise', '/arbeitsschutz/nachweise', true],
+    ['gefaehrdungsbeurteilung', '/arbeitsschutz/gefaehrdungsbeurteilung', true],
     ['mitarbeitende', '/admin/benutzer', true],
     ['qdvs', '/qdvs', true],
     ['einrichtung', '/einrichtung', true],

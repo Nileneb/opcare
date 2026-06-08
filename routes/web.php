@@ -17,6 +17,7 @@ use App\Livewire\Accounting\Taschengeldkasse;
 use App\Livewire\Admin\Heimrecht;
 use App\Livewire\Admin\Tenants;
 use App\Livewire\Admin\Users;
+use App\Livewire\Arbeitsschutz\Gefaehrdungsbeurteilung as GbuScreen;
 use App\Livewire\Assessment\AssessmentDurchfuehren;
 use App\Livewire\Assessment\AssessmentVerlauf;
 use App\Livewire\Auth\ChallengeTwoFactor;
@@ -108,6 +109,7 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class, Restrict
     Route::get('/admin/benutzer', Users::class)->name('admin.users');
     Route::get('/admin/mitarbeitende/{user}', Personalakte::class)->name('personnel.akte');
     Route::get('/arbeitsschutz/nachweise', Arbeitsschutz::class)->name('arbeitsschutz.nachweise');
+    Route::get('/arbeitsschutz/gefaehrdungsbeurteilung', GbuScreen::class)->name('arbeitsschutz.gbu');
     Route::get('/personal/kompetenzen', SkillBaum::class)->name('personnel.kompetenzen');
     Route::get('/personal/berechtigungen', Berechtigungen::class)->name('personnel.berechtigungen');
     Route::get('/personal/beauftragte', Beauftragtenregister::class)->name('personnel.beauftragte');
