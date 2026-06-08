@@ -46,6 +46,32 @@ class Chat extends Component
         abort_unless($u && $u->hasAnyRole(self::STAFF_ROLES), 403);
     }
 
+    /**
+     * Echo-Push: lauscht auf ALLE Konversations-Kanäle der Person (nicht nur die aktive). Eine
+     * neue Nachricht refresht sofort den Thread (falls aktiv) UND die Seitenleiste (Vorschau +
+     * Ungelesen-Badge). WHY: Livewire registriert Echo-Kanäle nur beim Init — würden wir nur den
+     * aktiven Kanal binden, fehlte er, weil beim Laden noch keine Konversation offen ist. Der
+     * führende Punkt am Event-Namen verhindert Echos Namespace-Prefix (sonst matcht broadcastAs nie).
+     *
+     * @return array<string, string>
+     */
+    public function getListeners(): array
+    {
+        $u = auth()->user();
+
+        if ($u === null) {
+            return [];
+        }
+
+        return KonversationTeilnehmer::withoutGlobalScopes()
+            ->where('user_id', $u->id)
+            ->pluck('konversation_id')
+            ->mapWithKeys(fn (int $id): array => [
+                "echo-private:konversation.{$id},.NachrichtGesendet" => '$refresh',
+            ])
+            ->all();
+    }
+
     public function oeffne(int $konversationId): void
     {
         $u = auth()->user();

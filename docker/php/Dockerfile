@@ -15,6 +15,17 @@ COPY package.json package-lock.json* vite.config.js ./
 RUN npm ci
 COPY resources ./resources
 COPY public ./public
+# WHY: Vite inlined import.meta.env.VITE_* zur BUILD-Zeit. Ohne diese Build-Args wäre der
+# Reverb-Client-Key im Bundle undefined → window.Echo würde nie erzeugt und der Chat fiele
+# stumm auf Polling zurück. Die VITE_REVERB_*-Werte sind Client-public (kein Secret).
+ARG VITE_REVERB_APP_KEY
+ARG VITE_REVERB_HOST
+ARG VITE_REVERB_PORT=8080
+ARG VITE_REVERB_SCHEME=http
+ENV VITE_REVERB_APP_KEY=$VITE_REVERB_APP_KEY \
+    VITE_REVERB_HOST=$VITE_REVERB_HOST \
+    VITE_REVERB_PORT=$VITE_REVERB_PORT \
+    VITE_REVERB_SCHEME=$VITE_REVERB_SCHEME
 RUN npm run build
 
 # --- Stage 2: PHP-Basis (Extensions + Composer) ----------------------------------

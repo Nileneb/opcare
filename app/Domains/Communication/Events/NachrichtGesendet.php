@@ -22,4 +22,11 @@ class NachrichtGesendet implements ShouldBroadcast
     {
         return new PrivateChannel('konversation.'.$this->konversationId);
     }
+
+    // WHY: Ohne expliziten broadcastAs sendet Laravel den FQCN als Event-Namen — der
+    // Livewire-Echo-Listener (echo-private:konversation.X,NachrichtGesendet) matcht dann nicht.
+    public function broadcastAs(): string
+    {
+        return 'NachrichtGesendet';
+    }
 }

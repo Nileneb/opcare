@@ -19,6 +19,17 @@ it('setzt die Sicherheits-Header auf Web-Antworten', function () {
     expect($response->headers->get('Permissions-Policy'))->toContain('camera=()');
 });
 
+it('erlaubt den Reverb-WebSocket in connect-src (sonst blockt CSP den Echtzeit-Chat)', function () {
+    $response = $this->get(route('login'));
+
+    $host = config('reverb.servers.reverb.hostname')
+        ?: (config('broadcasting.connections.reverb.options.host') ?: 'localhost');
+    $port = config('broadcasting.connections.reverb.options.port', 443);
+
+    expect($response->headers->get('Content-Security-Policy'))
+        ->toContain("connect-src 'self' ws://{$host}:{$port} wss://{$host}:{$port}");
+});
+
 it('sendet HSTS nur über HTTPS', function () {
     $mw = new SecurityHeaders;
     $next = fn () => new Response('ok');
