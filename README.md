@@ -6,7 +6,7 @@ Qualitätssicherung (QDVS/DAS-Pflege)** und **FHIR / ÜLB-MIO** (Pflegeüberleit
 des eingestellten Java-Projekts **[Offene-Pflege.de (OPDE)](#herkunft)** — dessen Domänenwissen dient als
 Vorlage, der Code ist von Grund auf neu.
 
-> **Status:** Funktionsfähig und aktiv in Entwicklung. **938 Tests grün**, CI durchgehend grün
+> **Status:** Funktionsfähig und aktiv in Entwicklung. **987 Tests grün**, CI durchgehend grün
 > (Tests · Linter · Security-Audit · FHIR-Validierung). Open Source (AGPL-3.0), **kein Rechtsgate**,
 > solange keine Echt-Patientendaten verarbeitet werden.
 >
@@ -52,6 +52,8 @@ Warenwirtschaft bis zu KI-Assistenz und TI-Anbindung. Nach Themen aufgeklappt:
 - **Arbeitsschutz-Nachweise & Fortbildung** — Nachweise-mit-Frist + **Betriebsarzt/Sifa** (ASiG/DGUV V2),
   **Beauftragten-Register**, **Fortbildungsplan** (QPR QB6, Pflicht-Themen-Matrix).
 - **Team-Energiebarometer** — freiwillig/anonym (k-Anonymität, § 26 BDSG/§ 87 BetrVG).
+- **Interner Chat** — Team-Kommunikation statt WhatsApp: 1:1, Gruppen, Stations-Kanäle, Ankündigungen
+  (Leitung→alle); tenant-isoliert, kein Bewohner-Bezug, Ungelesen-Glocke im Header.
 </details>
 
 <details>
@@ -152,7 +154,7 @@ Warenwirtschaft bis zu KI-Assistenz und TI-Anbindung. Nach Themen aufgeklappt:
 | Backend | **Laravel 13**, **PHP 8.3+** |
 | Frontend | Blade + **Livewire 4** + Alpine.js |
 | Datenbank | **SQLite** (Dev/CI) · **PostgreSQL** (Prod) |
-| Tests | **Pest 4** (938 Tests) |
+| Tests | **Pest 4** (987 Tests) |
 | Lint/Style | **Laravel Pint** · **Larastan/PHPStan L5** |
 | DTOs / RBAC / Audit | `spatie/laravel-data` · `spatie/laravel-permission` · `spatie/laravel-activitylog` · `spatie/laravel-medialibrary` |
 | KI (lokal) | **Ollama** (VLM/Embeddings) · externe **MCP-Tools** (Vision-MCP, whisperX-mcp) |
@@ -206,6 +208,7 @@ Domänen-orientierte Struktur unter `app/Domains/`. Layering als Einbahnstraße:
 | **Catering** | Küche/Verpflegung (LMIV): Diät-/Allergen-Sicht der Bewohner + Speiseplan mit Allergenwarnung; **HACCP-Eigenkontrolle** (VO 852/2004 Art. 5: CCP-Temperaturüberwachung + Abweichungs-/Korrektur-Workflow) + **Reinigungs-/Desinfektionsplan** (Anhang II: Frist-Ampel + Erledigungs-Nachweis) |
 | **Brandschutz** | **Brandschutz-Organisation** (§ 10 ArbSchG / ASR A2.2/A2.3 / DIN 14096): Brandschutzordnung (Teil A/B/C, Revisions-Ampel), Begehungs-Eigenkontrolle mit Mängel-Workflow (Schwere/Frist) + Räumungs-/Evakuierungsübung mit Frist-Ampel |
 | **SocialCare** | Soziale Betreuung (§ 43b SGB XI): Angebote + Teilnahme-Nachweis je Bewohner |
+| **Communication** | **Interner Chat**: Konversationen (Direkt/Gruppe/Station/Ankündigung) + Nachrichten, tenant-isoliert, kein Activity-Log; Ungelesen-Zähler, Broadcast-Event (Reverb-ready), Polling-Auslieferung |
 </details>
 
 <details>
@@ -289,7 +292,7 @@ php artisan serve
 ## Entwicklung
 
 ```bash
-php artisan test                 # bzw. vendor/bin/pest   (938 Tests)
+php artisan test                 # bzw. vendor/bin/pest   (987 Tests)
 vendor/bin/pint                  # Code-Style
 php -d memory_limit=1G vendor/bin/phpstan analyse   # Larastan L5
 php artisan fhir:export --output=bundle.json        # FHIR-Document-Bundle

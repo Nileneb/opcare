@@ -54,6 +54,10 @@ use App\Domains\Catering\Models\HaccpMesspunkt;
 use App\Domains\Catering\Models\Reinigungsaufgabe;
 use App\Domains\Catering\Services\MessungErfassen;
 use App\Domains\Catering\Services\ReinigungErledigen;
+use App\Domains\Communication\Enums\KonversationTyp as CommKonversationTyp;
+use App\Domains\Communication\Models\Konversation;
+use App\Domains\Communication\Models\Nachricht;
+use App\Domains\Communication\Services\AnkuendigungskanalHolen;
 use App\Domains\Compliance\Models\Auftragsverarbeitung;
 use App\Domains\Compliance\Models\Verarbeitungstaetigkeit;
 use App\Domains\Compliance\Support\VvtDefaults;
@@ -586,6 +590,35 @@ class DemoSeeder extends Seeder
         Raeumungsuebung::create(['tenant_id' => $tenant->id, 'durchgefuehrt_am' => now()->subMonths(16)->toDateString(), 'durchgefuehrt_von' => $admin->id,
             'intervall_monate' => 12, 'bereich' => 'Gesamtes Haus 1', 'szenario' => 'Küchenbrand mit Verrauchung Treppenhaus Ost',
             'teilnehmer_anzahl' => 18, 'dauer_minuten' => 25, 'erkenntnisse' => 'Räumung Wohnbereich 2 verzögert — zweiter Rettungsweg neu beschildert.']);
+
+        // Interner Chat (Team-Kommunikation): Direkt, Gruppe, Stations-Kanal, Ankündigung — tenant-isoliert, nur Text.
+        $chatNachricht = function (Konversation $k, User $u, string $text, int $minutenHer) use ($tenant): void {
+            $n = Nachricht::create(['tenant_id' => $tenant->id, 'konversation_id' => $k->id, 'user_id' => $u->id, 'inhalt' => $text]);
+            $n->forceFill(['created_at' => now()->subMinutes($minutenHer)])->saveQuietly();
+        };
+        $dm = Konversation::create(['tenant_id' => $tenant->id, 'typ' => CommKonversationTyp::Direkt]);
+        foreach ([$admin, $sandra] as $m) {
+            $dm->teilnehmer()->create(['tenant_id' => $tenant->id, 'user_id' => $m->id]);
+        }
+        $chatNachricht($dm, $sandra, 'Kannst du heute den Spätdienst übernehmen? Mir ist was dazwischengekommen.', 90);
+        $chatNachricht($dm, $admin, 'Ja, mache ich. Ich bin ab 13:30 da.', 78);
+        $chatNachricht($dm, $sandra, 'Super, danke dir! 🙏', 75);
+
+        $gruppe = Konversation::create(['tenant_id' => $tenant->id, 'typ' => CommKonversationTyp::Gruppe, 'titel' => 'Frühdienst Wohnbereich 1', 'erstellt_von' => $admin->id]);
+        foreach ([$admin, $sandra, $tom] as $m) {
+            $gruppe->teilnehmer()->create(['tenant_id' => $tenant->id, 'user_id' => $m->id]);
+        }
+        $chatNachricht($gruppe, $admin, 'Morgen früh bitte an die Wäscheausgabe denken, der Lieferdienst kommt um 7.', 200);
+        $chatNachricht($gruppe, $tom, 'Alles klar, ich bin eh ab 6 da.', 180);
+
+        $stationsKanal = Konversation::create(['tenant_id' => $tenant->id, 'typ' => CommKonversationTyp::Station, 'titel' => $station->name, 'station_id' => $station->id]);
+        foreach ([$admin, $sandra, $tom] as $m) {
+            $stationsKanal->teilnehmer()->create(['tenant_id' => $tenant->id, 'user_id' => $m->id]);
+        }
+        $chatNachricht($stationsKanal, $tom, 'Zimmer 12 braucht neue Inkontinenzmaterial-Vorräte, Lager ist leer.', 40);
+
+        $ankuendigung = app(AnkuendigungskanalHolen::class)->handle($tenant->id);
+        $chatNachricht($ankuendigung, $admin, 'Team-Sitzung am Freitag 14:00 im Aufenthaltsraum. Bitte alle teilnehmen.', 300);
 
         // Arbeitszeit-Ist (BAG/EuGH): erfasste Zeiten der laufenden Woche für Sandra/Tom (Soll-Ist-Demo).
         $woStart = now()->startOfWeek();
