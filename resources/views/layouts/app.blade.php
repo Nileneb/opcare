@@ -40,7 +40,7 @@
             @endforeach
         </nav>
         @if (auth()->user()?->hasAnyRole(['admin', 'pflegefachkraft', 'super-admin']))
-            @php($qualActive = request()->routeIs('controlling','quality.report','quality.qm','qdvs.export','arbeitsschutz.nachweise','personnel.fortbildung','hygiene','datenschutz','personnel.kompetenzen','personnel.berechtigungen','personnel.beauftragte','quality.fem','quality.gremien','vertretungen','heimrecht'))
+            @php($qualActive = request()->routeIs('controlling','quality.report','quality.qm','qdvs.export','arbeitsschutz.nachweise','arbeitsschutz.gbu','personnel.fortbildung','hygiene','datenschutz','personnel.kompetenzen','personnel.berechtigungen','personnel.beauftragte','quality.fem','quality.gremien','vertretungen','heimrecht'))
             <div class="nav-menu" x-data="{ open: false }" @keydown.escape="open = false">
                 <button type="button" class="nav-menu-btn {{ $qualActive ? 'is-active' : '' }}" @click="open = !open" :aria-expanded="open">
                     Qualität &amp; Recht <span class="nav-caret">▾</span>
@@ -49,7 +49,8 @@
                     <a href="{{ route('controlling') }}" @class(['is-active' => request()->routeIs('controlling') || request()->routeIs('quality.report')])>Controlling</a>
                     <a href="{{ route('quality.qm') }}" @class(['is-active' => request()->routeIs('quality.qm')])>QM-Checkliste</a>
                     <a href="{{ route('qdvs.export') }}" @class(['is-active' => request()->routeIs('qdvs.export')])>QDVS-Export</a>
-                    <a href="{{ route('arbeitsschutz.nachweise') }}" @class(['is-active' => request()->routeIs('arbeitsschutz.nachweise')])>Arbeitsschutz</a>
+                    <a href="{{ route('arbeitsschutz.nachweise') }}" @class(['is-active' => request()->routeIs('arbeitsschutz.nachweise')])>Arbeitsschutz-Nachweise</a>
+                    <a href="{{ route('arbeitsschutz.gbu') }}" @class(['is-active' => request()->routeIs('arbeitsschutz.gbu')])>Gefährdungsbeurteilung</a>
                     <a href="{{ route('personnel.fortbildung') }}" @class(['is-active' => request()->routeIs('personnel.fortbildung')])>Fortbildung</a>
                     <a href="{{ route('hygiene') }}" @class(['is-active' => request()->routeIs('hygiene')])>Hygiene/MRE</a>
                     <a href="{{ route('datenschutz') }}" @class(['is-active' => request()->routeIs('datenschutz')])>Datenschutz</a>
