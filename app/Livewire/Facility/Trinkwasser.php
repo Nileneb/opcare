@@ -11,6 +11,7 @@ use App\Support\Concerns\ScopesTenantValidation;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 /**
  * Trinkwasser-Überwachung (TrinkwV 2023 § 31): Anlagen-Register, Probenahmestellen,
@@ -21,6 +22,7 @@ use Livewire\Component;
 class Trinkwasser extends Component
 {
     use ScopesTenantValidation;
+    use WithFileUploads;
 
     // Anlage anlegen
     public string $bezeichnung = '';
@@ -42,6 +44,9 @@ class Trinkwasser extends Component
     public int $kbe = 0;
 
     public string $labor = '';
+
+    // Laborbefund-Upload
+    public $laborbefund_datei = null;
 
     // Überschreitungs-Workflow
     public string $meldung_massnahme = '';
@@ -112,6 +117,7 @@ class Trinkwasser extends Component
             'untersucht_am' => ['required', 'date', 'before_or_equal:today'],
             'kbe' => ['required', 'integer', 'min:0'],
             'labor' => ['nullable', 'string', 'max:160'],
+            'laborbefund_datei' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:20480'],
         ];
 
         try {
@@ -127,7 +133,7 @@ class Trinkwasser extends Component
         $anlage = Trinkwasseranlage::where('tenant_id', app(CurrentTenant::class)->id())
             ->findOrFail($anlageId);
 
-        $svc->handle(
+        $befund = $svc->handle(
             $anlage,
             $data['stelle_id'] ?? null,
             $data['untersucht_am'],
@@ -135,7 +141,14 @@ class Trinkwasser extends Component
             $data['labor'] ?: null,
         );
 
-        $this->reset('stelle_id', 'untersucht_am', 'kbe', 'labor');
+        if ($this->laborbefund_datei !== null) {
+            $datei = $this->laborbefund_datei;
+            $befund->addMedia($datei->getRealPath())
+                ->usingFileName($datei->getClientOriginalName())
+                ->toMediaCollection('laborbefund');
+        }
+
+        $this->reset('stelle_id', 'untersucht_am', 'kbe', 'labor', 'laborbefund_datei');
         $this->untersucht_am = today()->toDateString();
         session()->flash('status', 'Befund erfasst.');
     }
@@ -167,7 +180,7 @@ class Trinkwasser extends Component
         $tenantId = app(CurrentTenant::class)->id();
 
         $anlagen = Trinkwasseranlage::where('tenant_id', $tenantId)
-            ->with(['probenahmestellen', 'befunde' => fn ($q) => $q->with('probenahmestelle')->latest('untersucht_am')->limit(10)])
+            ->with(['probenahmestellen', 'befunde' => fn ($q) => $q->with(['probenahmestelle', 'media'])->latest('untersucht_am')->limit(10)])
             ->orderBy('bezeichnung')
             ->get();
 

@@ -8,10 +8,15 @@ use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Support\CurrentTenant;
 use App\Livewire\Facility\Trinkwasser;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
+    Storage::fake('media');
+
     $this->tenant = Tenant::create(['name' => 'TW-UI', 'slug' => 'tw-ui']);
     app(CurrentTenant::class)->set($this->tenant);
     foreach (['admin', 'haustechnik', 'kueche'] as $r) {
@@ -202,6 +207,117 @@ it('verwehrt den Zugriff für Rolle kueche mit 403', function () {
     $this->actingAs($kueche);
 
     Livewire::test(Trinkwasser::class)->assertForbidden();
+});
+
+// ─── Laborbefund-Upload ────────────────────────────────────────────────────────
+
+it('erfasst Befund mit Laborbefund-PDF und legt Media in Collection laborbefund ab', function () {
+    $anlage = Trinkwasseranlage::create([
+        'tenant_id' => $this->tenant->id,
+        'bezeichnung' => 'Anlage Upload',
+        'ist_grossanlage' => true,
+        'untersuchungsintervall_monate' => 12,
+    ]);
+
+    // WHY(GC-FALLE): Variable muss bis nach der Assertion leben, sonst löscht GC Temp-Datei.
+    $pdfDatei = UploadedFile::fake()->create('legionellen.pdf', 100, 'application/pdf');
+
+    Livewire::actingAs($this->user)
+        ->test(Trinkwasser::class)
+        ->set('untersucht_am', '2026-06-01')
+        ->set('kbe', 5)
+        ->set('laborbefund_datei', $pdfDatei)
+        ->call('befundErfassen', $anlage->id)
+        ->assertHasNoErrors();
+
+    $befund = Legionellenbefund::where('trinkwasseranlage_id', $anlage->id)->firstOrFail();
+    expect($befund->getFirstMedia('laborbefund'))->not->toBeNull();
+
+    unset($pdfDatei);
+});
+
+it('erfasst Befund ohne Datei — kein Media, kein Crash', function () {
+    $anlage = Trinkwasseranlage::create([
+        'tenant_id' => $this->tenant->id,
+        'bezeichnung' => 'Anlage Ohne Datei',
+        'ist_grossanlage' => true,
+        'untersuchungsintervall_monate' => 12,
+    ]);
+
+    Livewire::actingAs($this->user)
+        ->test(Trinkwasser::class)
+        ->set('untersucht_am', '2026-06-01')
+        ->set('kbe', 10)
+        ->call('befundErfassen', $anlage->id)
+        ->assertHasNoErrors();
+
+    $befund = Legionellenbefund::where('trinkwasseranlage_id', $anlage->id)->firstOrFail();
+    expect($befund->getFirstMedia('laborbefund'))->toBeNull();
+});
+
+it('Laborbefund-Download gibt 200 für eigenen Tenant zurück', function () {
+    $anlage = Trinkwasseranlage::create([
+        'tenant_id' => $this->tenant->id,
+        'bezeichnung' => 'Anlage DL-Eigen',
+        'ist_grossanlage' => true,
+        'untersuchungsintervall_monate' => 12,
+    ]);
+
+    // WHY(GC-FALLE): Variable muss bis nach der Assertion leben.
+    $pdfDatei = UploadedFile::fake()->create('labor_eigen.pdf', 50, 'application/pdf');
+
+    Livewire::actingAs($this->user)
+        ->test(Trinkwasser::class)
+        ->set('untersucht_am', '2026-06-01')
+        ->set('kbe', 3)
+        ->set('laborbefund_datei', $pdfDatei)
+        ->call('befundErfassen', $anlage->id)
+        ->assertHasNoErrors();
+
+    $befund = Legionellenbefund::where('trinkwasseranlage_id', $anlage->id)->firstOrFail();
+    $media = $befund->getFirstMedia('laborbefund');
+    expect($media)->not->toBeNull();
+
+    $url = URL::temporarySignedRoute('media.download', now()->addMinutes(5), ['media' => $media->id]);
+
+    $this->actingAs($this->user)->get($url)->assertOk();
+
+    unset($pdfDatei);
+});
+
+it('Laborbefund-Download gibt 403 für fremden Tenant (IDOR)', function () {
+    $anlage = Trinkwasseranlage::create([
+        'tenant_id' => $this->tenant->id,
+        'bezeichnung' => 'Anlage DL-Fremd',
+        'ist_grossanlage' => true,
+        'untersuchungsintervall_monate' => 12,
+    ]);
+
+    // WHY(GC-FALLE): Variable muss bis nach der Assertion leben.
+    $pdfDatei = UploadedFile::fake()->create('labor_fremd.pdf', 50, 'application/pdf');
+
+    Livewire::actingAs($this->user)
+        ->test(Trinkwasser::class)
+        ->set('untersucht_am', '2026-06-01')
+        ->set('kbe', 3)
+        ->set('laborbefund_datei', $pdfDatei)
+        ->call('befundErfassen', $anlage->id)
+        ->assertHasNoErrors();
+
+    unset($pdfDatei);
+
+    $befund = Legionellenbefund::where('trinkwasseranlage_id', $anlage->id)->firstOrFail();
+    $media = $befund->getFirstMedia('laborbefund');
+    expect($media)->not->toBeNull();
+
+    $fremdTenant = Tenant::create(['name' => 'TW-Fremd', 'slug' => 'tw-fremd']);
+    $fremdUser = User::factory()->create(['tenant_id' => $fremdTenant->id]);
+    $fremdUser->assignRole('haustechnik');
+    app(CurrentTenant::class)->set($fremdTenant);
+
+    $url = URL::temporarySignedRoute('media.download', now()->addMinutes(5), ['media' => $media->id]);
+
+    $this->actingAs($fremdUser)->get($url)->assertForbidden();
 });
 
 it('wirft findOrFail wenn Fremd-Tenant-Anlage beim Befund erfassen übergeben wird', function () {
