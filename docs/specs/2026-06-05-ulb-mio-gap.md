@@ -171,13 +171,52 @@ ernaehrung; dazu medizinprodukte + patientenAdressbuch sobald Daten erfasst). HL
 gegen R4 + de.basisprofil.r4#1.5.0 + kbv.mio.ueberleitungsbogen#1.0.0, plus expliziter blockierender
 `-profile KBV_PR_MIO_ULB_Bundle`-Check.
 
-## Restlicher (optionaler) Sektions-Backlog
+## Vollständigkeits-Programm (User-Entscheid 2026-06-08: ÜLB-Datenmodell lückenlos VOR Multi-Beruf)
 
-Der Kern-Backlog (Status-Beobachtungen, Medizinprodukte, Angehörige) ist **erledigt** (Schritt 9). Genuin
-offen bleiben — alle optional, Bundle ist voll konform — die Sektionen ohne opcare-Store bzw. ohne ehrliche
-Datenquelle (s. `🔴 Fehlend` oben + `INBETRIEBNAHME.md §3a` für die bewusst zurückgestellte codierte Tiefe):
-Drainage/Atemwegszugang, gradDerBehinderung, Patientenwunsch/Personal_Statements, gesetzliche Betreuung
-strukturiert, administrative Mitgabe-Flags, `Observation_Relatives_Notified`.
+**Begründung:** Das ÜLB-MIO ist eine geschlossene, veröffentlichte Spec — alle Datenpunkte sind vorab bekannt.
+„Feld einführen wenn gebraucht" ist hier KEIN YAGNI, sondern erzeugt bei einem deployten Compliance-Produkt den
+Schmerzpfad Wand→Issue→Migration→alle-updaten. Ziel: **jeder spec'd ÜLB-Datenpunkt hat einen Erfassungspfad**.
+Dank Architektur-Leitsatz ist das überwiegend Seeden/Katalog-Erweitern, nicht Migrieren.
+
+### ✅ Inkrement 1 (2026-06-08, Merge 0f2a729): 3 codierte Sektionen über den generischen Status-Katalog
+Atemwegszugang (`Respiratory_Access`), Atmungsunterstützung (`Respiratory_Support`), räumliche Isolation
+(`Isolation_Necessary`) — Katalog-Eintrag + `CompositionMapper::SECTIONS` + Demo-Seed, sonst kein neuer Code-Pfad.
+**Validator-Loop-Lehren (alle gefixt):** (a) `Respiratory_Access` bindet `effective[x]` auf **Period** statt
+dateTime → Katalog-Flag `'effective' => 'period'`; (b) **FHIR-Resource-id verbietet Unterstrich** → Katalog-Key
+`raeumliche_isolation` erzeugte ungültige id → `StatusObservationMapper` normalisiert `_`→`-`; (c) **section.title
+exakt** aus Profil (inkl. KBV-Tippfehler „Notwendigkeit der räumlichen Isoation"). Amtlicher Validator 0 errors,
+CI (tests + fhir-validate) grün.
+
+### Restliche Sektionen — gruppiert nach Bau-Form (introspizierte Anforderungen)
+
+**Gruppe A — codiert über Status-Katalog (gleiches Muster wie Inkrement 1), je Katalog+SECTIONS-Eintrag:**
+- `patientenwunsch` → Profil ist **`Observation_Wish`** (NICHT Personal_Statements — Section-Entry-Slice geprüft!);
+  `Personal_Statements` gehört in eine andere Sektion. **Display-Falle:** Fixed-Display ohne Leerzeichen vor `:`
+  (`…(observable entity): Relative to…`) — exakt übernehmen.
+- `auffaelligesVerhalten` → `Observation_Striking_Behavior`; Value-ValueSet `Behavior_Finding` ist **filter-basiert**
+  (`descendent-of 844005`) → mit `-tx n/a` nicht expandierbar; konkreten SNOMED-Nachfahren wählen.
+- `gradDerBehinderung` → zwei Profile: `Degree_Of_Disability` (**valueInteger** 0–100, code 116149007) +
+  `Degree_Of_Disability_Available` (Presence). Mapper braucht `kind => 'integer'`-Zweig.
+
+**Gruppe B — Observations mit Datums-Extensions / valueDateTime (neuer Mapper-Zweig):**
+- `harnableitung`/`stuhlableitung` (`Urinary_/Fecal_Drainage`) + Pflicht-Ext `Insertion_/Removal_Date_Fecal_Urinary_Drainage`.
+- `zeitpunktLetzteMiktion`/`zeitpunktLetzterStuhlgang` → valueDateTime-Observations.
+
+**Gruppe C — eigene Ressourcentypen (neuer Store + Mapper):**
+- `raeumlicheIsolation` als **Procedure** zusätzlich (`Procedure_Isolation`) — heute nur als Observation-Necessity.
+- `krankenhausaufenthalt` → `Encounter_Hospital_Stay` (+ `Encounter_Current_Location`): kleiner Store
+  (Aufnahme/Entlassung/Grund).
+- `empfehlung` → `CarePlan_Recommendation_Receiving_Institution`.
+- `mitgegebeneDokumente` → `DocumentReference_ePa_Reference`.
+
+**Gruppe D — administrative Flags / Ereignisse (Resident-Flags bzw. Ereignis-Store):**
+- `mitgabeKrankenkassenkarte` (`Health_Insurance_Card_Given`), `zuzahlungsbefreiung` (`Copayment_Exemption`) →
+  bool-Flags am Resident.
+- `Observation_Relatives_Notified` → echtes Benachrichtigungs-**Ereignis** (nicht die Präferenz `contacts.benachrichtigen`).
+
+**Toolchain (lokal verifiziert):** `/tmp/validator_cli.jar` + `~/.fhir/packages/{ÜLB,kbv.basis,de.basisprofil}`;
+`DB_CONNECTION=sqlite … CACHE_STORE=array QUEUE_CONNECTION=sync php artisan migrate:fresh --seed --force` →
+`php artisan fhir:export --output=…` → `java -jar validator_cli.jar … -profile …_Bundle -tx n/a` (0 errors = grün).
 
 **Muster für neue Sektionen:** Profil introspizieren (fixe `code.coding`, `section.title`, value-ValueSet) →
 Wrapper-Mapper + Leaf → Kandidat-Bundle gegen `-ig kbv.mio.ueberleitungsbogen#1.0.0` iterieren → Sektion in
