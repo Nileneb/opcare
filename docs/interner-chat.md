@@ -11,12 +11,18 @@ Schnelle interne Nachrichten im System, damit Mitarbeitende nicht auf WhatsApp a
   Bewohner-Medien. Verhindert Schatten-Doku + hält DSGVO sauber.
 - **Tenant-isoliert**, **kein Activity-Log** (Chat ist privat), Portal-/Betreuer-Nutzer ausgeschlossen.
 
-## Realtime (ehrlich)
+## Realtime (Reverb/Echo, End-to-End verifiziert)
 
-Reverb läuft serverseitig, aber **Laravel Echo ist im Frontend nicht verdrahtet** (auch die NotificationBell
-pollt). Daher liefert v1 neue Nachrichten **per Livewire-Polling** (`wire:poll.10s` Thread, `.30s` Glocke). Das
-Broadcast-Event `NachrichtGesendet` (privater Kanal `konversation.{id}`, Mitglieder-Auth) wird trotzdem gefeuert,
-damit eine spätere Echo-Schicht ohne Datenmodell-Umbau andockt.
+Neue Nachrichten kommen **in Echtzeit per WebSocket** an: Laravel **Reverb** (Server) + **Echo** (Frontend,
+`resources/js/echo.js`, via `@vite`). Das Broadcast-Event `NachrichtGesendet` (privater Kanal `konversation.{id}`,
+Mitglieder-Auth in `routes/channels.php`) wird über Horizon an Reverb gepusht; Thread, Seitenleiste und Glocke
+abonnieren **alle** Kanäle der Person (Livewire bindet Echo-Kanäle nur beim Init) und refreshen sofort. Per
+Browser-Test bewiesen — eine serverseitig gesendete Nachricht erscheint ohne Reload live im Thread.
+
+`broadcastAs('NachrichtGesendet')` + Listener mit **führendem Punkt** (`.NachrichtGesendet`), sonst prefixt Echo
+einen Namespace und matcht nie. Ein langsamer `wire:poll` (Thread 30 s, Glocke 60 s) bleibt nur als
+WS-Ausfall-Fallback. Docker: Browser → `REVERB_HOST`, Server → `REVERB_INTERNAL_HOST` (Servicename `reverb`),
+`VITE_REVERB_*` als Build-Args ins Bundle, CSP `connect-src` erlaubt den WS-Origin.
 
 ## Modell
 
@@ -40,8 +46,8 @@ damit eine spätere Echo-Schicht ohne Datenmodell-Umbau andockt.
 
 ## Aufbewahrung / spätere Stufen
 
-Nachrichten bleiben mit Absender; DSGVO-Löschkonzept (Austritt) + echter Echo-Push sind bewusst spätere
-Iterationen. Kein E-Mail/Mailserver (verworfen).
+Nachrichten bleiben mit Absender; ein DSGVO-Löschkonzept (Austritt) ist bewusst eine spätere
+Iteration. Kein E-Mail/Mailserver (verworfen).
 
 ## Spec
 
