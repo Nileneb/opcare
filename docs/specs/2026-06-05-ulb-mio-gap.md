@@ -199,8 +199,16 @@ CI (tests + fhir-validate) grün.
   `Degree_Of_Disability_Available` (Presence). Mapper braucht `kind => 'integer'`-Zweig.
 
 **Gruppe B — Observations mit Datums-Extensions / valueDateTime (neuer Mapper-Zweig):**
-- `harnableitung`/`stuhlableitung` (`Urinary_/Fecal_Drainage`) + Pflicht-Ext `Insertion_/Removal_Date_Fecal_Urinary_Drainage`.
-- `zeitpunktLetzteMiktion`/`zeitpunktLetzterStuhlgang` → valueDateTime-Observations.
+- ✅ `zeitpunktLetzteMiktion`/`zeitpunktLetzterStuhlgang` → `Last_Micturition`/`Last_Bowel_Movement`
+  (Merge 4de5cc7): Mapper-Kind `datetime` (valueDateTime, Carbon→FHIR), **kein effective[x]** (Profil max=0);
+  UI datetime-local. 0 errors.
+- ⏳ `harnableitung`/`stuhlableitung` (`Urinary_/Fecal_Drainage`): **offen, intricater als erwartet.** Profil
+  verlangt `effectivePeriod.start` MIT Pflicht-Extension `KBV_EX_MIO_ULB_Insertion_Date_Fecal_Urinary_Drainage`
+  (`codeAnlagedatum`, min=1) — und diese Extension ist **valueCodeableConcept** (NICHT Datum, trotz Name!),
+  coding optional. Nötig: (1) Extension-ValueSet introspizieren (welche Codes/Semantik), (2) `effectivePeriod`
+  mit `_start.extension`-Sibling im Mapper, (3) ggf. Mini-Schema (`wert_datum`/coded-Anlagestatus) am
+  `resident_status_observations`. Value selbst = `Evacuation_Bladder_/Intestinal_Content`-VS (Member schon
+  extrahiert: Katheter/Stoma-Typen).
 
 **Gruppe C — eigene Ressourcentypen (neuer Store + Mapper):**
 - `raeumlicheIsolation` als **Procedure** zusätzlich (`Procedure_Isolation`) — heute nur als Observation-Necessity.
