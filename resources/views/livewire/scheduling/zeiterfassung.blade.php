@@ -29,22 +29,33 @@
             </div>
         </div>
         <table class="data">
-            <thead><tr><th>Datum</th><th>Beginn</th><th>Ende</th><th>Pause</th><th>Ist</th><th></th></tr></thead>
+            <thead><tr><th>Datum</th><th>Beginn</th><th>Ende</th><th>Pause</th><th>Ist</th><th>§ 4 ArbZG</th><th></th></tr></thead>
             <tbody>
                 @forelse ($eigene as $b)
+                    @php $ps = $b->pausenStatus(); @endphp
                     <tr>
                         <td>{{ optional($b->datum)->format('d.m.Y') }}</td>
                         <td>{{ $b->beginn }}</td>
                         <td>{{ $b->ende ?? '— läuft' }}</td>
                         <td>{{ $b->pause_minuten }} min</td>
                         <td>{{ $b->istStunden() !== null ? $b->istStunden().' h' : '—' }}</td>
+                        <td>
+                            <span class="badge {{ $ps->badge() }}"
+                                title="@if ($b->erforderlichePauseMinuten() > 0)erforderlich {{ $b->erforderlichePauseMinuten() }} min, erfasst {{ $b->pause_minuten }} min@else unter 6 h — keine Pausenpflicht @endif">{{ $ps->label() }}</span>
+                        </td>
                         <td><button class="btn btn-link" wire:click="entfernen({{ $b->id }})" wire:confirm="Buchung löschen?">Löschen</button></td>
                     </tr>
                 @empty
-                    <tr><td colspan="6" class="muted">Keine Buchungen in dieser Woche.</td></tr>
+                    <tr><td colspan="7" class="muted">Keine Buchungen in dieser Woche.</td></tr>
                 @endforelse
             </tbody>
         </table>
+        @if ($pausenVerstoesse > 0)
+            <div class="alert alert-danger" style="margin-top:8px">
+                <b>{{ $pausenVerstoesse }}</b> Buchung(en) dieser Woche mit zu kurzer Pause nach <b>§ 4 ArbZG</b>
+                (≥ 30 min ab 6 h, ≥ 45 min ab 9 h Brutto-Arbeitszeit).
+            </div>
+        @endif
 
         <form wire:submit="manuellAnlegen" style="margin-top:14px;border-top:1px solid var(--line-cool);padding-top:14px">
             <div class="form-row-3">

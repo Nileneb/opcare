@@ -650,9 +650,12 @@ class DemoSeeder extends Seeder
 
         // Arbeitszeit-Ist (BAG/EuGH): erfasste Zeiten der laufenden Woche für Sandra/Tom (Soll-Ist-Demo).
         $woStart = now()->startOfWeek();
-        foreach ([[$sandra, 0, '06:00', '14:30'], [$sandra, 1, '06:00', '14:15'], [$tom, 0, '13:30', '22:00']] as [$mitarbeiter, $offset, $beginn, $ende]) {
-            Zeitbuchung::create(['user_id' => $mitarbeiter->id, 'datum' => $woStart->copy()->addDays($offset)->toDateString(), 'beginn' => $beginn, 'ende' => $ende, 'pause_minuten' => 30]);
+        foreach ([[$sandra, 0, '06:00', '14:30', 30], [$sandra, 1, '06:00', '14:15', 30], [$tom, 0, '13:30', '22:00', 30]] as [$mitarbeiter, $offset, $beginn, $ende, $pause]) {
+            Zeitbuchung::create(['user_id' => $mitarbeiter->id, 'datum' => $woStart->copy()->addDays($offset)->toDateString(), 'beginn' => $beginn, 'ende' => $ende, 'pause_minuten' => $pause]);
         }
+        // Admin-Buchungen für die § 4-Demo: ein 10-h-Dienst mit nur 30 min Pause (Verstoß, < 45 min) + ein konformer.
+        Zeitbuchung::create(['user_id' => $admin->id, 'datum' => $woStart->copy()->toDateString(), 'beginn' => '07:00', 'ende' => '17:30', 'pause_minuten' => 30]);
+        Zeitbuchung::create(['user_id' => $admin->id, 'datum' => $woStart->copy()->addDay()->toDateString(), 'beginn' => '08:00', 'ende' => '15:00', 'pause_minuten' => 30]);
 
         // Soziale Betreuung (§ 43b SGB XI): Betreuungskraft + Angebote des Tages + Teilnahme-Nachweis.
         $betreuerin = User::create(['name' => 'Petra Sommer', 'email' => 'betreuung@opcare.local', 'password' => Hash::make('password'), 'tenant_id' => $tenant->id]);

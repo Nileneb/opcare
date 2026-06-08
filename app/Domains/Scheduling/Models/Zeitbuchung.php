@@ -4,6 +4,7 @@ namespace App\Domains\Scheduling\Models;
 
 use App\Domains\Identity\Models\Tenant;
 use App\Domains\Identity\Models\User;
+use App\Domains\Scheduling\Compliance\Enums\Pausenstatus;
 use App\Support\Models\BaseModel;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection;
@@ -72,12 +73,52 @@ class Zeitbuchung extends BaseModel
             return null;
         }
 
+        return round(max(0, $this->bruttoMinuten() - $this->pause_minuten) / 60, 2);
+    }
+
+    /** Brutto-Arbeitszeit (Ende − Beginn) in Minuten; Nachtschicht über Mitternacht korrekt. 0, solange sie läuft. */
+    public function bruttoMinuten(): int
+    {
+        if ($this->ende === null) {
+            return 0;
+        }
+
         $start = CarbonImmutable::parse('2000-01-01 '.$this->beginn);
         $end = CarbonImmutable::parse('2000-01-01 '.$this->ende);
         if ($end <= $start) {
             $end = $end->addDay();
         }
 
-        return round(max(0, $start->diffInMinutes($end) - $this->pause_minuten) / 60, 2);
+        return (int) round($start->diffInMinutes($end));
+    }
+
+    /**
+     * Nach § 4 ArbZG erforderliche Mindest-Pause anhand der Brutto-Arbeitszeit: > 9 h → 45 min, > 6 h → 30 min,
+     * sonst keine. Bemessungsgrundlage ist die Brutto-Arbeitszeit (Pausen zählen nicht als Arbeitszeit).
+     */
+    public function erforderlichePauseMinuten(): int
+    {
+        $brutto = $this->bruttoMinuten();
+
+        return match (true) {
+            $brutto > 9 * 60 => 45,
+            $brutto > 6 * 60 => 30,
+            default => 0,
+        };
+    }
+
+    /** § 4 ArbZG-Status der erfassten Pause (prüfbar, weil die Pause erfasst ist). */
+    public function pausenStatus(): Pausenstatus
+    {
+        if ($this->ende === null) {
+            return Pausenstatus::Laeuft;
+        }
+
+        $erforderlich = $this->erforderlichePauseMinuten();
+        if ($erforderlich === 0) {
+            return Pausenstatus::NichtRelevant;
+        }
+
+        return $this->pause_minuten >= $erforderlich ? Pausenstatus::Konform : Pausenstatus::Unzureichend;
     }
 }
