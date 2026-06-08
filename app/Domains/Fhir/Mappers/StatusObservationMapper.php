@@ -56,6 +56,13 @@ class StatusObservationMapper
                 return null;
             }
             $resource['valueString'] = (string) $obs->wert_text;
+        } elseif ($def['kind'] === 'codeable_text') {
+            // WHY(ÜLB): Profile wie Wish/Striking_Behavior binden value auf CodeableConcept, erlauben aber
+            // coding-frei (nur .text) — Freitext-Erfassung ohne erzwungene SNOMED-Codierung.
+            if (($obs->wert_text ?? '') === '') {
+                return null;
+            }
+            $resource['valueCodeableConcept'] = ['text' => (string) $obs->wert_text];
         } else {
             $display = $def['value_displays'][$obs->wert_code] ?? null;
             if ($obs->wert_code === null || $display === null) {

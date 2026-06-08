@@ -65,6 +65,18 @@ class CompositionMapper
             ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '363787002:704321009=40174006', 'display' => 'Observable entity (observable entity) : Characterizes (attribute) = Isolation procedure (procedure)'],
             'Notwendigkeit der räumlichen Isoation',
         ],
+        'patientenwunsch' => [
+            ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '1186606009', 'display' => 'Patient request observable (observable entity)'],
+            'Patientenwunsch',
+        ],
+        'auffaelligesVerhalten' => [
+            ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '363896009:704326004=25786006', 'display' => 'Behavior observable (observable entity) : Precondition (attribute) = Abnormal behavior (finding)'],
+            'Auffälliges Verhalten',
+        ],
+        'gradDerBehinderung' => [
+            ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '363787002:704326004=21134002', 'display' => 'Observable entity (observable entity) : Precondition (attribute) = Disability (finding)'],
+            'Grad der Behinderung',
+        ],
         'harnkontinenzDifferenzierteEinschaetzung' => [
             ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '129009001', 'display' => 'Bladder control, function (observable entity)'],
             'Harnkontinenz differenzierte Einschätzung',

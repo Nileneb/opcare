@@ -381,6 +381,9 @@ class DemoSeeder extends Seeder
             ['kostform', '160670007', null], ['atmung', null, 'unauffällig, keine Atemnot'],
             ['atemwegszugang', '366141005', null], ['atmungsunterstuetzung', '106048009:47429007=40617009,363713009=2667000', null],
             ['raeumliche_isolation', '129125009:363589002=40174006,408730004=897016006', null],
+            ['patientenwunsch', null, 'Patientenverfügung vorhanden; keine künstliche Beatmung gewünscht'],
+            ['auffaelliges_verhalten', null, 'zeitweise nächtliche Unruhe, kein aggressives Verhalten'],
+            ['grad_der_behinderung', '404684003:363713009=52101004,47429007=(21134002:363713009=272520006)', null],
         ] as [$typ, $code, $text]) {
             $maria->statusObservations()->create(['typ' => $typ, 'wert_code' => $code, 'wert_text' => $text, 'erfasst_am' => now()->subDays(3)->toDateString()]);
         }

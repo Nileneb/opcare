@@ -106,6 +106,36 @@ class StatusObservationCatalog
                     '129125009:363589002=40174006,408730004=410537005' => 'Procedure with explicit context (situation) : Associated procedure (attribute) = Isolation procedure (procedure) , Procedure context (attribute) = Action status unknown (qualifier value)',
                 ],
             ],
+            'patientenwunsch' => [
+                'label' => 'Patientenwunsch', 'section' => 'Patientenwunsch', 'kind' => 'codeable_text',
+                'code' => ['1186606009', 'Patientenwunsch'],
+                'profile' => 'Observation_Wish', 'slice' => 'patientenwunsch',
+                'fhir_code' => ['1186606009', 'Patient request observable (observable entity)'],
+                'options' => [],
+            ],
+            'auffaelliges_verhalten' => [
+                'label' => 'Auffälliges Verhalten', 'section' => 'Verhalten', 'kind' => 'codeable_text',
+                'code' => ['25786006', 'Auffälliges Verhalten'],
+                'profile' => 'Observation_Striking_Behavior', 'slice' => 'auffaelligesVerhalten',
+                'fhir_code' => ['363896009:704326004=25786006', 'Behavior observable (observable entity) : Precondition (attribute) = Abnormal behavior (finding)'],
+                'options' => [],
+            ],
+            'grad_der_behinderung' => [
+                'label' => 'Grad der Behinderung', 'section' => 'Soziales', 'kind' => 'coded',
+                'code' => ['21134002', 'Grad der Behinderung'],
+                'profile' => 'Observation_Degree_Of_Disability_Available', 'slice' => 'gradDerBehinderung',
+                'fhir_code' => ['363787002:704326004=(404684003:363713009=260411009,47429007=(21134002:363713009=272520006))', 'Observable entity (observable entity) : Precondition (attribute) = ( Clinical finding (finding) : Has interpretation (attribute) = Presence findings (qualifier value) , Associated with (attribute) = ( Disability (finding) : Has interpretation (attribute) = Degree findings (qualifier value) ) )'],
+                'options' => [
+                    '404684003:363713009=52101004,47429007=(21134002:363713009=272520006)' => 'Behinderung vorhanden',
+                    '404684003:363713009=2667000,47429007=(21134002:363713009=272520006)' => 'keine Behinderung',
+                    '404684003:363713009=373068000,47429007=(21134002:363713009=272520006)' => 'unbekannt',
+                ],
+                'value_displays' => [
+                    '404684003:363713009=52101004,47429007=(21134002:363713009=272520006)' => 'Clinical finding (finding) : Has interpretation (attribute) = Present (qualifier value) , Associated with (attribute) = ( Disability (finding) : Has interpretation (attribute) = Degree findings (qualifier value) )',
+                    '404684003:363713009=2667000,47429007=(21134002:363713009=272520006)' => 'Clinical finding (finding) : Has interpretation (attribute) = Absent (qualifier value) , Associated with (attribute) = ( Disability (finding) : Has interpretation (attribute) = Degree findings (qualifier value) )',
+                    '404684003:363713009=373068000,47429007=(21134002:363713009=272520006)' => 'Clinical finding (finding) : Has interpretation (attribute) = Undetermined (qualifier value) , Associated with (attribute) = ( Disability (finding) : Has interpretation (attribute) = Degree findings (qualifier value) )',
+                ],
+            ],
         ];
     }
 

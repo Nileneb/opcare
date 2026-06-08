@@ -287,6 +287,25 @@ it('mappt Atemwegszugang/Atmungsunterstützung/räumliche Isolation auf ihre ÜL
         ->toContain('Notwendigkeit der räumlichen Isoation');
 });
 
+it('mappt Patientenwunsch/Verhalten (Freitext→CodeableConcept) und Grad der Behinderung (codiert)', function () {
+    $this->resident->statusObservations()->create(['typ' => 'patientenwunsch', 'wert_text' => 'keine künstliche Beatmung', 'erfasst_am' => '2026-06-01']);
+    $this->resident->statusObservations()->create(['typ' => 'auffaelliges_verhalten', 'wert_text' => 'nächtliche Unruhe', 'erfasst_am' => '2026-06-01']);
+    $this->resident->statusObservations()->create(['typ' => 'grad_der_behinderung', 'wert_code' => '404684003:363713009=52101004,47429007=(21134002:363713009=272520006)', 'erfasst_am' => '2026-06-01']);
+
+    $bundle = app(FhirDocumentExporter::class)->export($this->resident);
+    $resources = collect($bundle['entry'])->pluck('resource');
+    $profileOf = fn (string $needle) => $resources->first(fn ($r) => isset($r['meta']['profile'][0]) && str_contains($r['meta']['profile'][0], $needle));
+
+    // WHY(ÜLB): Wish/Striking_Behavior binden value auf CodeableConcept, erlauben aber nur .text (coding-frei).
+    expect($profileOf('Observation_Wish')['valueCodeableConcept']['text'])->toBe('keine künstliche Beatmung')
+        ->and($profileOf('Observation_Wish'))->not->toHaveKey('valueString')
+        ->and($profileOf('Observation_Striking_Behavior')['valueCodeableConcept']['text'])->toBe('nächtliche Unruhe')
+        ->and($profileOf('Observation_Degree_Of_Disability_Available')['valueCodeableConcept']['coding'][0]['code'])->toBe('404684003:363713009=52101004,47429007=(21134002:363713009=272520006)');
+
+    $titles = collect($bundle['entry'][0]['resource']['section'])->pluck('title')->all();
+    expect($titles)->toContain('Patientenwunsch')->toContain('Auffälliges Verhalten')->toContain('Grad der Behinderung');
+});
+
 it('exportiert pro Status-Typ nur die jüngste Erfassung (Sektion max=1)', function () {
     $this->resident->statusObservations()->create(['typ' => 'bewusstsein', 'wert_code' => '371632003', 'erfasst_am' => '2026-01-01']);
     $this->resident->statusObservations()->create(['typ' => 'bewusstsein', 'wert_code' => '271591004', 'erfasst_am' => '2026-06-01']);
