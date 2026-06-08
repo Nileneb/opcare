@@ -364,3 +364,14 @@ it('GBU-Blade rendert Farbverlauf-Indikator für Selbst-Überlastungsmeldung', f
     Livewire::test(GbuScreen::class)
         ->assertSee('hsl(', false);
 });
+
+it('Admin sieht den persönlichen Belastungswert anderer nicht (Datenschutz-Invariante)', function () {
+    aktiveFreischaltungAnlegen($this->tenant, $this->admin);
+    // Mitarbeiter:in hat einen eigenen Slider-Wert gesetzt
+    PersoenlicheBelastung::create(['tenant_id' => $this->tenant->id, 'user_id' => $this->mitarbeiter->id, 'wert' => 9]);
+
+    // Admin öffnet den Self-Care-Screen → lädt NUR den eigenen Wert (null), nie den fremden (9)
+    Livewire::actingAs($this->admin)
+        ->test(Energiebarometer::class)
+        ->assertSet('meineBelastung', null);
+});
