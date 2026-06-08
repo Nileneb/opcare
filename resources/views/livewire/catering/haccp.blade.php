@@ -4,6 +4,7 @@
             <p class="kicker">Küche · Lebensmittelhygiene</p>
             <h1>HACCP-Tagesblatt</h1>
             <p class="lead">Temperaturkontrolle kritischer Kontrollpunkte (CCP) nach VO (EG) 852/2004 Art. 5 und DIN 10508. Jede Abweichung erfordert eine dokumentierte Korrekturmaßnahme.</p>
+            <p class="muted" style="font-size:.85em">Warum diese CCP überwacht werden, begründet das <a href="{{ route('haccp.gefahrenanalyse') }}">Gefahrenanalyse-Register →</a> (HACCP-Prinzip 1–3).</p>
         </div>
         @php $offeneGesamt = collect($tagesblatt)->filter(fn($e) => $e['offene_abweichung'])->count(); @endphp
         @if ($offeneGesamt > 0)

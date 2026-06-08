@@ -25,6 +25,13 @@ class StimmeAbgeben
                 throw new InvalidArgumentException('Online-Wahl nicht freigegeben (Inbetriebnahme).');
             }
 
+            // WHY: Stillgelegter Krypto-Modus (docs/INBETRIEBNAHME.md §6) — Defense-in-depth zur
+            // Sperre in AbstimmungStarten; eine in GeheimKrypto eröffnete Abstimmung darf keine
+            // Stimme annehmen, solange die Krypto-Härtung nicht freigeschaltet ist.
+            if ($abstimmung->modus->istKrypto() && ! config('voting.krypto_unverkettbarkeit_aktiv')) {
+                throw new InvalidArgumentException('Krypto-unverkettbarer Modus stillgelegt (Inbetriebnahme).');
+            }
+
             $teilnahme = $this->holeTeilnahme($abstimmung, $waehlerTyp, $waehlerId);
 
             if ($teilnahme === null) {

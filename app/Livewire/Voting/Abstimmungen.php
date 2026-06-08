@@ -186,6 +186,13 @@ class Abstimmungen extends Component
 
         $gremien = Gremium::where('tenant_id', $tenantId)->orderBy('name')->get();
 
+        // WHY: GeheimKrypto ist stillgelegt (docs/INBETRIEBNAHME.md §6) — erst anbieten, wenn die
+        // Krypto-Härtung freigeschaltet ist, statt einen nicht haltbaren Modus wählbar zu machen.
+        $modusOptionen = array_values(array_filter(
+            Stimmodus::cases(),
+            fn (Stimmodus $m) => ! $m->istKrypto() || config('voting.krypto_unverkettbarkeit_aktiv'),
+        ));
+
         return view('livewire.voting.abstimmungen', [
             'abstimmbar' => $abstimmbar,
             'abgeschlossen' => $abgeschlossen,
@@ -193,7 +200,7 @@ class Abstimmungen extends Component
             'gremien' => $gremien,
             'darfAnlegen' => $this->darfAnlegen(),
             'elektoratOptionen' => Elektorat::cases(),
-            'modusOptionen' => Stimmodus::cases(),
+            'modusOptionen' => $modusOptionen,
             'artOptionen' => Abstimmungsart::cases(),
         ]);
     }

@@ -24,6 +24,7 @@ class AbstimmungStarten
     {
         return DB::transaction(function () use ($daten, $optionen, $userId) {
             $this->pruefGeheimErzwingung($daten);
+            $this->pruefKryptoFreigabe($daten);
 
             $abstimmung = Abstimmung::create(array_merge([
                 'tenant_id' => $this->currentTenant->id(),
@@ -79,14 +80,32 @@ class AbstimmungStarten
             ? in_array($elektorat, [Elektorat::Bewohner, Elektorat::Mitarbeitende], true)
             : in_array($elektorat, [Elektorat::Bewohner->value, Elektorat::Mitarbeitende->value], true);
 
-        $modusIstNichtGeheim = $modus instanceof Stimmodus
-            ? $modus !== Stimmodus::Geheim
-            : $modus !== Stimmodus::Geheim->value;
+        $modusEnum = $modus instanceof Stimmodus ? $modus : ($modus !== null ? Stimmodus::tryFrom($modus) : null);
+        // WHY: GeheimKrypto erfüllt die Geheim-Pflicht ebenfalls (stärkere Anonymität, nicht schwächere).
+        $modusIstNichtGeheim = $modusEnum === null || ! $modusEnum->istGeheim();
 
         // WHY: HeimmwV §5 (Heimmitwirkungsverordnung) + MVG-EKD §11: Heimbeirats- und
         // MAV-Wahlen müssen zwingend geheim durchgeführt werden.
         if ($artIstWahl && $elektoratIstWahlpflichtig && $modusIstNichtGeheim) {
             throw new InvalidArgumentException('Gesetzliche Wahl (Heimbeirat/MAV) muss geheim sein.');
+        }
+    }
+
+    /**
+     * WHY: GeheimKrypto ist ein „gebaut & stillgelegt"-Modus (docs/INBETRIEBNAHME.md §6). Die
+     * Server-/Root-Unverkettbarkeit braucht die noch nicht implementierte Krypto-Härtung (blind-
+     * signierter Token); bis der Schalter umgelegt ist, wird der Modus an der Quelle blockiert
+     * statt eine Garantie vorzutäuschen, die der Code nicht hält.
+     */
+    private function pruefKryptoFreigabe(array $daten): void
+    {
+        $modus = $daten['modus'] ?? null;
+        $modusEnum = $modus instanceof Stimmodus ? $modus : ($modus !== null ? Stimmodus::tryFrom($modus) : null);
+
+        if ($modusEnum?->istKrypto() && ! config('voting.krypto_unverkettbarkeit_aktiv')) {
+            throw new InvalidArgumentException(
+                'Krypto-unverkettbarer Modus stillgelegt (Inbetriebnahme — Krypto-Härtung erforderlich).'
+            );
         }
     }
 

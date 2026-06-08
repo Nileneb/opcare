@@ -467,3 +467,96 @@ it('eroeffne einer Wahl bei online_wahl_aktiv=true legt Wahlteilnahmen an', func
 
     expect(Wahlteilnahme::where('abstimmung_id', $abstimmung->id)->count())->toBeGreaterThan(0);
 });
+
+// ─── GeheimKrypto: gebaut & stillgelegt (Inbetriebnahme-Schalter) ────────────
+
+it('Stimmodus::GeheimKrypto hat label, istGeheim und istKrypto', function () {
+    expect(Stimmodus::GeheimKrypto->label())->toBe('Geheim (krypto-unverkettbar)')
+        ->and(Stimmodus::GeheimKrypto->istGeheim())->toBeTrue()
+        ->and(Stimmodus::GeheimKrypto->istKrypto())->toBeTrue()
+        ->and(Stimmodus::Geheim->istGeheim())->toBeTrue()
+        ->and(Stimmodus::Geheim->istKrypto())->toBeFalse()
+        ->and(Stimmodus::Namentlich->istGeheim())->toBeFalse();
+});
+
+it('AbstimmungStarten lehnt GeheimKrypto ab solange der Schalter aus ist', function () {
+    config()->set('voting.krypto_unverkettbarkeit_aktiv', false);
+
+    expect(fn () => erstelleAbstimmung([
+        'titel' => 'Krypto-Umfrage',
+        'elektorat' => Elektorat::Mitarbeitende,
+        'modus' => Stimmodus::GeheimKrypto,
+        'art' => Abstimmungsart::Umfrage,
+        'status' => AbstimmungStatus::Entwurf,
+    ]))->toThrow(InvalidArgumentException::class, 'stillgelegt');
+});
+
+it('AbstimmungStarten erlaubt GeheimKrypto wenn der Schalter an ist', function () {
+    config()->set('voting.krypto_unverkettbarkeit_aktiv', true);
+
+    $abstimmung = erstelleAbstimmung([
+        'titel' => 'Krypto-Umfrage',
+        'elektorat' => Elektorat::Mitarbeitende,
+        'modus' => Stimmodus::GeheimKrypto,
+        'art' => Abstimmungsart::Umfrage,
+        'status' => AbstimmungStatus::Entwurf,
+    ]);
+
+    expect($abstimmung->modus)->toBe(Stimmodus::GeheimKrypto);
+});
+
+it('GeheimKrypto erfüllt die Geheim-Pflicht gesetzlicher Wahlen (kein Geheim-Zwang-Fehler)', function () {
+    config()->set('voting.krypto_unverkettbarkeit_aktiv', true);
+    config()->set('voting.online_wahl_aktiv', true);
+
+    $abstimmung = erstelleAbstimmung([
+        'titel' => 'Heimbeiratswahl krypto',
+        'elektorat' => Elektorat::Bewohner,
+        'modus' => Stimmodus::GeheimKrypto,
+        'art' => Abstimmungsart::Wahl,
+        'status' => AbstimmungStatus::Entwurf,
+    ]);
+
+    expect($abstimmung->modus)->toBe(Stimmodus::GeheimKrypto);
+});
+
+it('StimmeAbgeben blockiert eine in GeheimKrypto eröffnete Abstimmung wenn der Schalter wieder aus ist', function () {
+    config()->set('voting.krypto_unverkettbarkeit_aktiv', true);
+    $user = User::factory()->create(['tenant_id' => $this->tenant->id]);
+
+    $abstimmung = erstelleAbstimmung([
+        'titel' => 'Krypto-Umfrage',
+        'elektorat' => Elektorat::Mitarbeitende,
+        'modus' => Stimmodus::GeheimKrypto,
+        'art' => Abstimmungsart::Umfrage,
+        'status' => AbstimmungStatus::Offen,
+    ]);
+
+    $optionId = $abstimmung->optionen()->first()->id;
+
+    // Schalter zurück auf aus → Abgabe muss an der Defense-in-depth-Sperre scheitern
+    config()->set('voting.krypto_unverkettbarkeit_aktiv', false);
+
+    expect(fn () => $this->abstimmen->handle($abstimmung, 'user', $user->id, [$optionId]))
+        ->toThrow(InvalidArgumentException::class, 'stillgelegt');
+});
+
+it('GeheimKrypto-Stimme trägt keinen Personenbezug (anonym wie Geheim)', function () {
+    config()->set('voting.krypto_unverkettbarkeit_aktiv', true);
+    $user = User::factory()->create(['tenant_id' => $this->tenant->id]);
+
+    $abstimmung = erstelleAbstimmung([
+        'titel' => 'Krypto-Umfrage',
+        'elektorat' => Elektorat::Mitarbeitende,
+        'modus' => Stimmodus::GeheimKrypto,
+        'art' => Abstimmungsart::Umfrage,
+        'status' => AbstimmungStatus::Offen,
+    ]);
+
+    $optionId = $abstimmung->optionen()->first()->id;
+    $this->abstimmen->handle($abstimmung, 'user', $user->id, [$optionId]);
+
+    $stimme = Stimme::where('abstimmung_id', $abstimmung->id)->first();
+    expect($stimme->waehler_user_id)->toBeNull()
+        ->and($stimme->waehler_resident_id)->toBeNull();
+});

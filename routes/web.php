@@ -29,6 +29,7 @@ use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Brandschutz\Brandschutz as BrandschutzScreen;
 use App\Livewire\Capture\Belegerfassung;
 use App\Livewire\Capture\Wareneingangerfassung;
+use App\Livewire\Catering\Gefahrenanalyse as GefahrenanalyseScreen;
 use App\Livewire\Catering\Haccp;
 use App\Livewire\Catering\Kueche;
 use App\Livewire\Catering\Reinigungsplan;
@@ -149,6 +150,7 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class, Restrict
     Route::get('/brandschutz', BrandschutzScreen::class)->name('brandschutz');
     Route::get('/kueche', Kueche::class)->name('kueche');
     Route::get('/haccp', Haccp::class)->name('haccp');
+    Route::get('/haccp/gefahrenanalyse', GefahrenanalyseScreen::class)->name('haccp.gefahrenanalyse');
     Route::get('/reinigungsplan', Reinigungsplan::class)->name('reinigungsplan');
     Route::get('/zeiterfassung', Zeiterfassung::class)->name('zeiterfassung');
     Route::get('/wunschdienstplan', Wunschdienstplan::class)->name('wunschdienstplan');
