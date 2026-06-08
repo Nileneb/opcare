@@ -386,6 +386,8 @@ class DemoSeeder extends Seeder
             ['grad_der_behinderung', '404684003:363713009=52101004,47429007=(21134002:363713009=272520006)', null],
             ['zeitpunkt_letzte_miktion', null, now()->subHours(4)->toIso8601String()],
             ['zeitpunkt_letzter_stuhlgang', null, now()->subDay()->toIso8601String()],
+            ['harnableitung', '440311000', now()->subMonths(2)->toDateString()],
+            ['stuhlableitung', '302112009', now()->subMonths(5)->toDateString()],
         ] as [$typ, $code, $text]) {
             $maria->statusObservations()->create(['typ' => $typ, 'wert_code' => $code, 'wert_text' => $text, 'erfasst_am' => now()->subDays(3)->toDateString()]);
         }

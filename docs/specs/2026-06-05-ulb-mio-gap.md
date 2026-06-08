@@ -84,7 +84,8 @@ nicht die Präferenz `contacts.benachrichtigen`) · administrative Flags (`mitga
 - **Phase 2b/3 — erledigt:** generischer **Status-Observation-Mechanismus** (`resident_status_observations`
   + `StatusObservationCatalog`, SNOMED-codiert/Freitext): Bewusstsein, Harn-/Stuhlkontinenz, Kostform,
   Ernährungsform, Atmung. UI-Card „Pflegerische Einschätzungen", FHIR `valueCodeableConcept`/`valueString`,
-  dynamische Composition-Sektionen. *Offen:* Drainage + post-koordinierte SNOMED-Ausdrücke (Isolation).
+  dynamische Composition-Sektionen. Drainage (Harn-/Stuhlableitung) mit Anlagedatum-Extension erledigt
+  (Gruppe B vollständig). *Offen:* Gruppen C/D (eigene Ressourcentypen + administrative Flags).
 - **Phase 4 — erledigt:** Medizinprodukte/Hilfsmittel (`resident_devices`) → FHIR `Device` (type.text +
   patient), Sektion „Medizinprodukte". *Offen:* Atemwegszugang/-unterstützung als eigene Observations.
 - **Phase 5 — erledigt:** Angehörige/Kontaktpersonen (`resident_contacts`) → FHIR `RelatedPerson`,
@@ -202,13 +203,14 @@ CI (tests + fhir-validate) grün.
 - ✅ `zeitpunktLetzteMiktion`/`zeitpunktLetzterStuhlgang` → `Last_Micturition`/`Last_Bowel_Movement`
   (Merge 4de5cc7): Mapper-Kind `datetime` (valueDateTime, Carbon→FHIR), **kein effective[x]** (Profil max=0);
   UI datetime-local. 0 errors.
-- ⏳ `harnableitung`/`stuhlableitung` (`Urinary_/Fecal_Drainage`): **offen, intricater als erwartet.** Profil
-  verlangt `effectivePeriod.start` MIT Pflicht-Extension `KBV_EX_MIO_ULB_Insertion_Date_Fecal_Urinary_Drainage`
-  (`codeAnlagedatum`, min=1) — und diese Extension ist **valueCodeableConcept** (NICHT Datum, trotz Name!),
-  coding optional. Nötig: (1) Extension-ValueSet introspizieren (welche Codes/Semantik), (2) `effectivePeriod`
-  mit `_start.extension`-Sibling im Mapper, (3) ggf. Mini-Schema (`wert_datum`/coded-Anlagestatus) am
-  `resident_status_observations`. Value selbst = `Evacuation_Bladder_/Intestinal_Content`-VS (Member schon
-  extrahiert: Katheter/Stoma-Typen).
+- ✅ `harnableitung`/`stuhlableitung` → `Urinary_/Fecal_Drainage`: Mapper-Kind `coded_insertion_date`.
+  **Auflösung des „intricaten" Teils:** die Pflicht-Extension `Insertion_Date_Fecal_Urinary_Drainage` ist KEIN
+  Datum, sondern ein **fixes Label-Coding** (`439272007:704321009=107733003` „Date of procedure : … =
+  Introduction procedure") auf `effectivePeriod.start` — sie sagt nur „dieser Start = Anlagedatum". Das echte
+  Datum steckt in `start` selbst. Modell daher OHNE neues Schema: `wert_code` = Ableitungs-Typ
+  (`Evacuation_Bladder_/Intestinal_Content`-VS), `wert_text` = Anlagedatum. Mapper schreibt
+  `effectivePeriod.start` + `_start.extension` (fixes Coding); UI = Typ-Select + `type=date`-Anlagedatum (beide
+  Pflicht). 0 errors (beide Profile). **Damit ist Gruppe B vollständig.**
 
 **Gruppe C — eigene Ressourcentypen (neuer Store + Mapper):**
 - `raeumlicheIsolation` als **Procedure** zusätzlich (`Procedure_Isolation`) — heute nur als Observation-Necessity.

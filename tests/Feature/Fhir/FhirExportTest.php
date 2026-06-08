@@ -326,6 +326,28 @@ it('mappt Zeitpunkt-Beobachtungen auf valueDateTime ohne effective[x] (Last_Mict
     expect($titles)->toContain('Zeitpunkt der letzten Miktion')->toContain('Zeitpunkt des letzten Stuhlgangs');
 });
 
+it('mappt Harn-/Stuhlableitung auf Drainage-Profile mit Anlagedatum-Extension auf effectivePeriod.start', function () {
+    $this->resident->statusObservations()->create(['typ' => 'harnableitung', 'wert_code' => '440311000', 'wert_text' => '2026-04-01', 'erfasst_am' => '2026-06-01']);
+    $this->resident->statusObservations()->create(['typ' => 'stuhlableitung', 'wert_code' => '302112009', 'wert_text' => '2026-03-01', 'erfasst_am' => '2026-06-01']);
+
+    $bundle = app(FhirDocumentExporter::class)->export($this->resident);
+    $resources = collect($bundle['entry'])->pluck('resource');
+    $profileOf = fn (string $needle) => $resources->first(fn ($r) => isset($r['meta']['profile'][0]) && str_contains($r['meta']['profile'][0], $needle));
+
+    $harn = $profileOf('Observation_Urinary_Drainage');
+    // WHY(ÜLB): Ableitungs-Typ steht in valueCodeableConcept, das Anlagedatum in effectivePeriod.start mit
+    // Pflicht-Extension Insertion_Date (fixes Label-Coding) auf dem .start-Primitive (_start).
+    expect($harn)->not->toBeNull()
+        ->and($harn['valueCodeableConcept']['coding'][0]['code'])->toBe('440311000')
+        ->and($harn['effectivePeriod']['start'])->toStartWith('2026-04-01')
+        ->and($harn['effectivePeriod']['_start']['extension'][0]['url'])->toContain('KBV_EX_MIO_ULB_Insertion_Date_Fecal_Urinary_Drainage')
+        ->and($harn['effectivePeriod']['_start']['extension'][0]['valueCodeableConcept']['coding'][0]['code'])->toBe('439272007:704321009=107733003')
+        ->and($profileOf('Observation_Fecal_Drainage')['valueCodeableConcept']['coding'][0]['code'])->toBe('302112009');
+
+    $titles = collect($bundle['entry'][0]['resource']['section'])->pluck('title')->all();
+    expect($titles)->toContain('Harnableitung')->toContain('Stuhlableitung');
+});
+
 it('exportiert pro Status-Typ nur die jüngste Erfassung (Sektion max=1)', function () {
     $this->resident->statusObservations()->create(['typ' => 'bewusstsein', 'wert_code' => '371632003', 'erfasst_am' => '2026-01-01']);
     $this->resident->statusObservations()->create(['typ' => 'bewusstsein', 'wert_code' => '271591004', 'erfasst_am' => '2026-06-01']);

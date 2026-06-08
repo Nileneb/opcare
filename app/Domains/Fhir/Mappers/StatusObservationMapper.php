@@ -46,13 +46,28 @@ class StatusObservationMapper
         ];
 
         // WHY(ÜLB): Zeitpunkt-Profile (Last_Micturition/Last_Bowel_Movement) verbieten effective[x] (max=0) —
-        // der Zeitpunkt steckt in valueDateTime. Andere Profile binden effective[x] teils auf Period statt dateTime.
-        if ($def['kind'] !== 'datetime') {
-            if (($def['effective'] ?? 'dateTime') === 'period') {
-                $resource['effectivePeriod'] = ['start' => $effective];
-            } else {
-                $resource['effectiveDateTime'] = $effective;
+        // der Zeitpunkt steckt in valueDateTime. Ableitungs-Profile (Urinary/Fecal_Drainage) tragen das
+        // Anlagedatum als effectivePeriod.start mit Pflicht-Extension Insertion_Date (fixes Label-Coding) auf
+        // dem .start-Primitive. Andere Profile binden effective[x] teils auf Period statt dateTime.
+        if ($def['kind'] === 'datetime') {
+            // kein effective[x]
+        } elseif ($def['kind'] === 'coded_insertion_date') {
+            if (($obs->wert_text ?? '') !== '') {
+                $resource['effectivePeriod'] = [
+                    'start' => Carbon::parse((string) $obs->wert_text)->toIso8601String(),
+                    '_start' => ['extension' => [[
+                        'url' => 'https://fhir.kbv.de/StructureDefinition/KBV_EX_MIO_ULB_Insertion_Date_Fecal_Urinary_Drainage',
+                        'valueCodeableConcept' => ['coding' => [$this->coding(
+                            '439272007:704321009=107733003',
+                            'Date of procedure (observable entity) : Characterizes (attribute) = Introduction procedure (procedure)'
+                        )]],
+                    ]]],
+                ];
             }
+        } elseif (($def['effective'] ?? 'dateTime') === 'period') {
+            $resource['effectivePeriod'] = ['start' => $effective];
+        } else {
+            $resource['effectiveDateTime'] = $effective;
         }
 
         if ($def['kind'] === 'text') {

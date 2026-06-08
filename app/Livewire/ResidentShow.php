@@ -318,6 +318,13 @@ class ResidentShow extends Component
         if ($kind === 'coded') {
             $this->validate(['so_wert_code' => ['required', Rule::in(array_keys($def['options']))]]);
             $wert = ['wert_code' => $this->so_wert_code, 'wert_text' => null];
+        } elseif ($kind === 'coded_insertion_date') {
+            // Ableitung = codierter Typ (Pflicht) + Anlagedatum (Pflicht, ÜLB-Anlagedatum-Extension).
+            $this->validate([
+                'so_wert_code' => ['required', Rule::in(array_keys($def['options']))],
+                'so_wert_text' => ['required', 'date'],
+            ]);
+            $wert = ['wert_code' => $this->so_wert_code, 'wert_text' => $this->so_wert_text];
         } elseif ($kind === 'datetime') {
             $this->validate(['so_wert_text' => ['required', 'date']]);
             $wert = ['wert_code' => null, 'wert_text' => $this->so_wert_text];

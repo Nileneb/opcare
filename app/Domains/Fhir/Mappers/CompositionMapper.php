@@ -89,6 +89,14 @@ class CompositionMapper
             ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '129009001', 'display' => 'Bladder control, function (observable entity)'],
             'Harnkontinenz differenzierte Einschätzung',
         ],
+        'harnableitung' => [
+            ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '406219008', 'display' => 'Urinary elimination status (observable entity)'],
+            'Harnableitung',
+        ],
+        'stuhlableitung' => [
+            ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '363787002:704321009=266683002', 'display' => 'Observable entity (observable entity) : Characterizes (attribute) = Evacuation of gastrointestinal tract contents (procedure)'],
+            'Stuhlableitung',
+        ],
         'stuhlkontinenzDifferenzierteEinschaetzung' => [
             ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '16490003', 'display' => 'Anorectal continence, function (observable entity)'],
             'Stuhlkontinenz differenzierte Einschätzung',

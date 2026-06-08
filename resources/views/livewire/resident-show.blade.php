@@ -116,7 +116,7 @@
             @forelse ($resident->statusObservations->sortByDesc('erfasst_am') as $o)
                 <div class="chip">
                     <b>{{ $statusCatalog[$o->typ]['label'] ?? $o->typ }}</b>
-                    <span>{{ $o->wert_code ? ($statusCatalog[$o->typ]['options'][$o->wert_code] ?? $o->wert_code) : $o->wert_text }}</span>
+                    <span>{{ $o->wert_code ? ($statusCatalog[$o->typ]['options'][$o->wert_code] ?? $o->wert_code) : $o->wert_text }}@if ($o->wert_code && $o->wert_text) <span style="color:var(--c-muted)">(Anlage {{ $o->wert_text }})</span>@endif</span>
                     @if (! empty($statusCatalog[$o->typ]['section']))<span class="badge gray">{{ $statusCatalog[$o->typ]['section'] }}</span>@endif
                     <span style="color:var(--c-muted)">{{ optional($o->erfasst_am)->format('d.m.Y') }}</span>
                     <button type="button" class="btn btn-ghost btn-sm" style="margin-left:auto" wire:click="removeStatusObservation({{ $o->id }})" wire:confirm="Eintrag entfernen?" title="Entfernen">✕</button>
@@ -136,6 +136,12 @@
                                     <option value="">– wählen –</option>
                                     @foreach ($statusCatalog[$so_typ]['options'] as $code => $label)<option value="{{ $code }}">{{ $label }}</option>@endforeach
                                 </select>@error('so_wert_code')<span class="err">{{ $message }}</span>@enderror
+                            @elseif (($statusCatalog[$so_typ]['kind'] ?? 'coded') === 'coded_insertion_date')
+                                <select wire:model="so_wert_code">
+                                    <option value="">– Art der Ableitung –</option>
+                                    @foreach ($statusCatalog[$so_typ]['options'] as $code => $label)<option value="{{ $code }}">{{ $label }}</option>@endforeach
+                                </select>@error('so_wert_code')<span class="err">{{ $message }}</span>@enderror
+                                <input type="date" wire:model="so_wert_text" title="Anlagedatum" style="margin-top:6px" />@error('so_wert_text')<span class="err">{{ $message }}</span>@enderror
                             @elseif (($statusCatalog[$so_typ]['kind'] ?? 'coded') === 'datetime')
                                 <input type="datetime-local" wire:model="so_wert_text" />@error('so_wert_text')<span class="err">{{ $message }}</span>@enderror
                             @else
