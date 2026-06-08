@@ -51,6 +51,7 @@ class HaccpMesspunkt extends BaseModel
         'aktiv' => 'boolean',
     ];
 
+    /** @return HasMany<Temperaturmessung, $this> */
     public function messungen(): HasMany
     {
         return $this->hasMany(Temperaturmessung::class);
@@ -70,13 +71,26 @@ class HaccpMesspunkt extends BaseModel
     }
 
     /**
-     * Single source of truth: hat dieser Messpunkt eine offene Abweichung (kein Korrekturmaßnahmen-Eintrag)?
+     * All open deviations across all days — single source of truth for the correction workflow.
+     * WHY(VO 852/2004 Art. 5): a deviation from a previous day without correction must remain
+     * visible until explicitly closed; day-scoped eager-loads would hide it.
+     *
+     * @return Collection<int, Temperaturmessung>
      */
-    public function offeneAbweichung(): bool
+    public function offeneAbweichungen(): Collection
     {
         return $this->messungen()
             ->where('abweichung', true)
             ->whereNull('korrekturmassnahme')
-            ->exists();
+            ->latest('gemessen_am')
+            ->get();
+    }
+
+    /**
+     * Single source of truth: hat dieser Messpunkt eine offene Abweichung (kein Korrekturmaßnahmen-Eintrag)?
+     */
+    public function offeneAbweichung(): bool
+    {
+        return $this->offeneAbweichungen()->isNotEmpty();
     }
 }

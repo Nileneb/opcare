@@ -243,3 +243,98 @@ it('mount verwehrt Zugriff für haustechnik — messpunktSpeichern nicht erreich
     // Kein Messpunkt wurde angelegt.
     expect(HaccpMesspunkt::where('tenant_id', $this->tenant->id)->count())->toBe(0);
 });
+
+// ---------------------------------------------------------------------------
+// B1-Regression: tag-übergreifende offene Abweichungen sichtbar (VO 852/2004 Art. 5)
+// ---------------------------------------------------------------------------
+
+it('B1: gestrige + heutige offene Abweichung beide in offeneAbweichungen() und im View sichtbar', function () {
+    $this->actingAs(haccpUser($this->tenant->id));
+
+    $mp = HaccpMesspunkt::create([
+        'tenant_id' => $this->tenant->id,
+        'bezeichnung' => 'Kühlhaus B1',
+        'art' => HaccpArt::Kuehlung,
+        'grenzwert' => 7.0,
+        'aktiv' => true,
+    ]);
+
+    $gestrige = Temperaturmessung::create([
+        'tenant_id' => $this->tenant->id,
+        'haccp_messpunkt_id' => $mp->id,
+        'gemessen_am' => now()->subDay()->setTime(10, 0),
+        'wert' => 10.0,
+        'abweichung' => true,
+        'korrekturmassnahme' => null,
+        'erfasst_von' => null,
+    ]);
+
+    $heutige = Temperaturmessung::create([
+        'tenant_id' => $this->tenant->id,
+        'haccp_messpunkt_id' => $mp->id,
+        'gemessen_am' => now()->subHour(),
+        'wert' => 9.0,
+        'abweichung' => true,
+        'korrekturmassnahme' => null,
+        'erfasst_von' => null,
+    ]);
+
+    // Model-Methode liefert beide Messungen
+    $offene = $mp->offeneAbweichungen();
+    expect($offene)->toHaveCount(2)
+        ->and($offene->pluck('id')->toArray())->toContain($gestrige->id)
+        ->and($offene->pluck('id')->toArray())->toContain($heutige->id);
+
+    // View zeigt beide Korrekturformulare
+    Livewire::test(Haccp::class)
+        ->assertSee('korrekturSetzen('.$gestrige->id.')', false)
+        ->assertSee('korrekturSetzen('.$heutige->id.')', false);
+});
+
+it('B1: nach korrekturSetzen der heutigen Messung bleibt die gestrige offen und sichtbar', function () {
+    $this->actingAs(haccpUser($this->tenant->id));
+
+    $mp = HaccpMesspunkt::create([
+        'tenant_id' => $this->tenant->id,
+        'bezeichnung' => 'Kühlhaus B1b',
+        'art' => HaccpArt::Kuehlung,
+        'grenzwert' => 7.0,
+        'aktiv' => true,
+    ]);
+
+    $gestrige = Temperaturmessung::create([
+        'tenant_id' => $this->tenant->id,
+        'haccp_messpunkt_id' => $mp->id,
+        'gemessen_am' => now()->subDay()->setTime(10, 0),
+        'wert' => 10.0,
+        'abweichung' => true,
+        'korrekturmassnahme' => null,
+        'erfasst_von' => null,
+    ]);
+
+    $heutige = Temperaturmessung::create([
+        'tenant_id' => $this->tenant->id,
+        'haccp_messpunkt_id' => $mp->id,
+        'gemessen_am' => now()->subHour(),
+        'wert' => 9.0,
+        'abweichung' => true,
+        'korrekturmassnahme' => null,
+        'erfasst_von' => null,
+    ]);
+
+    // Heutige Korrektur schließen
+    Livewire::test(Haccp::class)
+        ->set('korrektur_text', 'Kühlgerät gereinigt')
+        ->call('korrekturSetzen', $heutige->id)
+        ->assertHasNoErrors();
+
+    // Gestrige muss noch offen sein
+    $mp->refresh();
+    expect($mp->offeneAbweichung())->toBeTrue();
+    expect($mp->offeneAbweichungen())->toHaveCount(1)
+        ->and($mp->offeneAbweichungen()->first()->id)->toBe($gestrige->id);
+
+    // View zeigt immer noch das Formular für die gestrige Messung
+    Livewire::test(Haccp::class)
+        ->assertSee('korrekturSetzen('.$gestrige->id.')', false);
+});

@@ -39,43 +39,22 @@
                     @endif
                 </div>
 
-                {{-- Roter Pflicht-Kasten bei offener Abweichung --}}
+                {{-- Roter Pflicht-Kasten je offener Abweichung (tag-übergreifend) --}}
                 @if ($offeneAbw)
-                    @foreach ($messungenHeute as $abwMessung)
-                        @if ($abwMessung->offen())
-                            <div class="alert alert-danger" style="border:2px solid #c0392b;background:#fdf0ef;padding:1rem;border-radius:4px;margin-bottom:1rem">
-                                <strong>&#9888; Grenzwert-Abweichung am CCP {{ $mp->bezeichnung }}: Ist {{ number_format((float)$abwMessung->wert, 1, ',', '') }} °C, Soll {{ $richtung }} {{ number_format((float)$mp->grenzwert, 1, ',', '') }} °C &mdash; Korrekturmaßnahme erforderlich (VO 852/2004 Art. 5).</strong>
-                                <form wire:submit="korrekturSetzen({{ $abwMessung->id }})" style="margin-top:.75rem">
-                                    <div class="field">
-                                        <label>Eingeleitete Korrekturmaßnahme *</label>
-                                        <textarea wire:model="korrektur_text" rows="3" placeholder="z. B. Produkte umgelagert, Techniker verständigt, Ware geprüft und freigegeben/verworfen"></textarea>
-                                        @error('korrektur_text')<span class="err">{{ $message }}</span>@enderror
-                                    </div>
-                                    <button class="btn btn-danger btn-sm">Korrekturmaßnahme dokumentieren</button>
-                                </form>
-                            </div>
-                        @endif
+                    @foreach ($mp->offeneAbweichungen() as $abwMessung)
+                        <div class="alert alert-danger" style="border:2px solid #c0392b;background:#fdf0ef;padding:1rem;border-radius:4px;margin-bottom:1rem">
+                            <strong>&#9888; Grenzwert-Abweichung am CCP {{ $mp->bezeichnung }}: Ist {{ number_format((float)$abwMessung->wert, 1, ',', '') }} °C, Soll {{ $richtung }} {{ number_format((float)$mp->grenzwert, 1, ',', '') }} °C &mdash; Korrekturmaßnahme erforderlich (VO 852/2004 Art. 5).</strong>
+                            <span class="muted" style="display:block;margin-top:.25rem;font-size:.85em">Messung vom {{ $abwMessung->gemessen_am->format('d.m.Y H:i') }} Uhr</span>
+                            <form wire:submit="korrekturSetzen({{ $abwMessung->id }})" style="margin-top:.75rem">
+                                <div class="field">
+                                    <label>Eingeleitete Korrekturmaßnahme *</label>
+                                    <textarea wire:model="korrektur_text" rows="3" placeholder="z. B. Produkte umgelagert, Techniker verständigt, Ware geprüft und freigegeben/verworfen"></textarea>
+                                    @error('korrektur_text')<span class="err">{{ $message }}</span>@enderror
+                                </div>
+                                <button class="btn btn-danger btn-sm">Korrekturmaßnahme dokumentieren</button>
+                            </form>
+                        </div>
                     @endforeach
-                    {{-- Falls Abweichung von gestrigen Messungen offen (kein heutiger Eintrag) --}}
-                    @if (count($messungenHeute) === 0 || collect($messungenHeute)->filter(fn($m) => $m->offen())->isEmpty())
-                        @php
-                            $offeneMsgs = $mp->messungen()->where('abweichung', true)->whereNull('korrekturmassnahme')->latest('gemessen_am')->get();
-                        @endphp
-                        @foreach ($offeneMsgs as $abwMessung)
-                            <div class="alert alert-danger" style="border:2px solid #c0392b;background:#fdf0ef;padding:1rem;border-radius:4px;margin-bottom:1rem">
-                                <strong>&#9888; Grenzwert-Abweichung am CCP {{ $mp->bezeichnung }}: Ist {{ number_format((float)$abwMessung->wert, 1, ',', '') }} °C, Soll {{ $richtung }} {{ number_format((float)$mp->grenzwert, 1, ',', '') }} °C &mdash; Korrekturmaßnahme erforderlich (VO 852/2004 Art. 5).</strong>
-                                <span class="muted" style="display:block;margin-top:.25rem;font-size:.85em">Messung vom {{ $abwMessung->gemessen_am->format('d.m.Y H:i') }} Uhr</span>
-                                <form wire:submit="korrekturSetzen({{ $abwMessung->id }})" style="margin-top:.75rem">
-                                    <div class="field">
-                                        <label>Eingeleitete Korrekturmaßnahme *</label>
-                                        <textarea wire:model="korrektur_text" rows="3" placeholder="z. B. Produkte umgelagert, Techniker verständigt, Ware geprüft und freigegeben/verworfen"></textarea>
-                                        @error('korrektur_text')<span class="err">{{ $message }}</span>@enderror
-                                    </div>
-                                    <button class="btn btn-danger btn-sm">Korrekturmaßnahme dokumentieren</button>
-                                </form>
-                            </div>
-                        @endforeach
-                    @endif
                 @endif
 
                 {{-- Heutige Messungen --}}
@@ -130,7 +109,7 @@
                         <div class="form-row-3">
                             <div class="field">
                                 <label>Temperatur (°C) *</label>
-                                <input type="number" step="0.1" wire:model="wert" placeholder="{{ number_format($mp->grenzwertDefault ?? $mp->grenzwert, 1, ',', '') }}" />
+                                <input type="number" step="0.1" wire:model="wert" placeholder="{{ number_format((float)$mp->grenzwert, 1, ',', '') }}" />
                                 @error('wert')<span class="err">{{ $message }}</span>@enderror
                             </div>
                             <div class="field">
