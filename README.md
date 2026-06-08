@@ -6,7 +6,7 @@ Qualitätssicherung (QDVS/DAS-Pflege)** und **FHIR / ÜLB-MIO** (Pflegeüberleit
 des eingestellten Java-Projekts **[Offene-Pflege.de (OPDE)](#herkunft)** — dessen Domänenwissen dient als
 Vorlage, der Code ist von Grund auf neu.
 
-> **Status:** Funktionsfähig und aktiv in Entwicklung. **860 Tests grün**, CI durchgehend grün
+> **Status:** Funktionsfähig und aktiv in Entwicklung. **900 Tests grün**, CI durchgehend grün
 > (Tests · Linter · Security-Audit · FHIR-Validierung). Open Source (AGPL-3.0), **kein Rechtsgate**,
 > solange keine Echt-Patientendaten verarbeitet werden.
 >
@@ -73,6 +73,9 @@ Warenwirtschaft bis zu KI-Assistenz und TI-Anbindung. Nach Themen aufgeklappt:
 
 - **Haustechnik & Instandhaltung** (DIN 31051) — Mängelmeldungen (offen → in Arbeit → erledigt) + **Wartungsplan**
   mit Prüffristen (überfällig rot; DGUV V3 / MPBetreibV / BetrSichV / TrinkwV).
+- **Brandschutz-Organisation** (§ 10 ArbSchG / ASR A2.2/A2.3 / DIN 14096) — **Brandschutzordnung** (Teil A/B/C,
+  Revisions-Ampel), **Begehungs-Eigenkontrolle** mit Mängel-Workflow (Schwere + Frist) und **Räumungs-/Evakuierungsübung**
+  mit Frist-Ampel. (Anlagen-Prüfung im Wartungsplan, Brandschutzhelfer in den Arbeitsschutz-Nachweisen.)
 - **Medizinprodukte** (MPBetreibV § 13/§ 14) — Bestandsverzeichnis + Medizinproduktebuch mit
   **STK/MTK-Prüffristen-Ampel**, **Einweisungen**, Vorkommnissen (BfArM-Meldung).
 - **Trinkwasser/Legionellen** (TrinkwV 2023) — Großanlagen-Untersuchungspflicht: Probenahmestellen-Register,
@@ -146,7 +149,7 @@ Warenwirtschaft bis zu KI-Assistenz und TI-Anbindung. Nach Themen aufgeklappt:
 | Backend | **Laravel 13**, **PHP 8.3+** |
 | Frontend | Blade + **Livewire 4** + Alpine.js |
 | Datenbank | **SQLite** (Dev/CI) · **PostgreSQL** (Prod) |
-| Tests | **Pest 4** (860 Tests) |
+| Tests | **Pest 4** (900 Tests) |
 | Lint/Style | **Laravel Pint** · **Larastan/PHPStan L5** |
 | DTOs / RBAC / Audit | `spatie/laravel-data` · `spatie/laravel-permission` · `spatie/laravel-activitylog` · `spatie/laravel-medialibrary` |
 | KI (lokal) | **Ollama** (VLM/Embeddings) · externe **MCP-Tools** (Vision-MCP, whisperX-mcp) |
@@ -198,6 +201,7 @@ Domänen-orientierte Struktur unter `app/Domains/`. Layering als Einbahnstraße:
 | **Hygiene** | **Hygieneplan** (Dokument-mit-Freigabe + Revisions-Ampel) + **MRE-/Infektions-Surveillance** je Bewohner mit Meldepflicht-Verfolgung (§ 23 / §§ 6/7 IfSG) |
 | **Facility** | Haustechnik/Instandhaltung (DIN 31051): Mängelmeldungen + Wartungsplan mit Prüffristen; **Medizinprodukte**-Bestandsverzeichnis + Medizinproduktebuch (MPBetreibV); **Trinkwasser/Legionellen-Überwachung** (TrinkwV 2023: Frist-Ampel, Maßnahmenwert 100 KbE/100 ml, § 51-Workflow) |
 | **Catering** | Küche/Verpflegung (LMIV): Diät-/Allergen-Sicht der Bewohner + Speiseplan mit Allergenwarnung; **HACCP-Eigenkontrolle** (VO 852/2004 Art. 5: CCP-Temperaturüberwachung + Abweichungs-/Korrektur-Workflow) + **Reinigungs-/Desinfektionsplan** (Anhang II: Frist-Ampel + Erledigungs-Nachweis) |
+| **Brandschutz** | **Brandschutz-Organisation** (§ 10 ArbSchG / ASR A2.2/A2.3 / DIN 14096): Brandschutzordnung (Teil A/B/C, Revisions-Ampel), Begehungs-Eigenkontrolle mit Mängel-Workflow (Schwere/Frist) + Räumungs-/Evakuierungsübung mit Frist-Ampel |
 | **SocialCare** | Soziale Betreuung (§ 43b SGB XI): Angebote + Teilnahme-Nachweis je Bewohner |
 </details>
 
@@ -282,7 +286,7 @@ php artisan serve
 ## Entwicklung
 
 ```bash
-php artisan test                 # bzw. vendor/bin/pest   (860 Tests)
+php artisan test                 # bzw. vendor/bin/pest   (900 Tests)
 vendor/bin/pint                  # Code-Style
 php -d memory_limit=1G vendor/bin/phpstan analyse   # Larastan L5
 php artisan fhir:export --output=bundle.json        # FHIR-Document-Bundle
