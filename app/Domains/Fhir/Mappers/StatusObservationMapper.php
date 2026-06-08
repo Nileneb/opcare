@@ -40,7 +40,7 @@ class StatusObservationMapper
             'id' => $id,
             'meta' => ['profile' => ['https://fhir.kbv.de/StructureDefinition/KBV_PR_MIO_ULB_'.$def['profile'].'|1.0.0']],
             'status' => 'final',
-            'code' => ['coding' => [$this->coding($def['fhir_code'][0], $def['fhir_code'][1])]],
+            'code' => ['coding' => [$this->codeCoding($def)]],
             'subject' => ['reference' => $patientReference],
             'performer' => [['reference' => $performerReference]],
         ];
@@ -70,7 +70,14 @@ class StatusObservationMapper
             $resource['effectiveDateTime'] = $effective;
         }
 
-        if ($def['kind'] === 'text') {
+        if ($def['kind'] === 'boolean') {
+            // WHY(ÜLB): Health_Insurance_Card_Given bindet value auf boolean. wert_code trägt '1'/'0'
+            // (UI-Select ja/nein) → valueBoolean.
+            if (($obs->wert_code ?? '') === '') {
+                return null;
+            }
+            $resource['valueBoolean'] = $obs->wert_code === '1';
+        } elseif ($def['kind'] === 'text') {
             if (($obs->wert_text ?? '') === '') {
                 return null;
             }
@@ -132,5 +139,22 @@ class StatusObservationMapper
     private function coding(string $code, string $display): array
     {
         return ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => $code, 'display' => $display];
+    }
+
+    /**
+     * code.coding der Observation. Default SNOMED; ein Katalog-Eintrag mit `code_system`/`code_version`
+     * (z. B. das KBV-CodeSystem der Krankenkassenkarte) überschreibt System + Version.
+     *
+     * @param  array<string, mixed>  $def
+     * @return array<string, string>
+     */
+    private function codeCoding(array $def): array
+    {
+        [$code, $display] = $def['fhir_code'];
+        if (isset($def['code_system'])) {
+            return ['system' => (string) $def['code_system'], 'version' => (string) $def['code_version'], 'code' => $code, 'display' => $display];
+        }
+
+        return $this->coding($code, $display);
     }
 }

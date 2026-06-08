@@ -383,6 +383,27 @@ it('mappt Empfehlungen auf CarePlan_Recommendation (Freitext in activity.detail.
     expect($titles)->toContain('Empfehung an die empfangende Einrichtung');
 });
 
+it('mappt administrative Flags: Krankenkassenkarte (boolean), Zuzahlungsbefreiung + Benachrichtigung (codiert)', function () {
+    $this->resident->statusObservations()->create(['typ' => 'mitgabe_krankenkassenkarte', 'wert_code' => '1', 'erfasst_am' => '2026-06-01']);
+    $this->resident->statusObservations()->create(['typ' => 'zuzahlungsbefreiung', 'wert_code' => '184781001', 'erfasst_am' => '2026-06-01']);
+    $this->resident->statusObservations()->create(['typ' => 'benachrichtigung_angehoerige', 'wert_code' => '418404007', 'erfasst_am' => '2026-06-01']);
+
+    $bundle = app(FhirDocumentExporter::class)->export($this->resident);
+    $resources = collect($bundle['entry'])->pluck('resource');
+    $profileOf = fn (string $needle) => $resources->first(fn ($r) => isset($r['meta']['profile'][0]) && str_contains($r['meta']['profile'][0], $needle));
+
+    $card = $profileOf('Observation_Health_Insurance_Card_Given');
+    // WHY(ÜLB): Health_Insurance_Card_Given bindet value auf boolean, code auf das KBV-CodeSystem (nicht SNOMED).
+    expect($card)->not->toBeNull()
+        ->and($card['valueBoolean'])->toBeTrue()
+        ->and($card['code']['coding'][0]['system'])->toBe('https://fhir.kbv.de/CodeSystem/KBV_CS_MIO_ULB_Health_Insurance_Card')
+        ->and($profileOf('Observation_Copayment_Exemption')['valueCodeableConcept']['coding'][0]['code'])->toBe('184781001')
+        ->and($profileOf('Observation_Relatives_Notified')['valueCodeableConcept']['coding'][0]['code'])->toBe('418404007');
+
+    $titles = collect($bundle['entry'][0]['resource']['section'])->pluck('title')->all();
+    expect($titles)->toContain('Mitgabe der Krankenkassenkarte')->toContain('Zuzahlungsbefreiung')->toContain('Benachrichtigung von An- und Zugehörigen');
+});
+
 it('exportiert pro Status-Typ nur die jüngste Erfassung (Sektion max=1)', function () {
     $this->resident->statusObservations()->create(['typ' => 'bewusstsein', 'wert_code' => '371632003', 'erfasst_am' => '2026-01-01']);
     $this->resident->statusObservations()->create(['typ' => 'bewusstsein', 'wert_code' => '271591004', 'erfasst_am' => '2026-06-01']);

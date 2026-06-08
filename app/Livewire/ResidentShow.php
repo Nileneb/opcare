@@ -323,7 +323,7 @@ class ResidentShow extends Component
         abort_if($def === null, 422);
 
         $kind = $def['kind'] ?? 'coded';
-        if ($kind === 'coded') {
+        if ($kind === 'coded' || $kind === 'boolean') {
             $this->validate(['so_wert_code' => ['required', Rule::in(array_keys($def['options']))]]);
             $wert = ['wert_code' => $this->so_wert_code, 'wert_text' => null];
         } elseif ($kind === 'coded_insertion_date') {

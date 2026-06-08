@@ -388,6 +388,9 @@ class DemoSeeder extends Seeder
             ['zeitpunkt_letzter_stuhlgang', null, now()->subDay()->toIso8601String()],
             ['harnableitung', '440311000', now()->subMonths(2)->toDateString()],
             ['stuhlableitung', '302112009', now()->subMonths(5)->toDateString()],
+            ['mitgabe_krankenkassenkarte', '1', null],
+            ['zuzahlungsbefreiung', '184781001', null],
+            ['benachrichtigung_angehoerige', '418404007', null],
         ] as [$typ, $code, $text]) {
             $maria->statusObservations()->create(['typ' => $typ, 'wert_code' => $code, 'wert_text' => $text, 'erfasst_am' => now()->subDays(3)->toDateString()]);
         }

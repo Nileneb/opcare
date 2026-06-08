@@ -232,10 +232,19 @@ CI (tests + fhir-validate) grün.
   Beide sind optionale Cross-Links ohne eigenständigen Erfassungs-Datenpunkt → nicht gebaut (ehrlich vermerkt).
 - **Damit ist Gruppe C in den sektions-relevanten Punkten vollständig.**
 
-**Gruppe D — administrative Flags / Ereignisse (Resident-Flags bzw. Ereignis-Store):**
-- `mitgabeKrankenkassenkarte` (`Health_Insurance_Card_Given`), `zuzahlungsbefreiung` (`Copayment_Exemption`) →
-  bool-Flags am Resident.
-- `Observation_Relatives_Notified` → echtes Benachrichtigungs-**Ereignis** (nicht die Präferenz `contacts.benachrichtigen`).
+**Gruppe D — administrative Flags / Status (✅ vollständig, Commit folgt):**
+Alle drei sind codierte/boolean Observations → **über den generischen `StatusObservationCatalog`** gelöst
+(kein neues Schema, kein Resident-Spaltenwildwuchs, UI rendert via `kind`-Branch). Section `Administratives`.
+- ✅ `mitgabeKrankenkassenkarte` → `Observation_Health_Insurance_Card_Given`: neuer Mapper-Kind **`boolean`**
+  (valueBoolean). **code.coding nutzt ein Nicht-SNOMED-CodeSystem** (`KBV_CS_MIO_ULB_Health_Insurance_Card`
+  v1.0.0) → Katalog-Felder `code_system`/`code_version` + Mapper-Helfer `codeCoding()`. UI: Select ja/nein.
+- ✅ `zuzahlungsbefreiung` → `Observation_Copayment_Exemption`: `coded`, value aus `Payment_Exemption`-VS
+  (befreit `184781001` / nicht befreit / unbekannt).
+- ✅ `benachrichtigung_angehoerige` → `Observation_Relatives_Notified`: `coded`, value aus
+  `Relatives_Notification_Status`-VS (erfolgt `418404007` / nicht erfolgt / unbekannt). **Anmerkung:** Das
+  ÜLB-Profil modelliert nur einen *Status* (CodeableConcept + optional effectiveDateTime), KEIN Wer/Was-Event —
+  die codierte Status-Observation ist also die profil-treue Abbildung (kein bespoke Event-Store nötig/sinnvoll).
+- 0 errors (alle drei). **Damit sind die Gruppen A–D vollständig.**
 
 **Toolchain (lokal verifiziert):** `/tmp/validator_cli.jar` + `~/.fhir/packages/{ÜLB,kbv.basis,de.basisprofil}`;
 `DB_CONNECTION=sqlite … CACHE_STORE=array QUEUE_CONNECTION=sync php artisan migrate:fresh --seed --force` →

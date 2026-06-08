@@ -131,7 +131,7 @@
                             </select>
                         </div>
                         <div class="field"><label>Wert</label>
-                            @if (($statusCatalog[$so_typ]['kind'] ?? 'coded') === 'coded')
+                            @if (in_array(($statusCatalog[$so_typ]['kind'] ?? 'coded'), ['coded', 'boolean'], true))
                                 <select wire:model="so_wert_code">
                                     <option value="">– wählen –</option>
                                     @foreach ($statusCatalog[$so_typ]['options'] as $code => $label)<option value="{{ $code }}">{{ $label }}</option>@endforeach

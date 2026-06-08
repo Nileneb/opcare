@@ -174,6 +174,47 @@ class StatusObservationCatalog
                     '404684003:47429007=266683002' => 'Clinical finding (finding) : Associated with (attribute) = Evacuation of gastrointestinal tract contents (procedure)',
                 ],
             ],
+            'mitgabe_krankenkassenkarte' => [
+                'label' => 'Krankenkassenkarte mitgegeben', 'section' => 'Administratives', 'kind' => 'boolean',
+                'code' => ['krankenkassenkarte_mitgegeben', 'Krankenkassenkarte mitgegeben'],
+                'profile' => 'Observation_Health_Insurance_Card_Given', 'slice' => 'mitgabeKrankenkassenkarte',
+                'fhir_code' => ['krankenkassenkarte_mitgegeben', 'Krankenkassenkarte mitgegeben'],
+                'code_system' => 'https://fhir.kbv.de/CodeSystem/KBV_CS_MIO_ULB_Health_Insurance_Card',
+                'code_version' => '1.0.0',
+                'options' => ['1' => 'ja', '0' => 'nein'],
+            ],
+            'zuzahlungsbefreiung' => [
+                'label' => 'Zuzahlungsbefreiung', 'section' => 'Administratives', 'kind' => 'coded',
+                'code' => ['308315007', 'Zuzahlungsbefreiung'],
+                'profile' => 'Observation_Copayment_Exemption', 'slice' => 'zuzahlungsbefreiung',
+                'fhir_code' => ['363787002:704326004=308315007', 'Observable entity (observable entity): Precondition (attribute) = Prescription payment exemption status (finding)'],
+                'options' => [
+                    '184781001' => 'befreit',
+                    '308315007:363713009=2667000' => 'nicht befreit',
+                    '308315007:363713009=373068000' => 'unbekannt',
+                ],
+                'value_displays' => [
+                    '184781001' => 'Has free prescriptions - automatic (finding)',
+                    '308315007:363713009=2667000' => 'Prescription payment exemption status (finding) : Has interpretation (attribute) = Absent (qualifier value)',
+                    '308315007:363713009=373068000' => 'Prescription payment exemption status (finding) : Has interpretation (attribute) = Undetermined (qualifier value)',
+                ],
+            ],
+            'benachrichtigung_angehoerige' => [
+                'label' => 'Benachrichtigung An-/Zugehörige', 'section' => 'Administratives', 'kind' => 'coded',
+                'code' => ['418404007', 'Benachrichtigung An-/Zugehörige'],
+                'profile' => 'Observation_Relatives_Notified', 'slice' => 'benachrichtigungVonAnUndZugehoerigen',
+                'fhir_code' => ['302160007:704321009=(185087000:370131001=35359004)', 'Household, family and support network detail (observable entity) : Characterizes (attribute) = ( Notifications (procedure) : Recipient category (attribute) = Family (social concept) )'],
+                'options' => [
+                    '418404007' => 'Benachrichtigung erfolgt',
+                    '129125009:{408731000=410512000,408730004=385660001,363589002=185087000,408732007=444148008}' => 'nicht erfolgt',
+                    '129125009:{408731000=410512000,408730004=410537005,363589002=185087000,408732007=444148008}' => 'Status unbekannt',
+                ],
+                'value_displays' => [
+                    '418404007' => 'Family notified (situation)',
+                    '129125009:{408731000=410512000,408730004=385660001,363589002=185087000,408732007=444148008}' => 'Procedure with explicit context (situation) : { Temporal context (attribute) = Current or specified time (qualifier value) , Procedure context (attribute) = Not done (qualifier value) , Associated procedure (attribute) = Notifications (procedure) , Subject relationship context (attribute) = Person in family of subject (person) }',
+                    '129125009:{408731000=410512000,408730004=410537005,363589002=185087000,408732007=444148008}' => 'Procedure with explicit context (situation) : { Temporal context (attribute) = Current or specified time (qualifier value) , Procedure context (attribute) = Action status unknown (qualifier value) , Associated procedure (attribute) = Notifications (procedure) , Subject relationship context (attribute) = Person in family of subject (person) }',
+                ],
+            ],
             'grad_der_behinderung' => [
                 'label' => 'Grad der Behinderung', 'section' => 'Soziales', 'kind' => 'coded',
                 'code' => ['21134002', 'Grad der Behinderung'],

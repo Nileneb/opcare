@@ -101,6 +101,18 @@ class CompositionMapper
             ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '16490003', 'display' => 'Anorectal continence, function (observable entity)'],
             'Stuhlkontinenz differenzierte Einschätzung',
         ],
+        'mitgabeKrankenkassenkarte' => [
+            ['system' => 'https://fhir.kbv.de/CodeSystem/KBV_CS_MIO_ULB_Health_Insurance_Card', 'version' => '1.0.0', 'code' => 'krankenkassenkarte_mitgegeben', 'display' => 'Krankenkassenkarte mitgegeben'],
+            'Mitgabe der Krankenkassenkarte',
+        ],
+        'zuzahlungsbefreiung' => [
+            ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '363787002:704326004=308315007', 'display' => 'Observable entity (observable entity) : Precondition (attribute) = Prescription payment exemption status (finding)'],
+            'Zuzahlungsbefreiung',
+        ],
+        'benachrichtigungVonAnUndZugehoerigen' => [
+            ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '302160007:704321009=(185087000:370131001=35359004)', 'display' => 'Household, family and support network detail (observable entity) : Characterizes (attribute) = ( Notifications (procedure) : Recipient category (attribute) = Family (social concept) )'],
+            'Benachrichtigung von An- und Zugehörigen',
+        ],
         'krankenhausaufenthalt' => [
             ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '170551006', 'display' => 'Last hospital inpatient (finding)'],
             'Krankenhausaufenthalt',
