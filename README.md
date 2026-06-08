@@ -6,7 +6,7 @@ Qualitätssicherung (QDVS/DAS-Pflege)** und **FHIR / ÜLB-MIO** (Pflegeüberleit
 des eingestellten Java-Projekts **[Offene-Pflege.de (OPDE)](#herkunft)** — dessen Domänenwissen dient als
 Vorlage, der Code ist von Grund auf neu.
 
-> **Status:** Funktionsfähig und aktiv in Entwicklung. **987 Tests grün**, CI durchgehend grün
+> **Status:** Funktionsfähig und aktiv in Entwicklung. **1043 Tests grün**, CI durchgehend grün
 > (Tests · Linter · Security-Audit · FHIR-Validierung). Open Source (AGPL-3.0), **kein Rechtsgate**,
 > solange keine Echt-Patientendaten verarbeitet werden.
 >
@@ -47,8 +47,10 @@ Warenwirtschaft bis zu KI-Assistenz und TI-Anbindung. Nach Themen aufgeklappt:
   (inkl. psychischer Belastung), **Risiko-Matrix** (Wahrscheinlichkeit × Schwere), **TOP-Maßnahmen**,
   Fortschreibungs-Frist-Ampel + Wirksamkeitskontrolle (§ 3).
 - **Belastungs-Live-Index** (§ 5 Abs. 3 Nr. 6 ArbSchG, live) — Belastung **je Wohnbereich** aus Pflegelast +
-  Unterdeckung + Ergonomie; Überschreitung → Meldung an die Leitung + Ein-Klick-**Entlastungsmaßnahme** in der GBU.
-  Bewusst **schicht-/bereichsbezogen, kein Personen-Scoring** (keine § 87-BetrVG-Leistungskontrolle).
+  Unterdeckung + Ergonomie als **0-10-Lage-Farbverlauf** (rein farblich); Überschreitung → Meldung an die Leitung +
+  Ein-Klick-**Entlastungsmaßnahme** in der GBU. Bewusst **schicht-/bereichsbezogen, kein Personen-Scoring**.
+  Optional schaltet ein **Mitarbeitenden-Beschluss** (§ 87 BetrVG, Voting-Modul) die **freiwillige individuelle
+  Selbst-Ampel** + selbst-initiierte Überlastungs-Meldung frei (Mode B/C; nur eigener Wert sichtbar).
 - **Arbeitsschutz-Nachweise & Fortbildung** — Nachweise-mit-Frist + **Betriebsarzt/Sifa** (ASiG/DGUV V2),
   **Beauftragten-Register**, **Fortbildungsplan** (QPR QB6, Pflicht-Themen-Matrix).
 - **Team-Energiebarometer** — freiwillig/anonym (k-Anonymität, § 26 BDSG/§ 87 BetrVG).
@@ -154,7 +156,7 @@ Warenwirtschaft bis zu KI-Assistenz und TI-Anbindung. Nach Themen aufgeklappt:
 | Backend | **Laravel 13**, **PHP 8.3+** |
 | Frontend | Blade + **Livewire 4** + Alpine.js |
 | Datenbank | **SQLite** (Dev/CI) · **PostgreSQL** (Prod) |
-| Tests | **Pest 4** (987 Tests) |
+| Tests | **Pest 4** (1043 Tests) |
 | Lint/Style | **Laravel Pint** · **Larastan/PHPStan L5** |
 | DTOs / RBAC / Audit | `spatie/laravel-data` · `spatie/laravel-permission` · `spatie/laravel-activitylog` · `spatie/laravel-medialibrary` |
 | KI (lokal) | **Ollama** (VLM/Embeddings) · externe **MCP-Tools** (Vision-MCP, whisperX-mcp) |
@@ -292,7 +294,7 @@ php artisan serve
 ## Entwicklung
 
 ```bash
-php artisan test                 # bzw. vendor/bin/pest   (987 Tests)
+php artisan test                 # bzw. vendor/bin/pest   (1043 Tests)
 vendor/bin/pint                  # Code-Style
 php -d memory_limit=1G vendor/bin/phpstan analyse   # Larastan L5
 php artisan fhir:export --output=bundle.json        # FHIR-Document-Bundle
