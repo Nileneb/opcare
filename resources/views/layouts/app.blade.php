@@ -40,79 +40,121 @@
             @endforeach
         </nav>
         @if (auth()->user()?->hasAnyRole(['admin', 'pflegefachkraft', 'super-admin']))
-            <nav class="app-nav app-nav-controlling">
-                <a href="{{ route('controlling') }}" @class(['is-active' => request()->routeIs('controlling') || request()->routeIs('quality.report')])>Controlling</a>
-                <a href="{{ route('quality.qm') }}" @class(['is-active' => request()->routeIs('quality.qm')])>QM-Checkliste</a>
-                <a href="{{ route('qdvs.export') }}" @class(['is-active' => request()->routeIs('qdvs.export')])>QDVS-Export</a>
-                <a href="{{ route('arbeitsschutz.nachweise') }}" @class(['is-active' => request()->routeIs('arbeitsschutz.nachweise')])>Arbeitsschutz</a>
-                <a href="{{ route('personnel.fortbildung') }}" @class(['is-active' => request()->routeIs('personnel.fortbildung')])>Fortbildung</a>
-                <a href="{{ route('hygiene') }}" @class(['is-active' => request()->routeIs('hygiene')])>Hygiene/MRE</a>
-                <a href="{{ route('datenschutz') }}" @class(['is-active' => request()->routeIs('datenschutz')])>Datenschutz</a>
-                <a href="{{ route('personnel.kompetenzen') }}" @class(['is-active' => request()->routeIs('personnel.kompetenzen')])>Skill-Baum</a>
-                <a href="{{ route('personnel.berechtigungen') }}" @class(['is-active' => request()->routeIs('personnel.berechtigungen')])>Berechtigungen</a>
-                <a href="{{ route('personnel.beauftragte') }}" @class(['is-active' => request()->routeIs('personnel.beauftragte')])>Beauftragte</a>
-                <a href="{{ route('quality.fem') }}" @class(['is-active' => request()->routeIs('quality.fem')])>FEM</a>
-                <a href="{{ route('quality.gremien') }}" @class(['is-active' => request()->routeIs('quality.gremien')])>Gremien</a>
-                <a href="{{ route('vertretungen') }}" @class(['is-active' => request()->routeIs('vertretungen')])>Vertretungen</a>
-                <a href="{{ route('heimrecht') }}" @class(['is-active' => request()->routeIs('heimrecht')])>Heimrecht</a>
-            </nav>
+            @php($qualActive = request()->routeIs('controlling','quality.report','quality.qm','qdvs.export','arbeitsschutz.nachweise','personnel.fortbildung','hygiene','datenschutz','personnel.kompetenzen','personnel.berechtigungen','personnel.beauftragte','quality.fem','quality.gremien','vertretungen','heimrecht'))
+            <div class="nav-menu" x-data="{ open: false }" @keydown.escape="open = false">
+                <button type="button" class="nav-menu-btn {{ $qualActive ? 'is-active' : '' }}" @click="open = !open" :aria-expanded="open">
+                    Qualität &amp; Recht <span class="nav-caret">▾</span>
+                </button>
+                <div class="nav-menu-panel" x-show="open" x-transition @click.outside="open = false" x-cloak>
+                    <a href="{{ route('controlling') }}" @class(['is-active' => request()->routeIs('controlling') || request()->routeIs('quality.report')])>Controlling</a>
+                    <a href="{{ route('quality.qm') }}" @class(['is-active' => request()->routeIs('quality.qm')])>QM-Checkliste</a>
+                    <a href="{{ route('qdvs.export') }}" @class(['is-active' => request()->routeIs('qdvs.export')])>QDVS-Export</a>
+                    <a href="{{ route('arbeitsschutz.nachweise') }}" @class(['is-active' => request()->routeIs('arbeitsschutz.nachweise')])>Arbeitsschutz</a>
+                    <a href="{{ route('personnel.fortbildung') }}" @class(['is-active' => request()->routeIs('personnel.fortbildung')])>Fortbildung</a>
+                    <a href="{{ route('hygiene') }}" @class(['is-active' => request()->routeIs('hygiene')])>Hygiene/MRE</a>
+                    <a href="{{ route('datenschutz') }}" @class(['is-active' => request()->routeIs('datenschutz')])>Datenschutz</a>
+                    <a href="{{ route('personnel.kompetenzen') }}" @class(['is-active' => request()->routeIs('personnel.kompetenzen')])>Skill-Baum</a>
+                    <a href="{{ route('personnel.berechtigungen') }}" @class(['is-active' => request()->routeIs('personnel.berechtigungen')])>Berechtigungen</a>
+                    <a href="{{ route('personnel.beauftragte') }}" @class(['is-active' => request()->routeIs('personnel.beauftragte')])>Beauftragte</a>
+                    <a href="{{ route('quality.fem') }}" @class(['is-active' => request()->routeIs('quality.fem')])>FEM</a>
+                    <a href="{{ route('quality.gremien') }}" @class(['is-active' => request()->routeIs('quality.gremien')])>Gremien</a>
+                    <a href="{{ route('vertretungen') }}" @class(['is-active' => request()->routeIs('vertretungen')])>Vertretungen</a>
+                    <a href="{{ route('heimrecht') }}" @class(['is-active' => request()->routeIs('heimrecht')])>Heimrecht</a>
+                </div>
+            </div>
         @endif
         @can('manage', \App\Domains\Scheduling\Models\Shift::class)
-            <nav class="app-nav app-nav-dienstplan">
-                <a href="{{ route('dienstplan') }}" @class(['is-active' => request()->routeIs('dienstplan')])>Dienstplan</a>
-                <a href="{{ route('arbeitsrecht') }}" @class(['is-active' => request()->routeIs('arbeitsrecht')])>Arbeitsrecht</a>
-                <a href="{{ route('spitzenzeiten') }}" @class(['is-active' => request()->routeIs('spitzenzeiten')])>Spitzenzeiten</a>
-            </nav>
+            @php($dienstActive = request()->routeIs('dienstplan','arbeitsrecht','spitzenzeiten'))
+            <div class="nav-menu" x-data="{ open: false }" @keydown.escape="open = false">
+                <button type="button" class="nav-menu-btn {{ $dienstActive ? 'is-active' : '' }}" @click="open = !open" :aria-expanded="open">
+                    Dienstplan <span class="nav-caret">▾</span>
+                </button>
+                <div class="nav-menu-panel" x-show="open" x-transition @click.outside="open = false" x-cloak>
+                    <a href="{{ route('dienstplan') }}" @class(['is-active' => request()->routeIs('dienstplan')])>Dienstplan</a>
+                    <a href="{{ route('arbeitsrecht') }}" @class(['is-active' => request()->routeIs('arbeitsrecht')])>Arbeitsrecht</a>
+                    <a href="{{ route('spitzenzeiten') }}" @class(['is-active' => request()->routeIs('spitzenzeiten')])>Spitzenzeiten</a>
+                </div>
+            </div>
         @endcan
         @unless ($istPortal)
-        <nav class="app-nav app-nav-voting">
-            <a href="{{ route('abstimmungen') }}" @class(['is-active' => request()->routeIs('abstimmungen')])>Abstimmungen</a>
-        </nav>
-        <nav class="app-nav app-nav-kalender">
-            <a href="{{ route('kalender') }}" @class(['is-active' => request()->routeIs('kalender')])>Kalender</a>
-            <a href="{{ route('zeiterfassung') }}" @class(['is-active' => request()->routeIs('zeiterfassung')])>Zeiterfassung</a>
-            <a href="{{ route('wunschdienstplan') }}" @class(['is-active' => request()->routeIs('wunschdienstplan')])>Wunschdienst</a>
-            <a href="{{ route('tauschboerse') }}" @class(['is-active' => request()->routeIs('tauschboerse')])>Tauschbörse</a>
-            <a href="{{ route('energiebarometer') }}" @class(['is-active' => request()->routeIs('energiebarometer')])>Energie</a>
-            <a href="{{ route('haustechnik') }}" @class(['is-active' => request()->routeIs('haustechnik')])>Haustechnik</a>
-            <a href="{{ route('medizinprodukte') }}" @class(['is-active' => request()->routeIs('medizinprodukte')])>Medizinprodukte</a>
-            @if (auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'haustechnik']))
-                <a href="{{ route('trinkwasser') }}" @class(['is-active' => request()->routeIs('trinkwasser')])>Trinkwasser</a>
-            @endif
-            @if (auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'pflegefachkraft', 'pflegehilfskraft', 'betreuungskraft', 'kueche', 'haustechnik', 'buchhaltung']))
-                <a href="{{ route('quality.beschwerden') }}" @class(['is-active' => request()->routeIs('quality.beschwerden')])>Beschwerden</a>
-            @endif
-            @if (auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'pflegefachkraft', 'kueche']))
-                <a href="{{ route('kueche') }}" @class(['is-active' => request()->routeIs('kueche')])>Küche</a>
-            @endif
-        </nav>
+            @php($votingActive = request()->routeIs('abstimmungen'))
+            <div class="nav-menu" x-data="{ open: false }" @keydown.escape="open = false">
+                <button type="button" class="nav-menu-btn {{ $votingActive ? 'is-active' : '' }}" @click="open = !open" :aria-expanded="open">
+                    Beteiligung <span class="nav-caret">▾</span>
+                </button>
+                <div class="nav-menu-panel" x-show="open" x-transition @click.outside="open = false" x-cloak>
+                    <a href="{{ route('abstimmungen') }}" @class(['is-active' => request()->routeIs('abstimmungen')])>Abstimmungen</a>
+                </div>
+            </div>
+            @php($kalenderActive = request()->routeIs('kalender','zeiterfassung','wunschdienstplan','tauschboerse','energiebarometer','haustechnik','medizinprodukte','trinkwasser','quality.beschwerden','kueche'))
+            <div class="nav-menu" x-data="{ open: false }" @keydown.escape="open = false">
+                <button type="button" class="nav-menu-btn {{ $kalenderActive ? 'is-active' : '' }}" @click="open = !open" :aria-expanded="open">
+                    Kalender &amp; Betrieb <span class="nav-caret">▾</span>
+                </button>
+                <div class="nav-menu-panel" x-show="open" x-transition @click.outside="open = false" x-cloak>
+                    <a href="{{ route('kalender') }}" @class(['is-active' => request()->routeIs('kalender')])>Kalender</a>
+                    <a href="{{ route('zeiterfassung') }}" @class(['is-active' => request()->routeIs('zeiterfassung')])>Zeiterfassung</a>
+                    <a href="{{ route('wunschdienstplan') }}" @class(['is-active' => request()->routeIs('wunschdienstplan')])>Wunschdienst</a>
+                    <a href="{{ route('tauschboerse') }}" @class(['is-active' => request()->routeIs('tauschboerse')])>Tauschbörse</a>
+                    <a href="{{ route('energiebarometer') }}" @class(['is-active' => request()->routeIs('energiebarometer')])>Energie</a>
+                    <a href="{{ route('haustechnik') }}" @class(['is-active' => request()->routeIs('haustechnik')])>Haustechnik</a>
+                    <a href="{{ route('medizinprodukte') }}" @class(['is-active' => request()->routeIs('medizinprodukte')])>Medizinprodukte</a>
+                    @if (auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'haustechnik']))
+                        <a href="{{ route('trinkwasser') }}" @class(['is-active' => request()->routeIs('trinkwasser')])>Trinkwasser</a>
+                    @endif
+                    @if (auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'pflegefachkraft', 'pflegehilfskraft', 'betreuungskraft', 'kueche', 'haustechnik', 'buchhaltung']))
+                        <a href="{{ route('quality.beschwerden') }}" @class(['is-active' => request()->routeIs('quality.beschwerden')])>Beschwerden</a>
+                    @endif
+                    @if (auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'pflegefachkraft', 'kueche']))
+                        <a href="{{ route('kueche') }}" @class(['is-active' => request()->routeIs('kueche')])>Küche</a>
+                    @endif
+                </div>
+            </div>
         @endunless
         @if (auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'pflegefachkraft']))
-            <nav class="app-nav app-nav-medikation-stamm">
-                <a href="{{ route('medikation.stammdaten') }}" @class(['is-active' => request()->routeIs('medikation.stammdaten')])>Medikationsstamm</a>
-                <a href="{{ route('medikation.btm') }}" @class(['is-active' => request()->routeIs('medikation.btm')])>BtM-Nachweis</a>
-            </nav>
+            @php($medikActive = request()->routeIs('medikation.stammdaten','medikation.btm'))
+            <div class="nav-menu" x-data="{ open: false }" @keydown.escape="open = false">
+                <button type="button" class="nav-menu-btn {{ $medikActive ? 'is-active' : '' }}" @click="open = !open" :aria-expanded="open">
+                    Medikation <span class="nav-caret">▾</span>
+                </button>
+                <div class="nav-menu-panel" x-show="open" x-transition @click.outside="open = false" x-cloak>
+                    <a href="{{ route('medikation.stammdaten') }}" @class(['is-active' => request()->routeIs('medikation.stammdaten')])>Medikationsstamm</a>
+                    <a href="{{ route('medikation.btm') }}" @class(['is-active' => request()->routeIs('medikation.btm')])>BtM-Nachweis</a>
+                </div>
+            </div>
         @endif
         @if (auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'buchhaltung']))
-            <nav class="app-nav app-nav-finanzen">
-                <a href="{{ route('buchhaltung') }}" @class(['is-active' => request()->routeIs('buchhaltung')])>Buchhaltung</a>
-                <a href="{{ route('inventur') }}" @class(['is-active' => request()->routeIs('inventur')])>Inventur</a>
-                <a href="{{ route('pflegehilfsmittel') }}" @class(['is-active' => request()->routeIs('pflegehilfsmittel')])>Pflegehilfsmittel</a>
-                <a href="{{ route('gefahrstoffe') }}" @class(['is-active' => request()->routeIs('gefahrstoffe')])>Gefahrstoffe</a>
-                <a href="{{ route('belegerfassung') }}" @class(['is-active' => request()->routeIs('belegerfassung')])>Beleg-Capture</a>
-                <a href="{{ route('wareneingang-capture') }}" @class(['is-active' => request()->routeIs('wareneingang-capture')])>Beleg→Wareneingang</a>
-                <a href="{{ route('regalzaehlung') }}" @class(['is-active' => request()->routeIs('regalzaehlung')])>Regalzählung</a>
-                <a href="{{ route('rueckverfolgung') }}" @class(['is-active' => request()->routeIs('rueckverfolgung')])>Rückverfolgung</a>
-                <a href="{{ route('taschengeld') }}" @class(['is-active' => request()->routeIs('taschengeld')])>Taschengeldkasse</a>
-                <a href="{{ route('beschaffung') }}" @class(['is-active' => request()->routeIs('beschaffung')])>Beschaffung</a>
-                <a href="{{ route('datenimport') }}" @class(['is-active' => request()->routeIs('datenimport')])>Datenimport</a>
-            </nav>
+            @php($finanzActive = request()->routeIs('buchhaltung','inventur','pflegehilfsmittel','gefahrstoffe','belegerfassung','wareneingang-capture','regalzaehlung','rueckverfolgung','taschengeld','beschaffung','datenimport'))
+            <div class="nav-menu" x-data="{ open: false }" @keydown.escape="open = false">
+                <button type="button" class="nav-menu-btn {{ $finanzActive ? 'is-active' : '' }}" @click="open = !open" :aria-expanded="open">
+                    WaWi &amp; Finanzen <span class="nav-caret">▾</span>
+                </button>
+                <div class="nav-menu-panel" x-show="open" x-transition @click.outside="open = false" x-cloak>
+                    <a href="{{ route('buchhaltung') }}" @class(['is-active' => request()->routeIs('buchhaltung')])>Buchhaltung</a>
+                    <a href="{{ route('inventur') }}" @class(['is-active' => request()->routeIs('inventur')])>Inventur</a>
+                    <a href="{{ route('pflegehilfsmittel') }}" @class(['is-active' => request()->routeIs('pflegehilfsmittel')])>Pflegehilfsmittel</a>
+                    <a href="{{ route('gefahrstoffe') }}" @class(['is-active' => request()->routeIs('gefahrstoffe')])>Gefahrstoffe</a>
+                    <a href="{{ route('belegerfassung') }}" @class(['is-active' => request()->routeIs('belegerfassung')])>Beleg-Capture</a>
+                    <a href="{{ route('wareneingang-capture') }}" @class(['is-active' => request()->routeIs('wareneingang-capture')])>Beleg→Wareneingang</a>
+                    <a href="{{ route('regalzaehlung') }}" @class(['is-active' => request()->routeIs('regalzaehlung')])>Regalzählung</a>
+                    <a href="{{ route('rueckverfolgung') }}" @class(['is-active' => request()->routeIs('rueckverfolgung')])>Rückverfolgung</a>
+                    <a href="{{ route('taschengeld') }}" @class(['is-active' => request()->routeIs('taschengeld')])>Taschengeldkasse</a>
+                    <a href="{{ route('beschaffung') }}" @class(['is-active' => request()->routeIs('beschaffung')])>Beschaffung</a>
+                    <a href="{{ route('datenimport') }}" @class(['is-active' => request()->routeIs('datenimport')])>Datenimport</a>
+                </div>
+            </div>
         @endif
         @if (auth()->user()?->hasAnyRole(['admin', 'super-admin']))
-            <nav class="app-nav app-nav-admin">
-                <a href="{{ route('admin.tenants') }}" @class(['is-active' => request()->routeIs('admin.tenants')])>Einrichtungen</a>
-                <a href="{{ route('admin.users') }}" @class(['is-active' => request()->routeIs('admin.users')])>Benutzer</a>
-            </nav>
+            @php($adminActive = request()->routeIs('admin.tenants','admin.users'))
+            <div class="nav-menu" x-data="{ open: false }" @keydown.escape="open = false">
+                <button type="button" class="nav-menu-btn {{ $adminActive ? 'is-active' : '' }}" @click="open = !open" :aria-expanded="open">
+                    Admin <span class="nav-caret">▾</span>
+                </button>
+                <div class="nav-menu-panel" x-show="open" x-transition @click.outside="open = false" x-cloak>
+                    <a href="{{ route('admin.tenants') }}" @class(['is-active' => request()->routeIs('admin.tenants')])>Einrichtungen</a>
+                    <a href="{{ route('admin.users') }}" @class(['is-active' => request()->routeIs('admin.users')])>Benutzer</a>
+                </div>
+            </div>
         @endif
         <div class="app-user">
             @auth @livewire('notification-bell') @endauth
