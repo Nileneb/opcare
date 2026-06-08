@@ -25,7 +25,7 @@
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem">
                     <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
                         {{-- Farbverlauf-Indikator statt Stufen-Badge --}}
-                        <div style="width:18px;height:18px;border-radius:50%;background:{{ \App\Domains\Arbeitsschutz\Support\BelastungsAmpel::farbe($m->lage()) }};border:1px solid rgba(0,0,0,.12);flex-shrink:0"
+                        <div class="ampel-dot" style="background:{{ \App\Domains\Arbeitsschutz\Support\BelastungsAmpel::farbe($m->lage()) }}"
                              title="{{ $m->wohnbereich }} — Lage {{ $m->lage() }}/10 ({{ $m->stufe->label() }})"></div>
                         <strong>{{ $m->wohnbereich }}</strong>
                         <span class="muted" style="font-size:.82em">gemeldet {{ $m->gemeldet_am->format('d.m.Y') }}</span>
@@ -71,7 +71,7 @@
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem">
                     <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
                         {{-- Farbverlauf-Indikator (wert = 0-10 wie lage) --}}
-                        <div style="width:18px;height:18px;border-radius:50%;background:{{ \App\Domains\Arbeitsschutz\Support\BelastungsAmpel::farbe($sm->wert) }};border:1px solid rgba(0,0,0,.12);flex-shrink:0"
+                        <div class="ampel-dot" style="background:{{ \App\Domains\Arbeitsschutz\Support\BelastungsAmpel::farbe($sm->wert) }}"
                              title="Belastungswert {{ $sm->wert }}/10"></div>
                         <strong>{{ $sm->user->name }}</strong>
                         <span class="muted" style="font-size:.82em">gemeldet {{ $sm->gemeldet_am->format('d.m.Y') }}</span>
@@ -249,7 +249,7 @@
 
                     {{-- Maßnahme hinzufügen --}}
                     <details style="margin-top:.5rem">
-                        <summary class="btn btn-sm" style="cursor:pointer;display:inline-block">+ Maßnahme hinzufügen</summary>
+                        <summary class="btn btn-ghost btn-sm" style="cursor:pointer;display:inline-block">+ Maßnahme hinzufügen</summary>
                         <form wire:submit="massnahmeHinzufuegen({{ $gefaehrdung->id }})" style="margin-top:.5rem">
                             <div class="form-row-3">
                                 <div class="field">
@@ -288,7 +288,7 @@
 
             {{-- Gefährdung hinzufügen --}}
             <details style="margin-top:.75rem">
-                <summary class="btn btn-sm" style="cursor:pointer;display:inline-block">+ Gefährdung hinzufügen</summary>
+                <summary class="btn btn-ghost btn-sm" style="cursor:pointer;display:inline-block">+ Gefährdung hinzufügen</summary>
                 <form wire:submit="gefaehrdungHinzufuegen({{ $gbu->id }})" style="margin-top:.5rem">
                     <div class="form-row-3">
                         <div class="field">

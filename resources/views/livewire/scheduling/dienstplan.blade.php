@@ -70,7 +70,7 @@
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem">
                     <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
                         {{-- Farbverlauf-Indikator statt Stufen-Badge --}}
-                        <div style="width:18px;height:18px;border-radius:50%;background:{{ \App\Domains\Arbeitsschutz\Support\BelastungsAmpel::farbe($b->lage) }};border:1px solid rgba(0,0,0,.12);flex-shrink:0"
+                        <div class="ampel-dot" style="background:{{ \App\Domains\Arbeitsschutz\Support\BelastungsAmpel::farbe($b->lage) }}"
                              title="{{ $b->wohnbereich }}"></div>
                         <strong>{{ $b->wohnbereich }}</strong>
                     </div>

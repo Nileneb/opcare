@@ -174,6 +174,7 @@
             @if ($begehung->maengel->isNotEmpty())
                 <div style="margin-bottom:1rem">
                     <h4>Mängel</h4>
+                    <div style="overflow-x:auto">
                     <table class="data">
                         <thead>
                             <tr>
@@ -217,12 +218,13 @@
                             @endforeach
                         </tbody>
                     </table>
+                    </div>
                 </div>
             @endif
 
             {{-- Mangel hinzufügen --}}
             <details>
-                <summary class="btn btn-sm" style="cursor:pointer;display:inline-block">+ Mangel hinzufügen</summary>
+                <summary class="btn btn-ghost btn-sm" style="cursor:pointer;display:inline-block">+ Mangel hinzufügen</summary>
                 <form wire:submit="mangelHinzufuegen({{ $begehung->id }})" style="margin-top:.5rem">
                     <div class="form-row-3">
                         <div class="field">

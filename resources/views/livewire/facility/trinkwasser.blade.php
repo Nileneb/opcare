@@ -105,7 +105,7 @@
                 @endif
 
                 <details style="margin-top:.5rem">
-                    <summary class="btn btn-sm" style="cursor:pointer;display:inline-block">+ Probenahmestelle anlegen</summary>
+                    <summary class="btn btn-ghost btn-sm" style="cursor:pointer;display:inline-block">+ Probenahmestelle anlegen</summary>
                     <form wire:submit="stelleSpeichern({{ $anlage->id }})" style="margin-top:.5rem">
                         <div class="form-row-2">
                             <div class="field">
@@ -167,6 +167,7 @@
             @if ($anlage->befunde->isNotEmpty())
                 <div>
                     <h4>Befund-Historie</h4>
+                    <div style="overflow-x:auto">
                     <table class="data">
                         <thead>
                             <tr>
@@ -219,6 +220,7 @@
                             @endforeach
                         </tbody>
                     </table>
+                    </div>
                 </div>
             @endif
         </div>
