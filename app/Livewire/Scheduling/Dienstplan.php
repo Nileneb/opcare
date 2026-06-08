@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Scheduling;
 
+use App\Domains\Arbeitsschutz\Data\BelastungsBefund;
 use App\Domains\Arbeitsschutz\Models\Belastungsmeldung;
 use App\Domains\Arbeitsschutz\Models\Gefaehrdungsbeurteilung;
 use App\Domains\Arbeitsschutz\Services\BelastungMelden;
@@ -26,6 +27,7 @@ use App\Domains\Scheduling\Models\ShiftAssignment;
 use App\Domains\Scheduling\Support\DienstplanGenerator;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -183,11 +185,7 @@ class Dienstplan extends Component
         abort_unless(auth()->user()?->can('manage', Shift::class), 403);
 
         $tenantId = app(CurrentTenant::class)->id();
-        $staffing = $this->berechneStaffingFuerMelden($tenantId);
-        $qualityFindings = $this->berechneQualityFindingsFuerMelden($tenantId);
-
-        $befunde = app(BelastungsAnalyzer::class)->analysiere($tenantId, $staffing, $qualityFindings);
-        $befund = $befunde->first(fn ($b) => $b->stationId === $stationId);
+        $befund = $this->berechneBelastung($tenantId)->first(fn ($b) => $b->stationId === $stationId);
 
         if ($befund === null) {
             session()->flash('status', 'Kein Befund für diese Station gefunden.');
@@ -245,10 +243,7 @@ class Dienstplan extends Component
             ->first();
 
         if ($meldung === null) {
-            $staffing = $this->berechneStaffingFuerMelden($tenantId);
-            $qualityFindings = $this->berechneQualityFindingsFuerMelden($tenantId);
-            $befunde = app(BelastungsAnalyzer::class)->analysiere($tenantId, $staffing, $qualityFindings);
-            $befund = $befunde->first(fn ($b) => $b->stationId === $this->entlastenStation);
+            $befund = $this->berechneBelastung($tenantId)->first(fn ($b) => $b->stationId === $this->entlastenStation);
 
             if ($befund === null || ! $befund->stufe->istMeldepflichtig()) {
                 session()->flash('status', 'Keine offene Meldung und Stufe nicht meldepflichtig — Entlasten nicht möglich.');
@@ -270,10 +265,22 @@ class Dienstplan extends Component
         session()->flash('status', 'Entlastungsmaßnahme angelegt und Meldung verknüpft.');
     }
 
-    // WHY: render() berechnet StaffingAnalysis mit Wochendaten — leitungMelden/entlastenSpeichern
-    // brauchen denselben Stand; diese Hilfsmethoden duplizieren die render()-Logik minimal, um
-    // unabhängig von render() aufgerufen werden zu können (Livewire actions laufen ohne render).
-    private function berechneStaffingFuerMelden(int $tenantId): StaffingAnalysis
+    /**
+     * Belastungs-Befunde je Wohnbereich — EINE Quelle für die Anzeige (render) UND die Aktionen
+     * (leitungMelden/entlastenSpeichern). WHY: sonst driften angezeigte und gemeldete Stufe auseinander.
+     *
+     * @return Collection<int, BelastungsBefund>
+     */
+    private function berechneBelastung(int $tenantId): Collection
+    {
+        return app(BelastungsAnalyzer::class)->analysiere(
+            $tenantId,
+            $this->berechneStaffing($tenantId),
+            $this->berechneQualityFindings($tenantId),
+        );
+    }
+
+    private function berechneStaffing(int $tenantId): StaffingAnalysis
     {
         $start = CarbonImmutable::parse($this->weekStart);
         $von = $start->toDateString();
@@ -295,7 +302,7 @@ class Dienstplan extends Component
     }
 
     /** @return array<int, QualityFinding> */
-    private function berechneQualityFindingsFuerMelden(int $tenantId): array
+    private function berechneQualityFindings(int $tenantId): array
     {
         $start = CarbonImmutable::parse($this->weekStart);
         $von = $start->toDateString();
@@ -368,7 +375,8 @@ class Dienstplan extends Component
             $qualityByUser[$qf->userId][] = $qf;
         }
 
-        $belastung = app(BelastungsAnalyzer::class)->analysiere($tenantId, $staffing, $qualityFindings);
+        // Belastungs-Index aus der gemeinsamen Quelle — identisch zu leitungMelden/entlastenSpeichern.
+        $belastung = $this->berechneBelastung($tenantId);
         $gbus = Gefaehrdungsbeurteilung::where('tenant_id', $tenantId)->orderBy('arbeitsbereich')->get();
 
         return view('livewire.scheduling.dienstplan', [
