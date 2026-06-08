@@ -8,6 +8,10 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use Spatie\Activitylog\Models\Activity;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * Legionellen-Untersuchungsbefund je Anlage und Probenahmestelle.
@@ -29,12 +33,16 @@ use Spatie\Activitylog\Models\Activity;
  * @property-read Trinkwasseranlage $anlage
  * @property-read Probenahmestelle|null $probenahmestelle
  * @property-read Collection<int, Activity> $activitiesAsSubject
+ * @property-read MediaCollection<int, Media> $media
+ * @property-read int|null $media_count
  * @property-read Tenant $tenant
  *
  * @mixin \Eloquent
  */
-class Legionellenbefund extends BaseModel
+class Legionellenbefund extends BaseModel implements HasMedia
 {
+    use InteractsWithMedia;
+
     /** Technischer Maßnahmenwert nach Anlage 3 Teil II TrinkwV 2023. */
     public const MASSNAHMENWERT = 100;
 
@@ -52,6 +60,14 @@ class Legionellenbefund extends BaseModel
         'ueberschreitung' => 'boolean',
         'gesundheitsamt_gemeldet_am' => 'date',
     ];
+
+    public function registerMediaCollections(): void
+    {
+        // WHY(§ 15 Abs. 3 TrinkwV 2023): Laborbefund-PDF/Foto als akkreditierter Nachweis je Befund archivieren.
+        $this->addMediaCollection('laborbefund')
+            ->useDisk(config('opcare.media_disk', 'media'))
+            ->singleFile();
+    }
 
     /** @return BelongsTo<Trinkwasseranlage, $this> */
     public function anlage(): BelongsTo

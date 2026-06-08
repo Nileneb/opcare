@@ -152,6 +152,12 @@
                             <label>Labor</label>
                             <input type="text" wire:model="labor" placeholder="z. B. Hygienelab GmbH" />
                         </div>
+                        <div class="field">
+                            <label>Laborbefund PDF/Foto</label>
+                            <input type="file" wire:model="laborbefund_datei" accept=".pdf,.jpg,.jpeg,.png" />
+                            <span class="muted" style="font-size:.85em">Laborbefund PDF/Foto (max. 20 MB)</span>
+                            @error('laborbefund_datei')<span class="err">{{ $message }}</span>@enderror
+                        </div>
                     </div>
                     <button class="btn btn-primary btn-sm">Befund erfassen</button>
                 </form>
@@ -170,6 +176,7 @@
                                 <th>Bewertung</th>
                                 <th>Labor</th>
                                 <th>Maßnahme / Meldung</th>
+                                <th>Befund</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -196,6 +203,14 @@
                                             @else
                                                 <span class="badge red">Maßnahmen ausstehend</span>
                                             @endif
+                                        @else
+                                            <span class="muted">—</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @php $labordok = $befund->getFirstMedia('laborbefund'); @endphp
+                                        @if ($labordok)
+                                            <a href="{{ URL::temporarySignedRoute('media.download', now()->addMinutes(5), ['media' => $labordok->id]) }}" class="btn btn-sm">Laborbefund ↓</a>
                                         @else
                                             <span class="muted">—</span>
                                         @endif
