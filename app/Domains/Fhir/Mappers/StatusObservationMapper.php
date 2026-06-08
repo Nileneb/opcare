@@ -30,7 +30,10 @@ class StatusObservationMapper
             return null;
         }
 
-        $id = 'status-'.$obs->typ.'-'.$obs->id;
+        // WHY(FHIR): Resource-ids erlauben nur [A-Za-z0-9.-]; Katalog-Keys mit „_" würden eine
+        // ungültige id erzeugen → Unterstrich auf Bindestrich normalisieren.
+        $id = 'status-'.str_replace('_', '-', $obs->typ).'-'.$obs->id;
+        $effective = $obs->erfasst_am?->toIso8601String() ?? $fallbackDate;
         $resource = [
             'resourceType' => 'Observation',
             'id' => $id,
@@ -38,9 +41,15 @@ class StatusObservationMapper
             'status' => 'final',
             'code' => ['coding' => [$this->coding($def['fhir_code'][0], $def['fhir_code'][1])]],
             'subject' => ['reference' => $patientReference],
-            'effectiveDateTime' => $obs->erfasst_am?->toIso8601String() ?? $fallbackDate,
             'performer' => [['reference' => $performerReference]],
         ];
+
+        // WHY(ÜLB): manche Profile (z. B. Respiratory_Access) binden effective[x] auf Period statt dateTime.
+        if (($def['effective'] ?? 'dateTime') === 'period') {
+            $resource['effectivePeriod'] = ['start' => $effective];
+        } else {
+            $resource['effectiveDateTime'] = $effective;
+        }
 
         if ($def['kind'] === 'text') {
             if (($obs->wert_text ?? '') === '') {

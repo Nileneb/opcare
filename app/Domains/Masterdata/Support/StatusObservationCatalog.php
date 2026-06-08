@@ -70,6 +70,42 @@ class StatusObservationCatalog
                 'fhir_code' => ['78064003:370132008=26716007', 'Respiratory function (observable entity) : Scale type (attribute) = Qualitative (qualifier value)'],
                 'options' => [],
             ],
+            'atemwegszugang' => [
+                'label' => 'Atemwegszugang', 'section' => 'Atmung', 'kind' => 'coded',
+                'code' => ['313292002', 'Atemwegszugang'],
+                'profile' => 'Observation_Respiratory_Access', 'slice' => 'atemwegszugang',
+                'fhir_code' => ['313292002', 'Route of breathing (observable entity)'],
+                'effective' => 'period',
+                'options' => ['366141005' => 'natürliche Atemwege', '302108003' => 'Tracheostoma'],
+                'value_displays' => ['366141005' => 'Finding of route of breathing (finding)', '302108003' => 'Tracheostomy present (finding)'],
+            ],
+            'atmungsunterstuetzung' => [
+                'label' => 'Atmungsunterstützung', 'section' => 'Atmung', 'kind' => 'coded',
+                'code' => ['40617009', 'Atmungsunterstützung'],
+                'profile' => 'Observation_Respiratory_Support', 'slice' => 'atmungsunterstuetzung',
+                'fhir_code' => ['363787002:704321009=40617009', 'Observable entity (observable entity) : Characterizes (attribute) = Artificial respiration (procedure)'],
+                'options' => ['106048009:47429007=40617009,363713009=52101004' => 'Beatmung vorhanden', '106048009:47429007=40617009,363713009=2667000' => 'keine Beatmung'],
+                'value_displays' => [
+                    '106048009:47429007=40617009,363713009=52101004' => 'Respiratory finding (finding) : Associated with (attribute) = Artificial respiration (procedure) , Has interpretation (attribute) = Present (qualifier value)',
+                    '106048009:47429007=40617009,363713009=2667000' => 'Respiratory finding (finding) : Associated with (attribute) = Artificial respiration (procedure) , Has interpretation (attribute) = Absent (qualifier value)',
+                ],
+            ],
+            'raeumliche_isolation' => [
+                'label' => 'Räumliche Isolation', 'section' => 'Isolation', 'kind' => 'coded',
+                'code' => ['40174006', 'Räumliche Isolation'],
+                'profile' => 'Observation_Isolation_Necessary', 'slice' => 'raeumlicheIsolation',
+                'fhir_code' => ['363787002:704321009=40174006', 'Observable entity (observable entity) : Characterizes (attribute) = Isolation procedure (procedure)'],
+                'options' => [
+                    '129125009:363589002=40174006,408730004=897015005' => 'Isolation empfohlen',
+                    '129125009:363589002=40174006,408730004=897016006' => 'Isolation nicht empfohlen',
+                    '129125009:363589002=40174006,408730004=410537005' => 'unklar',
+                ],
+                'value_displays' => [
+                    '129125009:363589002=40174006,408730004=897015005' => 'Procedure with explicit context (situation) : Associated procedure (attribute) = Isolation procedure (procedure) , Procedure context (attribute) = Recommended (qualifier value)',
+                    '129125009:363589002=40174006,408730004=897016006' => 'Procedure with explicit context (situation) : Associated procedure (attribute) = Isolation procedure (procedure) , Procedure context (attribute) = Not recommended (qualifier value)',
+                    '129125009:363589002=40174006,408730004=410537005' => 'Procedure with explicit context (situation) : Associated procedure (attribute) = Isolation procedure (procedure) , Procedure context (attribute) = Action status unknown (qualifier value)',
+                ],
+            ],
         ];
     }
 

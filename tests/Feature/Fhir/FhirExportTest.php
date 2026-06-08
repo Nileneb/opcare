@@ -261,6 +261,32 @@ it('mappt Status-Beobachtungen auf ihre ÜLB-Profile (Bewusstsein/Kontinenz/Atmu
         ->toContain('Ernährung');
 });
 
+it('mappt Atemwegszugang/Atmungsunterstützung/räumliche Isolation auf ihre ÜLB-Profile', function () {
+    foreach ([
+        ['atemwegszugang', '366141005'],
+        ['atmungsunterstuetzung', '106048009:47429007=40617009,363713009=2667000'],
+        ['raeumliche_isolation', '129125009:363589002=40174006,408730004=897016006'],
+    ] as [$typ, $code]) {
+        $this->resident->statusObservations()->create(['typ' => $typ, 'wert_code' => $code, 'erfasst_am' => '2026-06-01']);
+    }
+    $bundle = app(FhirDocumentExporter::class)->export($this->resident);
+    $resources = collect($bundle['entry'])->pluck('resource');
+    $profileOf = fn (string $needle) => $resources->first(fn ($r) => isset($r['meta']['profile'][0]) && str_contains($r['meta']['profile'][0], $needle));
+
+    $atemweg = $profileOf('Observation_Respiratory_Access');
+    // WHY(ÜLB): Respiratory_Access bindet effective[x] auf Period (nicht dateTime).
+    expect($atemweg['effectivePeriod']['start'])->not->toBeNull()
+        ->and($atemweg)->not->toHaveKey('effectiveDateTime')
+        // WHY(FHIR): Resource-id darf keinen Unterstrich enthalten — Katalog-Key wird normalisiert.
+        ->and($profileOf('Observation_Isolation_Necessary')['id'])->toBe('status-raeumliche-isolation-'.$this->resident->statusObservations()->where('typ', 'raeumliche_isolation')->first()->id)
+        ->and($profileOf('Observation_Respiratory_Support')['valueCodeableConcept']['coding'][0]['code'])->toBe('106048009:47429007=40617009,363713009=2667000');
+
+    $titles = collect($bundle['entry'][0]['resource']['section'])->pluck('title')->all();
+    expect($titles)->toContain('Atemwegszugang')
+        ->toContain('Atmungsunterstützung')
+        ->toContain('Notwendigkeit der räumlichen Isoation');
+});
+
 it('exportiert pro Status-Typ nur die jüngste Erfassung (Sektion max=1)', function () {
     $this->resident->statusObservations()->create(['typ' => 'bewusstsein', 'wert_code' => '371632003', 'erfasst_am' => '2026-01-01']);
     $this->resident->statusObservations()->create(['typ' => 'bewusstsein', 'wert_code' => '271591004', 'erfasst_am' => '2026-06-01']);

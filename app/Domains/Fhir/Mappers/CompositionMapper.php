@@ -51,6 +51,20 @@ class CompositionMapper
             ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '78064003:370132008=26716007', 'display' => 'Respiratory function (observable entity) : Scale type (attribute) = Qualitative (qualifier value)'],
             'Qualitative Beschreibung der Atmung',
         ],
+        'atemwegszugang' => [
+            ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '313292002', 'display' => 'Route of breathing (observable entity)'],
+            'Atemwegszugang',
+        ],
+        'atmungsunterstuetzung' => [
+            ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '363787002:704321009=40617009', 'display' => 'Observable entity (observable entity) : Characterizes (attribute) = Artificial respiration (procedure)'],
+            'Atmungsunterstützung',
+        ],
+        // WHY: Titel exakt aus dem KBV-Profil übernommen — der Tippfehler „Isoation" steht so im
+        // ÜLB-Profil (KBV_PR_MIO_ULB_Composition); abweichender Titel würde der Validator als Fehler werten.
+        'raeumlicheIsolation' => [
+            ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '363787002:704321009=40174006', 'display' => 'Observable entity (observable entity) : Characterizes (attribute) = Isolation procedure (procedure)'],
+            'Notwendigkeit der räumlichen Isoation',
+        ],
         'harnkontinenzDifferenzierteEinschaetzung' => [
             ['system' => self::SNOMED, 'version' => self::SNOMED_VERSION, 'code' => '129009001', 'display' => 'Bladder control, function (observable entity)'],
             'Harnkontinenz differenzierte Einschätzung',

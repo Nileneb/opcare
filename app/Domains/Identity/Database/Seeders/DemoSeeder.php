@@ -376,7 +376,12 @@ class DemoSeeder extends Seeder
             ));
         }
 
-        foreach ([['bewusstsein', '271591004', null], ['harnkontinenz', '450841000', null], ['stuhlkontinenz', '24029004', null], ['kostform', '160670007', null], ['atmung', null, 'unauffällig, keine Atemnot']] as [$typ, $code, $text]) {
+        foreach ([
+            ['bewusstsein', '271591004', null], ['harnkontinenz', '450841000', null], ['stuhlkontinenz', '24029004', null],
+            ['kostform', '160670007', null], ['atmung', null, 'unauffällig, keine Atemnot'],
+            ['atemwegszugang', '366141005', null], ['atmungsunterstuetzung', '106048009:47429007=40617009,363713009=2667000', null],
+            ['raeumliche_isolation', '129125009:363589002=40174006,408730004=897016006', null],
+        ] as [$typ, $code, $text]) {
             $maria->statusObservations()->create(['typ' => $typ, 'wert_code' => $code, 'wert_text' => $text, 'erfasst_am' => now()->subDays(3)->toDateString()]);
         }
         foreach ([['Rollator', 'hilfsmittel', 'für Strecken > 10 m'], ['Hörgerät rechts', 'hilfsmittel', null]] as [$bez, $kat, $hinweis]) {
