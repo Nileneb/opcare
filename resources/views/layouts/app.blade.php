@@ -160,8 +160,11 @@
                 </div>
             </div>
         @endif
+        @unless ($istPortal)
+            <a href="{{ route('chat') }}" @class(['app-nav-link', 'is-active' => request()->routeIs('chat')]) style="font-size:.95em">💬 Chat</a>
+        @endunless
         <div class="app-user">
-            @auth @livewire('notification-bell') @endauth
+            @auth @livewire('notification-bell') @livewire('communication.chat-glocke') @endauth
             @livewire('admin.tenant-switcher')
             <a href="{{ route('profile') }}" class="who" wire:navigate style="text-decoration:none;color:inherit">
                 <b>{{ $u?->name ?? 'Gast' }}</b>

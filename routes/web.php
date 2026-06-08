@@ -32,6 +32,7 @@ use App\Livewire\Capture\Wareneingangerfassung;
 use App\Livewire\Catering\Haccp;
 use App\Livewire\Catering\Kueche;
 use App\Livewire\Catering\Reinigungsplan;
+use App\Livewire\Communication\Chat as ChatScreen;
 use App\Livewire\Compliance\Datenschutz;
 use App\Livewire\Facility;
 use App\Livewire\Facility\Haustechnik;
@@ -165,6 +166,7 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class, Restrict
     Route::get('/dokumente/{media}', MediaDownloadController::class)->name('media.download')->middleware('signed');
     Route::get('/bewohner/{resident}/assessment/{instrument}', AssessmentDurchfuehren::class)->name('assessment.durchfuehren');
     Route::get('/bewohner/{resident}/assessments', AssessmentVerlauf::class)->name('assessment.verlauf');
+    Route::get('/chat', ChatScreen::class)->name('chat');
     Route::get('/abstimmungen', Abstimmungen::class)->name('abstimmungen');
     Route::get('/qdvs/{export}/download', function (App\Domains\Qdvs\Models\QdvsExport $export) {
         // WHY(DSGVO Art. 9): pseudonymisierte Gesundheitsdaten — Download nur für Leitung (admin/pflegefachkraft/super-admin).
