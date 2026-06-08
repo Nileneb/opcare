@@ -47,13 +47,19 @@ use App\Domains\Capture\Services\CaptureWareneingang;
 use App\Domains\CarePlanning\Models\CareMeasure;
 use App\Domains\CarePlanning\Models\SisAssessment;
 use App\Domains\Catering\Enums\EssenswunschArt;
+use App\Domains\Catering\Enums\GefahrenanalyseStatus;
+use App\Domains\Catering\Enums\Gefahrenart;
 use App\Domains\Catering\Enums\HaccpArt;
+use App\Domains\Catering\Enums\Lenkungsart;
 use App\Domains\Catering\Enums\LmivAllergen;
 use App\Domains\Catering\Enums\Mahlzeit;
 use App\Domains\Catering\Enums\ReinigungsIntervall;
 use App\Domains\Catering\Models\Essenswunsch;
+use App\Domains\Catering\Models\Gefahrenanalyse;
 use App\Domains\Catering\Models\Gericht;
 use App\Domains\Catering\Models\HaccpMesspunkt;
+use App\Domains\Catering\Models\LebensmittelGefahr;
+use App\Domains\Catering\Models\Lenkungsmassnahme;
 use App\Domains\Catering\Models\Reinigungsaufgabe;
 use App\Domains\Catering\Services\MessungErfassen;
 use App\Domains\Catering\Services\ReinigungErledigen;
@@ -547,6 +553,48 @@ class DemoSeeder extends Seeder
         // Tiefkühl und Ausgabe: regelkonforme Messungen.
         $messungSvc->handle($mpTiefkuehl, -20.5, now()->subHour()->toDateTimeString(), $koechin->id);
         $messungSvc->handle($mpBainMarie, 68.0, now()->subHour()->toDateTimeString(), $koechin->id);
+
+        // HACCP-Gefahrenanalyse-Register (HACCP-Prinzip 1–3, VO 852/2004 Art. 5, Codex Alimentarius):
+        // (a) freigegebener Prozessschritt mit CCP, der auf den Kühlhaus-Messpunkt verweist + Lenkung.
+        $gaKuehlware = Gefahrenanalyse::create([
+            'tenant_id' => $tenant->id, 'prozessschritt' => 'Wareneingang & Lagerung Kühlware', 'bereich' => 'Lager',
+            'beschreibung' => 'Annahme und Kühllagerung leicht verderblicher Lebensmittel.',
+            'erstellt_am' => now()->subMonths(6)->toDateString(), 'verifizierungsintervall_monate' => 12,
+            'letzte_verifizierung_am' => now()->subMonths(6)->toDateString(), 'verantwortlich' => 'Küchenleitung',
+            'freigegeben_am' => now()->subMonths(6)->toDateString(), 'status' => GefahrenanalyseStatus::Freigegeben,
+        ]);
+        $gefahrKuehlkette = LebensmittelGefahr::create([
+            'tenant_id' => $tenant->id, 'gefahrenanalyse_id' => $gaKuehlware->id, 'gefahrenart' => Gefahrenart::Biologisch,
+            'beschreibung' => 'Vermehrung von Salmonellen/Listerien bei Unterbrechung der Kühlkette.',
+            'wahrscheinlichkeit' => 2, 'schwere' => 3, 'ist_ccp' => true, 'haccp_messpunkt_id' => $mpKuehlhaus->id,
+            'ccp_begruendung' => 'Letzter beherrschbarer Schritt vor der Verarbeitung — kein nachgelagerter Abtötungsschritt.',
+        ]);
+        Lenkungsmassnahme::create([
+            'tenant_id' => $tenant->id, 'lebensmittel_gefahr_id' => $gefahrKuehlkette->id, 'art' => Lenkungsart::Ccp,
+            'beschreibung' => 'Kühlhaustemperatur ≤ 7 °C, tägliche dokumentierte Messung (HACCP-Tagesblatt).',
+            'verantwortlich' => 'Köchin', 'umgesetzt_am' => now()->subMonths(6)->toDateString(),
+            'verifiziert_am' => now()->subMonths(3)->toDateString(),
+        ]);
+        LebensmittelGefahr::create([
+            'tenant_id' => $tenant->id, 'gefahrenanalyse_id' => $gaKuehlware->id, 'gefahrenart' => Gefahrenart::Physikalisch,
+            'beschreibung' => 'Fremdkörper (Verpackungsreste) bei der Warenannahme.', 'wahrscheinlichkeit' => 1, 'schwere' => 2,
+        ]);
+        // (b) Entwurf mit offener Lücke: signifikante Allergen-Gefahr ohne Lenkung + CCP ohne Überwachung (rote Lücken-Warnung).
+        $gaAusgabe = Gefahrenanalyse::create([
+            'tenant_id' => $tenant->id, 'prozessschritt' => 'Speisenausgabe', 'bereich' => 'Ausgabe',
+            'erstellt_am' => now()->subDays(10)->toDateString(), 'verifizierungsintervall_monate' => 12,
+            'letzte_verifizierung_am' => now()->subDays(10)->toDateString(), 'verantwortlich' => 'Küchenleitung',
+            'status' => GefahrenanalyseStatus::Entwurf,
+        ]);
+        LebensmittelGefahr::create([
+            'tenant_id' => $tenant->id, 'gefahrenanalyse_id' => $gaAusgabe->id, 'gefahrenart' => Gefahrenart::Allergen,
+            'beschreibung' => 'Allergen-Kreuzkontakt durch gemeinsam genutzte Schöpfkellen.', 'wahrscheinlichkeit' => 2, 'schwere' => 3,
+        ]);
+        LebensmittelGefahr::create([
+            'tenant_id' => $tenant->id, 'gefahrenanalyse_id' => $gaAusgabe->id, 'gefahrenart' => Gefahrenart::Biologisch,
+            'beschreibung' => 'Keimvermehrung bei zu langer Warmhaltung unter 65 °C.', 'wahrscheinlichkeit' => 2, 'schwere' => 2,
+            'ist_ccp' => true, 'haccp_messpunkt_id' => null, 'ccp_begruendung' => 'Noch kein Überwachungspunkt zugeordnet.',
+        ]);
 
         // Reinigungs-/Desinfektionsplan (VO 852/2004 Anhang II, LMHV): 4 Aufgaben, eine überfällig (rot), eine frisch erledigt (grün).
         $reinigungSvc = app(ReinigungErledigen::class);

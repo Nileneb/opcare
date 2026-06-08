@@ -81,7 +81,7 @@
         @unless ($istPortal)
             @php($votingActive = request()->routeIs('abstimmungen'))
             <a href="{{ route('abstimmungen') }}" @class(['is-active' => $votingActive])>Abstimmungen</a>
-            @php($kalenderActive = request()->routeIs('kalender','zeiterfassung','wunschdienstplan','tauschboerse','energiebarometer','haustechnik','medizinprodukte','trinkwasser','brandschutz','quality.beschwerden','kueche','haccp','reinigungsplan'))
+            @php($kalenderActive = request()->routeIs('kalender','zeiterfassung','wunschdienstplan','tauschboerse','energiebarometer','haustechnik','medizinprodukte','trinkwasser','brandschutz','quality.beschwerden','kueche','haccp','haccp.gefahrenanalyse','reinigungsplan'))
             <div class="nav-menu" x-data="{ open: false }" @keydown.escape="open = false">
                 <button type="button" class="nav-menu-btn {{ $kalenderActive ? 'is-active' : '' }}" @click="open = !open" :aria-expanded="open">
                     Kalender &amp; Betrieb <span class="nav-caret">▾</span>
@@ -104,6 +104,7 @@
                     @if (auth()->user()?->isSuperAdmin() || auth()->user()?->hasAnyRole(['admin', 'pflegefachkraft', 'kueche']))
                         <a href="{{ route('kueche') }}" @class(['is-active' => request()->routeIs('kueche')])>Küche</a>
                         <a href="{{ route('haccp') }}" @class(['is-active' => request()->routeIs('haccp')])>HACCP</a>
+                        <a href="{{ route('haccp.gefahrenanalyse') }}" @class(['is-active' => request()->routeIs('haccp.gefahrenanalyse')])>Gefahrenanalyse</a>
                         <a href="{{ route('reinigungsplan') }}" @class(['is-active' => request()->routeIs('reinigungsplan')])>Reinigungsplan</a>
                     @endif
                 </div>
