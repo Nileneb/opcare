@@ -36,10 +36,13 @@ use App\Domains\Catering\Enums\EssenswunschArt;
 use App\Domains\Catering\Enums\HaccpArt;
 use App\Domains\Catering\Enums\LmivAllergen;
 use App\Domains\Catering\Enums\Mahlzeit;
+use App\Domains\Catering\Enums\ReinigungsIntervall;
 use App\Domains\Catering\Models\Essenswunsch;
 use App\Domains\Catering\Models\Gericht;
 use App\Domains\Catering\Models\HaccpMesspunkt;
+use App\Domains\Catering\Models\Reinigungsaufgabe;
 use App\Domains\Catering\Services\MessungErfassen;
+use App\Domains\Catering\Services\ReinigungErledigen;
 use App\Domains\Compliance\Models\Auftragsverarbeitung;
 use App\Domains\Compliance\Models\Verarbeitungstaetigkeit;
 use App\Domains\Compliance\Support\VvtDefaults;
@@ -501,6 +504,19 @@ class DemoSeeder extends Seeder
         // Tiefkühl und Ausgabe: regelkonforme Messungen.
         $messungSvc->handle($mpTiefkuehl, -20.5, now()->subHour()->toDateTimeString(), $koechin->id);
         $messungSvc->handle($mpBainMarie, 68.0, now()->subHour()->toDateTimeString(), $koechin->id);
+
+        // Reinigungs-/Desinfektionsplan (VO 852/2004 Anhang II, LMHV): 4 Aufgaben, eine überfällig (rot), eine frisch erledigt (grün).
+        $reinigungSvc = app(ReinigungErledigen::class);
+        $aufgabeArbeit = Reinigungsaufgabe::create(['tenant_id' => $tenant->id, 'bezeichnung' => 'Arbeitsflächen reinigen', 'bereich' => 'Küche', 'intervall' => ReinigungsIntervall::Taeglich, 'verantwortlich' => 'Küchenpersonal', 'aktiv' => true]);
+        // Überfällig: letzte Erledigung vor 3 Tagen → tägl. Intervall → rot.
+        $aufgabeArbeit->update(['letzte_erledigung_am' => now()->subDays(3)->toDateString()]);
+        $aufgabeArbeit->nachweise()->create(['tenant_id' => $tenant->id, 'erledigt_am' => now()->subDays(3)->toDateString(), 'erledigt_von' => $koechin->id, 'bemerkung' => null]);
+        $aufgabeKuehlhaus = Reinigungsaufgabe::create(['tenant_id' => $tenant->id, 'bezeichnung' => 'Kühlhaus reinigen', 'bereich' => 'Kühlhaus', 'intervall' => ReinigungsIntervall::Woechentlich, 'verantwortlich' => 'Köchin', 'aktiv' => true]);
+        // Frisch erledigt heute → grün.
+        $reinigungSvc->handle($aufgabeKuehlhaus, now()->toDateString(), $koechin->id, 'Komplett gereinigt und desinfiziert.');
+        Reinigungsaufgabe::create(['tenant_id' => $tenant->id, 'bezeichnung' => 'Dunstabzugshaube entfetten', 'bereich' => 'Küche', 'intervall' => ReinigungsIntervall::Monatlich, 'verantwortlich' => 'Hauswirtschaft', 'aktiv' => true]);
+        $aufgabeBoeden = Reinigungsaufgabe::create(['tenant_id' => $tenant->id, 'bezeichnung' => 'Böden Küche wischen', 'bereich' => 'Küche', 'intervall' => ReinigungsIntervall::Taeglich, 'verantwortlich' => 'Küchenpersonal', 'aktiv' => true]);
+        $reinigungSvc->handle($aufgabeBoeden, now()->toDateString(), $koechin->id, null);
 
         // Arbeitszeit-Ist (BAG/EuGH): erfasste Zeiten der laufenden Woche für Sandra/Tom (Soll-Ist-Demo).
         $woStart = now()->startOfWeek();

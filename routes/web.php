@@ -29,6 +29,7 @@ use App\Livewire\Capture\Belegerfassung;
 use App\Livewire\Capture\Wareneingangerfassung;
 use App\Livewire\Catering\Haccp;
 use App\Livewire\Catering\Kueche;
+use App\Livewire\Catering\Reinigungsplan;
 use App\Livewire\Compliance\Datenschutz;
 use App\Livewire\Facility;
 use App\Livewire\Facility\Haustechnik;
@@ -141,6 +142,7 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class, Restrict
     Route::get('/trinkwasser', Trinkwasser::class)->name('trinkwasser');
     Route::get('/kueche', Kueche::class)->name('kueche');
     Route::get('/haccp', Haccp::class)->name('haccp');
+    Route::get('/reinigungsplan', Reinigungsplan::class)->name('reinigungsplan');
     Route::get('/zeiterfassung', Zeiterfassung::class)->name('zeiterfassung');
     Route::get('/wunschdienstplan', Wunschdienstplan::class)->name('wunschdienstplan');
     Route::get('/tauschboerse', Tauschboerse::class)->name('tauschboerse');
