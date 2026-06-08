@@ -33,10 +33,13 @@ use App\Domains\Capture\Services\CaptureWareneingang;
 use App\Domains\CarePlanning\Models\CareMeasure;
 use App\Domains\CarePlanning\Models\SisAssessment;
 use App\Domains\Catering\Enums\EssenswunschArt;
+use App\Domains\Catering\Enums\HaccpArt;
 use App\Domains\Catering\Enums\LmivAllergen;
 use App\Domains\Catering\Enums\Mahlzeit;
 use App\Domains\Catering\Models\Essenswunsch;
 use App\Domains\Catering\Models\Gericht;
+use App\Domains\Catering\Models\HaccpMesspunkt;
+use App\Domains\Catering\Services\MessungErfassen;
 use App\Domains\Compliance\Models\Auftragsverarbeitung;
 use App\Domains\Compliance\Models\Verarbeitungstaetigkeit;
 use App\Domains\Compliance\Support\VvtDefaults;
@@ -487,6 +490,17 @@ class DemoSeeder extends Seeder
         Essenswunsch::create(['tenant_id' => $tenant->id, 'resident_id' => $maria->id, 'art' => EssenswunschArt::Abneigung, 'text' => 'kein Fisch']);
         Essenswunsch::create(['tenant_id' => $tenant->id, 'resident_id' => $maria->id, 'art' => EssenswunschArt::Vorliebe, 'text' => 'gern kleine Portionen']);
         $eintopf->menuewahlen()->create(['tenant_id' => $tenant->id, 'resident_id' => $maria->id]);
+
+        // HACCP-Messpunkte + Temperaturmessungen (VO (EG) 852/2004 Art. 5): 3 CCPs, einer mit offener Abweichung.
+        $mpKuehlhaus = HaccpMesspunkt::create(['tenant_id' => $tenant->id, 'bezeichnung' => 'Kühlhaus', 'art' => HaccpArt::Kuehlung, 'grenzwert' => 7.0, 'aktiv' => true]);
+        $mpTiefkuehl = HaccpMesspunkt::create(['tenant_id' => $tenant->id, 'bezeichnung' => 'Tiefkühltruhe', 'art' => HaccpArt::Tiefkuehlung, 'grenzwert' => -18.0, 'aktiv' => true]);
+        $mpBainMarie = HaccpMesspunkt::create(['tenant_id' => $tenant->id, 'bezeichnung' => 'Bain-Marie Ausgabe', 'art' => HaccpArt::Ausgabe, 'grenzwert' => 65.0, 'aktiv' => true]);
+        $messungSvc = app(MessungErfassen::class);
+        // Kühlhaus: 9 °C → Abweichung ohne Korrektur (zeigt roten Pflicht-Kasten).
+        $messungSvc->handle($mpKuehlhaus, 9.0, now()->subHour()->toDateTimeString(), $koechin->id);
+        // Tiefkühl und Ausgabe: regelkonforme Messungen.
+        $messungSvc->handle($mpTiefkuehl, -20.5, now()->subHour()->toDateTimeString(), $koechin->id);
+        $messungSvc->handle($mpBainMarie, 68.0, now()->subHour()->toDateTimeString(), $koechin->id);
 
         // Arbeitszeit-Ist (BAG/EuGH): erfasste Zeiten der laufenden Woche für Sandra/Tom (Soll-Ist-Demo).
         $woStart = now()->startOfWeek();
