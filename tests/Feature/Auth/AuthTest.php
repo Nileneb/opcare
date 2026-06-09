@@ -4,8 +4,11 @@ use App\Domains\Identity\Database\Seeders\RolesSeeder;
 use App\Domains\Identity\Models\Tenant;
 use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Support\CurrentTenant;
+use App\Mail\InvitationMail;
+use App\Models\Invitation;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
+use Illuminate\Support\Facades\Mail;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -16,7 +19,15 @@ beforeEach(function () {
 });
 
 it('zeigt Gästen die Login-Seite', function () {
-    $this->get('/login')->assertOk()->assertSee('Anmelden');
+    $this->get('/login')
+        ->assertOk()
+        ->assertSee('Anmelden')
+        ->assertDontSee('Noch kein Konto');
+});
+
+it('blockiert die registrierung und gibt 403 zurück', function () {
+    $this->get('/register')->assertStatus(403);
+    $this->post('/register', [])->assertStatus(403);
 });
 
 it('registriert einen neuen Benutzer und meldet ihn an', function () {
@@ -81,4 +92,49 @@ it('meldet einen Benutzer ab', function () {
 
     $this->actingAs($user)->post('/logout')->assertRedirect('/login');
     $this->assertGuest();
+});
+
+it('zeigt das öffentliche bewerbungsformular', function () {
+    $this->get('/bewerben')
+        ->assertOk()
+        ->assertSee('Bewerbung einreichen');
+});
+
+it('zeigt die hr einladungsseite für berechtigte nutzer', function () {
+    $user = User::factory()->create(['email' => 'hr@opcare.local', 'password' => 'pw-123456', 'tenant_id' => $this->tenant->id]);
+    $user->assignRole('admin');
+
+    $this->actingAs($user)->get('/hr/einladungen')
+        ->assertOk()
+        ->assertSee('Einladungen versenden');
+});
+
+it('zeigt die einladungsseite für gültige tokens', function () {
+    $invitation = Invitation::factory()->create();
+
+    $this->get('/invite/'.$invitation->token)
+        ->assertOk()
+        ->assertSee('Einladung annehmen')
+        ->assertSee($invitation->email);
+});
+
+it('zeigt eine fehlerseite für abgelaufene oder bereits genutzte einladungen', function () {
+    $invitation = Invitation::factory()->create(['expires_at' => now()->subHour()]);
+
+    $this->get('/invite/'.$invitation->token)
+        ->assertOk()
+        ->assertSee('Einladung ungültig')
+        ->assertSee('Personalabteilung');
+});
+
+it('queues invitation mail when the mailable is sent', function () {
+    Mail::fake();
+    $invitation = Invitation::factory()->create();
+
+    Mail::to($invitation->email)->queue(new InvitationMail($invitation));
+
+    Mail::assertQueued(InvitationMail::class, function (InvitationMail $mail) use ($invitation) {
+        return $mail->hasTo($invitation->email)
+            && $mail->invitation->is($invitation);
+    });
 });

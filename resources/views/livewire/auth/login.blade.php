@@ -28,7 +28,7 @@
         </button>
     </form>
 
-    <p class="auth-alt">Noch kein Konto? <a href="{{ route('register') }}" wire:navigate>Registrieren</a></p>
+    <p class="auth-alt" style="color:var(--color-muted);font-size:0.95em">Zugang nur auf Einladung. Bei Fragen wende dich an deine Einrichtung.</p>
 
     <div class="auth-demo">
         <b>Demo-Zugang:</b> admin@opcare.local · Passwort <b>password</b><br>

@@ -2,8 +2,11 @@
 
 use App\Domains\Fhir\FhirDocumentExporter;
 use App\Domains\Masterdata\Models\Resident;
+use App\Http\Controllers\ApplicationController;
+use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\MediaDownloadController;
 use App\Http\Controllers\SpeechController;
+use App\Http\Middleware\EnsureInviteOnly;
 use App\Http\Middleware\RequireTwoFactorEnrollment;
 use App\Http\Middleware\RestrictPortalUsers;
 use App\Livewire\Accounting\Beschaffung;
@@ -86,14 +89,25 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
-Route::middleware('guest')->group(function () {
+Route::middleware(['guest', EnsureInviteOnly::class])->group(function () {
     Route::get('/login', Login::class)->name('login');
-    Route::get('/register', Register::class)->name('register');
+    Route::match(['get', 'post'], '/register', function () {
+        abort(403, 'Registrierung nur per Einladung möglich.');
+    })->name('register');
     Route::get('/forgot-password', ForgotPassword::class)->name('password.request');
     Route::get('/reset-password/{token}', ResetPassword::class)->name('password.reset');
     // TOTP-Challenge: Benutzer ist nach der Passwortprüfung noch nicht authentifiziert (Session-Hand-off).
     Route::get('/two-factor/challenge', ChallengeTwoFactor::class)->name('two-factor.challenge');
 });
+
+Route::get('/bewerben', [ApplicationController::class, 'create'])->name('apply.form');
+Route::post('/bewerben', [ApplicationController::class, 'store'])->name('apply.store');
+Route::get('/bewerben/danke', function () {
+    return view('apply.thanks');
+})->name('apply.thanks');
+
+Route::get('/invite/{token}', [InvitationController::class, 'show'])->name('invitations.show');
+Route::post('/invite/{token}', [InvitationController::class, 'accept'])->name('invitations.accept');
 
 Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class, RestrictPortalUsers::class])->group(function () {
     // Pflicht-Enrollment: eingeloggt, aber bis zum Abschluss von der Middleware hierher gehalten.
@@ -171,6 +185,11 @@ Route::middleware(['auth', 'tenant', RequireTwoFactorEnrollment::class, Restrict
     Route::get('/bewohner/{resident}/assessment/{instrument}', AssessmentDurchfuehren::class)->name('assessment.durchfuehren');
     Route::get('/bewohner/{resident}/assessments', AssessmentVerlauf::class)->name('assessment.verlauf');
     Route::get('/chat', ChatScreen::class)->name('chat');
+    Route::get('/bewerbungen', [ApplicationController::class, 'index'])->name('hr.applications.index');
+    Route::get('/bewerbungen/{application}', [ApplicationController::class, 'show'])->name('hr.applications.show');
+    Route::patch('/bewerbungen/{application}/status', [ApplicationController::class, 'updateStatus'])->name('hr.applications.updateStatus');
+    Route::get('/hr/einladungen', [InvitationController::class, 'create'])->name('hr.invitations.create');
+    Route::post('/hr/einladungen', [InvitationController::class, 'store'])->name('hr.invitations.store');
     Route::get('/abstimmungen', Abstimmungen::class)->name('abstimmungen');
     Route::get('/qdvs/{export}/download', function (App\Domains\Qdvs\Models\QdvsExport $export) {
         // WHY(DSGVO Art. 9): pseudonymisierte Gesundheitsdaten — Download nur für Leitung (admin/pflegefachkraft/super-admin).

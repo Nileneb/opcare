@@ -144,7 +144,7 @@
             </div>
         @endif
         @if (auth()->user()?->hasAnyRole(['admin', 'super-admin']))
-            @php($adminActive = request()->routeIs('admin.tenants','admin.users'))
+            @php($adminActive = request()->routeIs('admin.tenants','admin.users','hr.invitations.create','hr.applications.index'))
             <div class="nav-menu" x-data="{ open: false }" @keydown.escape="open = false">
                 <button type="button" class="nav-menu-btn {{ $adminActive ? 'is-active' : '' }}" @click="open = !open" :aria-expanded="open">
                     Admin <span class="nav-caret">▾</span>
@@ -152,6 +152,8 @@
                 <div class="nav-menu-panel" x-show="open" x-transition @click.outside="open = false" x-cloak>
                     <a href="{{ route('admin.tenants') }}" @class(['is-active' => request()->routeIs('admin.tenants')])>Einrichtungen</a>
                     <a href="{{ route('admin.users') }}" @class(['is-active' => request()->routeIs('admin.users')])>Benutzer</a>
+                    <a href="{{ route('hr.invitations.create') }}" @class(['is-active' => request()->routeIs('hr.invitations.create')])>Einladungen</a>
+                    <a href="{{ route('hr.applications.index') }}" @class(['is-active' => request()->routeIs('hr.applications.index')])>Bewerbungen</a>
                 </div>
             </div>
         @endif
