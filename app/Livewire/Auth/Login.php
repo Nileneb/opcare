@@ -55,7 +55,13 @@ class Login extends Component
         Auth::login($user, $this->remember);
         session()->regenerate();
 
-        $this->redirect(route('overview'), navigate: true);
+        if (config('app.disable_two_factor')) {
+            $this->redirect(route('overview'), navigate: true);
+
+            return;
+        }
+
+        $this->redirect(route('two-factor.enroll'), navigate: true);
     }
 
     protected function ensureIsNotRateLimited(): void

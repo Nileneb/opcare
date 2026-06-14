@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Mail;
 use Livewire\Livewire;
 
 beforeEach(function () {
+    // WHY: 2FA-Pflicht-Tests dürfen nicht vom lokalen APP_DISABLE_TWO_FACTOR-Demo-Schalter abhängen.
+    config(['app.disable_two_factor' => false]);
     $this->seed(RolesSeeder::class);
     $tenant = Tenant::create(['name' => 'Testheim', 'slug' => 'testheim']);
     app(CurrentTenant::class)->set($tenant);
@@ -57,6 +59,22 @@ it('loggt einen Benutzer ohne 2FA ein und erzwingt das Enrollment', function () 
         ->set('password', 'geheim-123')
         ->call('login')
         ->assertRedirect(route('two-factor.enroll'));
+
+    $this->assertAuthenticatedAs($user);
+});
+
+it('umgeht 2FA komplett wenn der Demo-Schalter aktiv ist', function () {
+    config(['app.disable_two_factor' => true]);
+
+    $user = User::factory()->withoutTwoFactor()->create([
+        'email' => 'demo@opcare.local', 'password' => 'geheim-123', 'tenant_id' => $this->tenant->id,
+    ]);
+
+    Livewire::test(Login::class)
+        ->set('email', 'demo@opcare.local')
+        ->set('password', 'geheim-123')
+        ->call('login')
+        ->assertRedirect(route('overview'));
 
     $this->assertAuthenticatedAs($user);
 });
