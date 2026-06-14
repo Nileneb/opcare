@@ -4,10 +4,10 @@ use App\Domains\Identity\Database\Seeders\RolesSeeder;
 use App\Domains\Identity\Models\Tenant;
 use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Support\CurrentTenant;
-use App\Mail\InvitationMail;
-use App\Models\Invitation;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
+use App\Mail\InvitationMail;
+use App\Models\Invitation;
 use Illuminate\Support\Facades\Mail;
 use Livewire\Livewire;
 

@@ -10,8 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
-use Illuminate\View\View;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\View\View;
 
 class InvitationController extends Controller
 {

@@ -27,7 +27,6 @@ use App\Livewire\Auth\ChallengeTwoFactor;
 use App\Livewire\Auth\EnrollTwoFactor;
 use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
-use App\Livewire\Auth\Register;
 use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Brandschutz\Brandschutz as BrandschutzScreen;
 use App\Livewire\Capture\Belegerfassung;
