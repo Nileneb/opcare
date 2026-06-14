@@ -26,6 +26,13 @@ class ChallengeTwoFactor extends Component
     {
         if (! session('mfa.pending_id')) {
             $this->redirect(route('login'), navigate: true);
+
+            return;
+        }
+
+        if (config('app.disable_two_factor')) {
+            session()->forget(['mfa.pending_id', 'mfa.remember']);
+            $this->redirect(route('overview'), navigate: true);
         }
     }
 

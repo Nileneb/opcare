@@ -20,6 +20,10 @@ class RequireTwoFactorEnrollment
     {
         $user = $request->user();
 
+        if (config('app.disable_two_factor')) {
+            return $next($request);
+        }
+
         if ($user !== null && $user->two_factor_confirmed_at === null
             && ! $request->routeIs('two-factor.enroll')
             && ! $request->routeIs('logout')) {

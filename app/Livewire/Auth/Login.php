@@ -44,7 +44,7 @@ class Login extends Component
         // WHY(Track B, MFA-Pflicht): Passwort allein authentifiziert NICHT. Konfigurierte Nutzer müssen
         // erst die TOTP-Challenge bestehen (Auth::login dort); noch nicht eingerichtete werden eingeloggt
         // und von der Enrollment-Middleware sofort zum Einrichten geführt.
-        if ($user->hasTwoFactorEnabled()) {
+        if (! config('app.disable_two_factor') && $user->hasTwoFactorEnabled()) {
             session(['mfa.pending_id' => $user->id, 'mfa.remember' => $this->remember]);
 
             $this->redirect(route('two-factor.challenge'), navigate: true);
@@ -55,7 +55,7 @@ class Login extends Component
         Auth::login($user, $this->remember);
         session()->regenerate();
 
-        $this->redirect(route('two-factor.enroll'), navigate: true);
+        $this->redirect(route('overview'), navigate: true);
     }
 
     protected function ensureIsNotRateLimited(): void

@@ -36,6 +36,13 @@ class EnrollTwoFactor extends Component
 
             return;
         }
+
+        if (config('app.disable_two_factor')) {
+            $this->redirect(route('overview'), navigate: true);
+
+            return;
+        }
+
         if ($user->hasTwoFactorEnabled()) {
             $this->redirect(route('overview'), navigate: true);
 

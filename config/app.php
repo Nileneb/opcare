@@ -43,6 +43,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Development Two-Factor Bypass
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, two-factor authentication is skipped. This is intended for
+    | local/demo setups only and should remain false in production.
+    |
+    */
+
+    'disable_two_factor' => (bool) env('APP_DISABLE_TWO_FACTOR', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application URL
     |--------------------------------------------------------------------------
     |
